@@ -12,19 +12,17 @@
 // Parser 
 // copied from jsScheme - should be rewrriten (support #0=, etc)
 //
-FoxScheme.Parser = function(){
+FoxScheme.Parser = function(txt){
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Parser)) {
         console.log("Improper use of FoxScheme.Parser()");
         return null;
     }
+    this.tokens = this.tokenize(txt);
 };
-FoxScheme.Parser.prototype = {
-    initialize: function (txt) {
-        this.tokens = this.tokenize(txt);
-        this.i = 0;
-    },
-
+FoxScheme.Parser.prototype = function() {
+var i = 0;
+return {
     inspect: function () {
         return ["#<Parser:", this.i, "/", this.tokens.length, " ", Object.inspect(this.tokens), ">"].join("");
     },
@@ -63,16 +61,22 @@ FoxScheme.Parser.prototype = {
     },
 
     sexpCommentMarker: new Object,
-    getObject: function () {
-        var r = this.getObject0();
+    nextObject: function () {
+        var r = this.nextObject0();
 
         if (r != this.sexpCommentMarker) return r;
 
-        r = this.getObject();
+        r = this.nextObject();
         if (r == FoxScheme.Parser.EOS) throw new FoxScheme.Error("Readable object not found after S exression comment");
 
-        r = this.getObject();
+        r = this.nextObject();
         return r;
+    },
+    arrayToList: function(a) {
+        var list = FoxScheme.nil;
+        for(var i = a.length - 1; i >= 0; i--) {
+            list = new FoxScheme.Pair(a[i], list);
+        }
     },
 
     getList: function (close) {
@@ -89,12 +93,12 @@ FoxScheme.Parser.prototype = {
 
             if (this.tokens[this.i] == '.') {
                 this.i++;
-                var o = this.getObject();
+                var o = this.nextObject();
                 if (o != FoxScheme.Parser.EOS && list != FoxScheme.nil) {
                     prev.cdr = o;
                 }
             } else {
-                var cur = new FoxScheme.Pair(this.getObject(), FoxScheme.nil);
+                var cur = new FoxScheme.Pair(this.nextObject(), FoxScheme.nil);
                 if (list == FoxScheme.nil) list = cur;
                 else prev.cdr = cur;
                 prev = cur;
@@ -113,7 +117,7 @@ FoxScheme.Parser.prototype = {
                 this.i++;
                 break;
             }
-            arr[arr.length] = this.getObject();
+            arr[arr.length] = this.nextObject();
         }
         return arr;
     },
@@ -121,11 +125,11 @@ FoxScheme.Parser.prototype = {
     eatObjectsInSexpComment: function (err_msg) {
         while (this.tokens[this.i] == '#;') {
             this.i++;
-            if ((this.getObject() == FoxScheme.Parser.EOS) || (this.i >= this.tokens.length)) throw new FoxScheme.Error(err_msg);
+            if ((this.nextObject() == FoxScheme.Parser.EOS) || (this.i >= this.tokens.length)) throw new FoxScheme.Error(err_msg);
         }
     },
 
-    getObject0: function () {
+    nextObject0: function () {
         if (this.i >= this.tokens.length) return FoxScheme.Parser.EOS;
 
         var t = this.tokens[this.i++];
@@ -144,7 +148,7 @@ FoxScheme.Parser.prototype = {
               || t == '#[' 
               || t == '{' 
               || t == '#{') {
-            return s ? new FoxScheme.Pair(new FoxScheme.Symbol(s), new FoxScheme.Pair(this.getObject(), FoxScheme.nil)) : (t == '(' || t == '[' || t == '{') ? this.getList(t) : this.getVector(t);
+            return s ? new FoxScheme.Pair(new FoxScheme.Symbol(s), new FoxScheme.Pair(this.nextObject(), FoxScheme.nil)) : (t == '(' || t == '[' || t == '{') ? this.getList(t) : this.getVector(t);
         } else {
             switch (t) {
             case "+inf.0":
@@ -186,6 +190,7 @@ FoxScheme.Parser.prototype = {
             return new FoxScheme.Symbol(t);
         }
     }
-};
+}; // end of return { ...
+}();
 // indicates end of source file
 FoxScheme.Parser.EOS = new Object();
