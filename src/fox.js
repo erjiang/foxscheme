@@ -6,3 +6,5 @@
  */
 
 var FoxScheme = {};
+// handy shorterner $fs
+var $fs = FoxScheme;
