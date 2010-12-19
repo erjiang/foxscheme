@@ -19,10 +19,26 @@ FoxScheme.Parser = function(txt){
         return null;
     }
     this.tokens = this.tokenize(txt);
+    this.i = 0;
 };
-FoxScheme.Parser.prototype = function() {
-var i = 0;
-return {
+FoxScheme.Parser.prototype = {
+    listify: function(arg) {
+        var list = FoxScheme.nil;
+        /*
+         * Build a list out of an Array
+         */
+        if(arg instanceof Array) {
+            var i = arg.length;
+            while(i--) {
+                list = new FoxScheme.Pair(arg[i], list);
+            }
+        }
+        else
+            list = new FoxScheme.Pair(arg, list);
+
+        return list;
+    },
+
     inspect: function () {
         return ["#<Parser:", this.i, "/", this.tokens.length, " ", Object.inspect(this.tokens), ">"].join("");
     },
@@ -61,136 +77,85 @@ return {
     },
 
     sexpCommentMarker: new Object,
-    nextObject: function () {
-        var r = this.nextObject0();
 
-        if (r != this.sexpCommentMarker) return r;
+    nextObject: function() {
+        if(typeof(this.i) === "undefined")
+            this.i = 0;
+        if(this.i >= this.tokens.length)
+            return FoxScheme.Parser.EOS;
 
-        r = this.nextObject();
-        if (r == FoxScheme.Parser.EOS) throw new FoxScheme.Error("Readable object not found after S exression comment");
+        var t = this.tokens[this.i];
+        this.i++;
+        switch(t) {
+            case "(":
+            case "[":
+                return this.nextList();
+            case "#(":
+            case "#[":
+                return this.nextVector();
+            case "'": // convert '... into (quote ...)
+                return new FoxScheme.Pair(new FoxScheme.Symbol("quote"),
+                                            this.listify(this.nextObject()));
+            case "`":
+                return new FoxScheme.Pair(new FoxScheme.Symbol("quasiquote"),
+                                            this.listify(this.nextObject()));
+            case ",":
+                return new FoxScheme.Pair(new FoxScheme.Symbol("unquote"),
+                                            this.listify(this.nextObject()));
+            default:
+                /*
+                 * Could be a number
+                 */
+                var n = parseInt(t);
+                if(!isNaN(n))
+                    return n;
+                /*
+                 * Could be a character
+                 */
+                if(t.substring(0,2) == "#\\")
+                    return new FoxScheme.Char(t); // Char will handle parsing the character
 
-        r = this.nextObject();
-        return r;
-    },
-    arrayToList: function(a) {
-        var list = FoxScheme.nil;
-        for(var i = a.length - 1; i >= 0; i--) {
-            list = new FoxScheme.Pair(a[i], list);
-        }
-    },
+                /*
+                 * Strings start and end with "
+                 */
+                if(t.length > 1 &&
+                    t[0] == '"' &&
+                    t[t.length - 1] == '"')
+                    return t.substring(1, t.length - 2);
 
-    getList: function (close) {
-        var list = FoxScheme.nil,
-            prev = list;
-        while (this.i < this.tokens.length) {
+                /*
+                 * Must be a symbol, then.
+                 */
+                return new FoxScheme.Symbol(t);
 
-            this.eatObjectsInSexpComment("Input stream terminated unexpectedly(in list)");
-
-            if (this.tokens[this.i] == ')' || this.tokens[this.i] == ']' || this.tokens[this.i] == '}') {
-                this.i++;
                 break;
-            }
+        }
+    },
 
-            if (this.tokens[this.i] == '.') {
+    nextList: function() {
+        var list = [];
+        while(this.i < this.tokens.length) {
+            var t = this.tokens[this.i];
+            if(t === ")" || t === "]") {
                 this.i++;
-                var o = this.nextObject();
-                if (o != FoxScheme.Parser.EOS && list != FoxScheme.nil) {
-                    prev.cdr = o;
-                }
-            } else {
-                var cur = new FoxScheme.Pair(this.nextObject(), FoxScheme.nil);
-                if (list == FoxScheme.nil) list = cur;
-                else prev.cdr = cur;
-                prev = cur;
+                return this.listify(list);
             }
+            list.push(this.nextObject());
         }
-        return list;
     },
-
-    getVector: function (close) {
-        var arr = new Array();
-        while (this.i < this.tokens.length) {
-
-            this.eatObjectsInSexpComment("Input stream terminated unexpectedly(in vector)");
-
-            if (this.tokens[this.i] == ')' || this.tokens[this.i] == ']' || this.tokens[this.i] == '}') {
+    
+    nextVector: function() {
+        var list = [];
+        while(this.i < this.tokens.length) {
+            var t = this.tokens[this.i];
+            if(t === ")" || t === "]") {
                 this.i++;
-                break;
+                return new FoxScheme.Vector(list);
             }
-            arr[arr.length] = this.nextObject();
-        }
-        return arr;
-    },
-
-    eatObjectsInSexpComment: function (err_msg) {
-        while (this.tokens[this.i] == '#;') {
-            this.i++;
-            if ((this.nextObject() == FoxScheme.Parser.EOS) || (this.i >= this.tokens.length)) throw new FoxScheme.Error(err_msg);
-        }
-    },
-
-    nextObject0: function () {
-        if (this.i >= this.tokens.length) return FoxScheme.Parser.EOS;
-
-        var t = this.tokens[this.i++];
-        // if( t == ')' ) return null;
-        if (t == '#;') return this.sexpCommentMarker;
-
-        var s = t == "'" ? 'quote'
-              : t == "`" ? 'quasiquote' 
-              : t == "," ? 'unquote' 
-              : t == ",@" ? 'unquote-splicing' 
-              : false;
-
-        if (s || t == '('
-              || t == '#(' 
-              || t == '[' 
-              || t == '#[' 
-              || t == '{' 
-              || t == '#{') {
-            return s ? new FoxScheme.Pair(new FoxScheme.Symbol(s), new FoxScheme.Pair(this.nextObject(), FoxScheme.nil)) : (t == '(' || t == '[' || t == '{') ? this.getList(t) : this.getVector(t);
-        } else {
-            switch (t) {
-            case "+inf.0":
-                return Infinity;
-            case "-inf.0":
-                return -Infinity;
-            case "+nan.0":
-                return NaN;
-            }
-
-            var n;
-            if (/^#x[0-9a-z]+$/i.test(t)) { // #x... Hex
-                n = new Number('0x' + t.substring(2, t.length));
-            } else if (/^#d[0-9\.]+$/i.test(t)) { // #d... Decimal
-                n = new Number(t.substring(2, t.length));
-            } else {
-                n = new Number(t); // use constructor as parser
-            }
-
-            if (!isNaN(n)) {
-                return n.valueOf();
-            } else if (t == '#f' || t == '#F') {
-                return false;
-            } else if (t == '#t' || t == '#T') {
-                return true;
-            } else if (t.toLowerCase() == '#\\newline') {
-                return FoxScheme.Char.get('\n');
-            } else if (t.toLowerCase() == '#\\space') {
-                return FoxScheme.Char.get(' ');
-            } else if (t.toLowerCase() == '#\\tab') {
-                return FoxScheme.Char.get('\t');
-            } else if (/^#\\.$/.test(t)) {
-                return FoxScheme.Char.get(t.charAt(2));
-            } else if (/^\"(\\(.|$)|[^\"\\])*\"?$/.test(t)) {
-                return t.replace(/(\r?\n|\\n)/g, "\n").replace(/^\"|\\(.|$)|\"$/g, function ($0, $1) {
-                    return $1 ? $1 : '';
-                });
-            } else
-            return new FoxScheme.Symbol(t);
+            list.push(this.nextObject());
         }
     }
-}; // end of return { ...
-}();
+
+}; // end of = { ...
 // indicates end of source file
 FoxScheme.Parser.EOS = new Object();
