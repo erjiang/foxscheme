@@ -12,8 +12,9 @@ FoxScheme.Symbol = function(name) {
         throw new FoxScheme.Error("Invalid symbol name: \""+name+"\"");
     
     // finish initialization
-    this.name = name;
+    this._name = name;
 };
 FoxScheme.Symbol.prototype = {
-    toString: function() { return this.name; },
+    toString: function() { return this._name; },
+    name: function() { return this._name }
 };

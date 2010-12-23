@@ -35,5 +35,25 @@ FoxScheme.Pair.prototype = {
             return "("+this._car.toString()
                 +" . "+this._cdr.toString()+")";
         }
+    },
+    /*
+     * Some utility functions for use internally by FoxScheme
+     */
+    isProper: function() {
+        if(this._cdr == FoxScheme.nil)
+            return true
+        else if(this._cdr instanceof FoxScheme.Pair)
+            return this._cdr.isProper()
+        else
+            return false
+    },
+    first: function() {
+        return this.car()
+    },
+    second: function() {
+        return this.cdr().car()
+    },
+    third: function() {
+        return this.cdr().cdr().car()
     }
 };
