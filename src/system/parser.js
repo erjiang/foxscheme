@@ -106,9 +106,12 @@ FoxScheme.Parser.prototype = {
                 /*
                  * Could be a number
                  */
-                var n = parseInt(t);
-                if(!isNaN(n))
-                    return n;
+                // JavaScript's parseInt("9x") => 9
+                if(t.match(/[^0-9.+-e]/) === null) {
+                    var n = parseInt(t);
+                    if(!isNaN(n))
+                        return n;
+                }
                 /*
                  * Could be a character
                  */

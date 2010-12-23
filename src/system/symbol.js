@@ -8,7 +8,7 @@ FoxScheme.Symbol = function(name) {
     // check to see if the symbol name is proper
     if(name === null)
         throw new FoxScheme.Error("Tried to create a symbol without a name");
-    if(name.indexOf(" ") === -1)
+    if(name.indexOf(" ") !== -1)
         throw new FoxScheme.Error("Invalid symbol name: \""+name+"\"");
     
     // finish initialization
