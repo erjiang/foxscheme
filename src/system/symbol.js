@@ -10,6 +10,13 @@ FoxScheme.Symbol = function(name) {
         throw new FoxScheme.Error("Tried to create a symbol without a name");
     if(name.indexOf(" ") !== -1)
         throw new FoxScheme.Error("Invalid symbol name: \""+name+"\"");
+
+    var invalid = ["."];
+    for(var i in invalid) {
+        if(name === invalid[i])
+            // this kind of thing should be caught by the parser...
+            throw new FoxScheme.Bug("Invalid symbol name: "+name, "FoxScheme.Symbol")
+    }`
     
     // finish initialization
     this._name = name;

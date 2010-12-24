@@ -55,5 +55,16 @@ FoxScheme.Pair.prototype = {
     },
     third: function() {
         return this.cdr().cdr().car()
+    },
+    length: function() {
+        var acc = 0
+        var cursor = this
+        while(cursor !== FoxScheme.nil) {
+            acc += 1
+            if(!(cursor instanceof FoxScheme.Pair)) // improper list
+                throw new FoxScheme.Bug("Improper list "+this, "Pair.length()");
+            cursor = cursor._cdr
+        }
+        return acc
     }
 };

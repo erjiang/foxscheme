@@ -22,8 +22,10 @@ FoxScheme.Parser = function(txt){
     this.i = 0;
 };
 FoxScheme.Parser.prototype = {
-    listify: function(arg) {
-        var list = FoxScheme.nil;
+    listify: function(arg, end) {
+        var list = end;
+        if(!end)
+            list = FoxScheme.nil;
         /*
          * Build a list out of an Array
          */
@@ -137,12 +139,33 @@ FoxScheme.Parser.prototype = {
 
     nextList: function() {
         var list = [];
+        /*
+         * this.nextObject() increments the token index, so we
+         * don't necessarily have to do this.i++
+         */
         while(this.i < this.tokens.length) {
             var t = this.tokens[this.i];
+            /*
+             * Check for the end of the list
+             */
             if(t === ")" || t === "]") {
                 this.i++;
                 return this.listify(list);
             }
+            /*
+             * Check for improper list
+             */
+            if(t === ".") {
+                this.i++
+                var ls = this.listify(list, this.nextObject())
+                if(this.tokens[this.i] !== ")" &&
+                   this.tokens[this.i] !== "]")
+                    throw new FoxScheme.Error("Only one item should follow dot (.)",  "FoxScheme.Parser")
+
+                this.i++
+                return ls
+            }
+
             list.push(this.nextObject());
         }
     },
