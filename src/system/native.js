@@ -4,11 +4,11 @@
  * (i.e. things that cannot be written in Scheme)
  */
 
-FoxScheme.nativefunctions = function() {
+FoxScheme.nativeprocedures = function() {
 var funcs = new FoxScheme.Hash();
 var defun = function(name, arity, maxarity, proc) {
     funcs.set(name,
-        new FoxScheme.NativeFunction(proc, name, arity, maxarity))
+        new FoxScheme.NativeProcedure(proc, name, arity, maxarity))
 }
 
 /*
