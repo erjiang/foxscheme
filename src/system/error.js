@@ -29,7 +29,7 @@ FoxScheme.Error.prototype = {
  *
  */
 
-FoxScheme.Bug = function(message) {
+FoxScheme.Bug = function(message, proc) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Bug)) {
         console.log("Improper use of FoxScheme.Bug()");
@@ -38,6 +38,7 @@ FoxScheme.Bug = function(message) {
 
     // finish initialization
     this.message = message;
+    if(proc) this.message = "In "+proc+": "+this.message;
 };
 FoxScheme.Bug.prototype = {
     toString: function() { return "[BUG] "+this.message; }
