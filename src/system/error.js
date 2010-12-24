@@ -6,7 +6,7 @@
  *
  */
 
-FoxScheme.Error = function(message) {
+FoxScheme.Error = function(message, proc) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Error)) {
         console.log("Improper use of FoxScheme.Error()");
@@ -15,6 +15,7 @@ FoxScheme.Error = function(message) {
 
     // finish initialization
     this.message = message;
+    if(proc) this.message = "In "+proc+": "+this.message;
 };
 FoxScheme.Error.prototype = {
     toString: function() { return "[ERROR] "+this.message; }
