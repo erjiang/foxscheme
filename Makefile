@@ -16,7 +16,8 @@ src/system/char.js \
 src/system/pair.js \
 src/system/vector.js \
 src/system/hash.js \
-src/system/parser.js
+src/system/parser.js \
+src/system/function.js
 
 OUTPUT=bin/foxscheme.js
 
