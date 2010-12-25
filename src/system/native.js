@@ -23,7 +23,7 @@ defun("cons", 2, 2,
         return new FoxScheme.Pair(a, b)
     })
 
-defun("car", 2, 2,
+defun("car", 1, 1,
     function(p) {
         if(!(p instanceof FoxScheme.Pair))
             throw new FoxScheme.Error(p+" is not a Pair", "car");
@@ -31,7 +31,7 @@ defun("car", 2, 2,
         return p.car()
     })
 
-defun("cdr", 2, 2,
+defun("cdr", 1, 1,
     function(p) {
         if(!(p instanceof FoxScheme.Pair))
             throw new FoxScheme.Error(p+" is not a Pair", "cdr");

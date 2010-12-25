@@ -17,9 +17,15 @@ FoxScheme.Interpreter = function() {
         throw FoxScheme.Error("Improper use of FoxScheme.Interpreter()")
         return null
     }
+
+    this.initialize();
 }
 
-FoxScheme.prototype = function() {
+FoxScheme.Interpreter.prototype = function() {
+  var globals;
+  var initialize = function () {
+    globals = new FoxScheme.Hash();
+  }
   var arrayify = function(list) {
     var ls = []
     while(list !== FoxScheme.nil) {
@@ -28,24 +34,78 @@ FoxScheme.prototype = function() {
     }
     return ls;
   }
-  var get = function(env, x) {
-    for(i in env) {
-      if(env[i].car() == x)
-        return env[i].cdr()
-    }
-    return null;
+
+
+  var contains = function(arr, item) {
+    for (i in arr)
+      if(arr[i] === item)
+        return true
+
+    return false
   }
 
-  var eval = function(expr, env) {
-    if(typeof(env) === undefined)
-      var env = [];
+  // some reserved keywords that would throw an "invalid syntax"
+  // error rather than an "unbound variable" error
+  var syntax = ["lambda", "if", "let", "set!", "call/cc"]
 
+  /*
+   * eval makes up most of the interpreter.  It is a simple cased
+   * recursive interpreter like the 311 interpreter.
+   *
+   * Currently, it doesn't support lambdas or macros or continuations
+   * 
+   * This section is especially indented 2 spaces or else it gets
+   * kind of wide
+   */
+  var eval = function(expr, env) {
+    /*
+     * Anything besides symbols and pairs:
+     * Can be returned immediately, regardless of the env
+     */
+    if(!(expr instanceof FoxScheme.Symbol) &&
+       !(expr instanceof FoxScheme.Pair))
+      return expr
+
+    if(env === undefined)
+      var env = new FoxScheme.Hash();
+    
+    /*
+     * Symbol:
+     * Look up the symbol first in the env, then in the
+     * globals, and finally the system globals
+     */
+    if(expr instanceof FoxScheme.Symbol) {
+        var sym = expr.name()
+        var val
+        if((val = env.get(sym)) === undefined)
+          if((val = globals.get(sym)) === undefined)
+            if((val = FoxScheme.nativeprocedures.get(sym)) === undefined)
+              if(contains(syntax, sym))
+                throw new FoxScheme.Error("Invalid syntax "+sym)
+              else
+                throw new FoxScheme.Error("Unbound symbol "+expr)
+
+        return val;
+    }
+
+    /*
+     * List:
+     * Eval the first item and make sure it's a procedure.  Then,
+     * apply it to the rest of the list.
+     */
     if(expr instanceof FoxScheme.Pair) {
       if(!expr.isProper())
-        throw new FoxScheme.Error("Invalid syntax--improper list "+expr.toString());
-      if(expr.first() instanceof FoxScheme.Symbol) {
+        throw new FoxScheme.Error("Invalid syntax--improper list: "+expr);
+
+      if(expr.car() instanceof FoxScheme.Symbol) {
         var sym = expr.first().name();
         switch (sym) {
+          case "quote":
+            if(expr.length() !== 2)
+              throw new FoxScheme.Error("Can't quote more than 1 thing: "+expr)
+
+            return expr.second()
+            break;
           case "lambda":
             //TODO
             break;
@@ -65,12 +125,30 @@ FoxScheme.prototype = function() {
             //TODO
             break;
           default:
-            //TODO
+            var proc = eval(expr.car(), env)
+            if(!(proc instanceof FoxScheme.Procedure))
+              throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
+
+            // something like (map eval (cdr expr))
+            var args = arrayify(expr.cdr())
+            for(var i in args) {
+              args[i] = eval(args[i], env)
+            }
+
+            // actually do (apply (car expr) (cdr expr))
+            return proc.fapply(args)
             break;
         }
       }
     }
-    else
-      return expr;
+    throw new FoxScheme.Bug("Don't know what to do with "+expr, "Interpreter")
+  }
+
+  /*
+   * Finally, give an object for FoxScheme.Interpreter.prototype
+   */
+  return {
+    initialize: initialize,
+    eval: eval
   }
 }();
