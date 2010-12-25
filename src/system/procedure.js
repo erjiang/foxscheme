@@ -33,7 +33,7 @@ FoxScheme.NativeProcedure = function () {
 }
 
 FoxScheme.NativeProcedure.prototype = function() {
-    var proc, name, arity, maxarity;
+    
     /*
      * We need to create this from FoxScheme.Procedure()
      * so that instanceof works, and then write the props
@@ -49,37 +49,37 @@ FoxScheme.NativeProcedure.prototype = function() {
      * because cons takes only two arguments.
      */
     constructor.initialize = function(a_proc, a_name, a_arity, a_maxarity) {
-        proc = a_proc
-            arity = a_arity
+        this.proc = a_proc
+            this.arity = a_arity
             if(typeof(a_arity) === "undefined")
-                arity = -1;
-        maxarity = a_maxarity
+                this.arity = -1;
+        this.maxarity = a_maxarity
             if(typeof(a_maxarity) === "undefined")
-                maxarity = -1;
-        name = a_name
+                this.maxarity = -1;
+        this.name = a_name
             if(typeof(a_name) === "undefined")
-                name = null;
+                this.name = null;
     }
-    constructor.fapply = function(/* args */) {
+    constructor.fapply = function(ls) {
         /*
          * Check for invalid number of params
          */
-        if(arity !== -1) {
-            if(arguments.length < arity)
+        if(this.arity !== -1) {
+            if(arguments.length < this.arity)
                 throw new FoxScheme.Error("Too few parameters", this.toString())
-            else if (maxarity !== -1)
-                if(arguments.length > maxarity)
+            else if (this.maxarity !== -1)
+                if(arguments.length > this.maxarity)
                     throw new FoxScheme.Error("Too many parameters", this.toString())
         }
         /*
          * Do the actual procedure application here.
          */
-        proc.apply(proc, arguments)
+        return this.proc.apply(this.proc, ls)
     }
     constructor.toString = function() {
-        if(name === null)
+        if(this.name === null)
             return "#<NativeProcedure>";
-        return ['#<NativeProcedure', name, '>'].join("");
+        return ['#<NativeProcedure ', this.name, '>'].join("");
     }
     return constructor;
 }();
