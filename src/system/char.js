@@ -77,7 +77,10 @@ FoxScheme.Char.prototype = function() {
 			var x = this.toInteger();
 			if (x < 128) return "#\\" + charString[x];
 			else return "#\\x" + x.toString(16);
-		}
+		},
+        getValue: function() {
+            return this._char
+        }
 	};
 } ();
 
