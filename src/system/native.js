@@ -60,11 +60,47 @@ defun("-", 1, undefined,
             throw new FoxScheme.Error(arguments[0]+" is not a number")
         var acc = arguments[0]
         var i = arguments.length
+        // (- 5) => -5
+        if(i === 1)
+            return - acc;
+
         while(i-- > 1) { // exclude 1st arg
             if(!isNumber(arguments[i]))
                 throw new FoxScheme.Error(arguments[i]+" is not a number")
 
             acc -= arguments[i]
+        }
+        return acc
+    })
+
+defun("*", undefined, undefined,
+    function(/* args */) {
+        var acc = 1;
+        var i = arguments.length;
+        while(i--) {
+            if(!isNumber(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number")
+
+            acc *= arguments[i]
+        }
+        return acc;
+    })
+
+defun("/", 1, undefined,
+    function(/* args */) {
+        if(!isNumber(arguments[0]))
+            throw new FoxScheme.Error(arguments[0]+" is not a number")
+        var acc = arguments[0]
+        var i = arguments.length
+        // (/ 5) => 1/5
+        if(i === 1)
+            return 1/ acc;
+
+        while(i-- > 1) { // exclude 1st arg
+            if(!isNumber(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number")
+
+            acc /= arguments[i]
         }
         return acc
     })
