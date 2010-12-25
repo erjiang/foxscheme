@@ -46,7 +46,7 @@ FoxScheme.Interpreter.prototype = function() {
 
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
-  var syntax = ["lambda", "if", "let", "set!", "call/cc"]
+  var syntax = ["lambda", "if", "let", "set!", "call/cc", "quote"]
 
   /*
    * eval makes up most of the interpreter.  It is a simple cased
@@ -97,7 +97,11 @@ FoxScheme.Interpreter.prototype = function() {
       if(!expr.isProper())
         throw new FoxScheme.Error("Invalid syntax--improper list: "+expr);
 
-      if(expr.car() instanceof FoxScheme.Symbol) {
+      /*
+       * Go to the switch only if the first item is syntax
+       */
+      if(expr.car() instanceof FoxScheme.Symbol &&
+         contains(syntax, expr.car().name())) {
         var sym = expr.first().name();
         switch (sym) {
           case "quote":
@@ -125,20 +129,26 @@ FoxScheme.Interpreter.prototype = function() {
             //TODO
             break;
           default:
-            var proc = eval(expr.car(), env)
-            if(!(proc instanceof FoxScheme.Procedure))
-              throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
-
-            // something like (map eval (cdr expr))
-            var args = arrayify(expr.cdr())
-            for(var i in args) {
-              args[i] = eval(args[i], env)
-            }
-
-            // actually do (apply (car expr) (cdr expr))
-            return proc.fapply(args)
+            // this will only happen if a keyword is in the syntax list
+            // but there is no case for it
+            throw new FoxScheme.Bug("Unknown syntax "+sym, "Interpreter")
             break;
         }
+      }
+      // means that first item is not syntax
+      else {
+        var proc = eval(expr.car(), env)
+        if(!(proc instanceof FoxScheme.Procedure))
+          throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
+
+        // something like (map eval (cdr expr))
+        var args = arrayify(expr.cdr())
+        for(var i in args) {
+          args[i] = eval(args[i], env)
+        }
+
+        // actually do (apply (car expr) (cdr expr))
+        return proc.fapply(args)
       }
     }
     throw new FoxScheme.Bug("Don't know what to do with "+expr, "Interpreter")
