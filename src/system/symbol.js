@@ -16,7 +16,7 @@ FoxScheme.Symbol = function(name) {
         if(name === invalid[i])
             // this kind of thing should be caught by the parser...
             throw new FoxScheme.Bug("Invalid symbol name: "+name, "FoxScheme.Symbol")
-    }`
+    }
     
     // finish initialization
     this._name = name;

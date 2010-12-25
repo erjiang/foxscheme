@@ -29,6 +29,9 @@ FoxScheme.Hash.prototype = function () {
             var val = store[key]
             delete store[key]
             return val
+        },
+        toString: function () {
+            return "#<Hash>"
         }
     }
 }();
