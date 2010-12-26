@@ -53,9 +53,9 @@ FoxScheme.Interpreter.prototype = function() {
      * Converts arguments into an array
      */
     else {
-      var i = ls.length
+      var i = list.length
       while(i--)
-        ls[i] = ls[i]
+        ls[i] = list[i]
     }
     return ls;
   }
@@ -206,7 +206,26 @@ FoxScheme.Interpreter.prototype = function() {
               }
               // (lambda (a b . c) body)
               else {
-                throw new FoxScheme.Bug("Improper parameter list not supported")
+                params = arrayify(params)
+                var newenv = env.clone()
+                return new FoxScheme.InterpretedProcedure(
+                  function () {
+                    // (a b . c) => [a, b, c]
+                    var args = arrayify(arguments)
+                    // process everything but last item
+                    var i = params.length - 1
+                    while(i--) {
+                      newenv.set(params[i].name(), args[i])
+                    }
+                    // now process the last item to be a new list of 
+                    // everything else
+                    newenv.set(params[params.length - 1].name(), listify(args.slice(params.length - 1)))
+
+                    // now that environment is all set up
+                    return that.eval(body, newenv)
+                  },
+                  params.length - 1,
+                  true); // yes, improper args
               }
             }
             else if(params === FoxScheme.nil) {

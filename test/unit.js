@@ -12,7 +12,7 @@ var evto = function(expr, test) {
     try {
         r = interp.eval(e)
     } catch (e) {
-        throw new Error(["Got error \"", e.message, "\" while evaluating ", expr].join(""))
+        throw new Error(["Got error \"", e, "\" while evaluating ", expr].join(""))
     }
     if(test instanceof Function) {
         if(!test(r))
@@ -181,6 +181,10 @@ describe('Lambdas', {
     },
     'no params': function () {
         evto("((lambda () 5))", 5)
+    },
+    'improper params': function () {
+        evto("((lambda (a b . c) (car c)) 1 2 5)", 5)
+        evto("((lambda (a b . c) b) 1 5 2)", 5)
     },
     'nested lambdas': function () {
         // the inner x should shadow the outer x
