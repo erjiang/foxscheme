@@ -56,6 +56,9 @@ FoxScheme.Pair.prototype = {
     third: function() {
         return this.cdr().cdr().car()
     },
+    fourth: function() {
+        return this.cdr().cdr().cdr().car()
+    },
     length: function() {
         var acc = 0
         var cursor = this

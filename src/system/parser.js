@@ -104,6 +104,12 @@ FoxScheme.Parser.prototype = {
             case ",":
                 return new FoxScheme.Pair(new FoxScheme.Symbol("unquote"),
                                             this.listify(this.nextObject()));
+            case "#t":
+            case "#T":
+                return true;
+            case "#f":
+            case "#F":
+                return false;
             case ".":
             case ")":
             case "]":

@@ -242,7 +242,22 @@ FoxScheme.Interpreter.prototype = function() {
             //TODO
             break;
           case "if":
-            //TODO
+            var l = expr.length()
+            if(l < 3 || l > 4)
+              throw new FoxScheme.Error("Invalid syntax for if: "+expr)
+
+            if(this.eval(expr.second()) !== false)
+              return this.eval(expr.third(), env)
+            /*
+             * One-armed ifs are supposed to be merely syntax, as
+             *     (expand '(if #t #t))
+             *     => (if #t #t (#2%void))
+             * in Chez Scheme, but here it's easier to support natively
+             */
+            else if(l === 3)
+              return FoxScheme.void;
+            else
+              return this.eval(expr.fourth(), env)
             break;
           case "set!":
             //TODO

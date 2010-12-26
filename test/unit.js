@@ -46,6 +46,18 @@ var should_error = function(expr) {
         throw new Error(expr+" should have evaluated to an error")
     }
 }
+var assert_true = function(bool) {
+    if(bool !== true)
+        throw new Error("Assertion failed: Got "+bool+" but expected true")
+}
+var assert_equals = function(a, b) {
+    if(a !== b)
+        throw new Error("Assertion failed: Expected "+b+" but got "+a)
+}
+var assert_instanceof = function(a, b) {
+    if(!(a instanceof b))
+        throw new Error("Assertion failed: "+a+" is not an instanceof "+b)
+}
 
 /*********** U N I T  T E S T S *************/
 
@@ -73,6 +85,25 @@ describe('Unparseable', {
     }
 })
 
+describe('Parser', {
+    "Cramped decimal": function() {
+        evto("'(2.())", function(x) {
+            assert_instanceof(x, FoxScheme.Pair)
+            assert_equals(x.car(), 2)
+            assert_equals(x.cdr().car(), FoxScheme.nil)
+            return true;
+        })
+    },
+    "Cramped nils": function () {
+        evto("'(().())", function(x) {
+            assert_instanceof(x, FoxScheme.Pair)
+            assert_equals(x.car(), FoxScheme.nil)
+            assert_equals(x.cdr(), FoxScheme.nil)
+            return true;
+        })
+    }
+})
+
 /*
  * Test basic fuctionality for understanding literals
  */
@@ -86,6 +117,12 @@ describe('Simple literals', {
             return ((a instanceof FoxScheme.Char) &&
                     (a.getValue() == "a"))
         })
+    },
+    Booleans: function() {
+        evto("#t", true)
+        evto("#T", true)
+        evto("#f", false)
+        evto("#F", false)
     }
 })
 
@@ -190,5 +227,20 @@ describe('Lambdas', {
         // the inner x should shadow the outer x
         evto(" ((lambda (x) ((lambda (x) x) 5) ) 2) ", 5)
         evto(" ((lambda x ((lambda y (car (car y))) (car (cdr x))))  1 '(5 . 6) 4 2) ", 5)
+    }
+})
+
+describe("if", {
+    "Basic if": function() {
+        evto("(if #t 5 1)", 5)
+        evto("(if #f 1 5)", 5)
+    },
+    "One-armed if": function() {
+        evto("(if #f 1)", FoxScheme.void)
+        evto("(if #t 5)", 5)
+    },
+    Truthy: function () {
+        evto("(if 3 5 1)", 5)
+        evto("(if '() 5 1)", 5)
     }
 })
