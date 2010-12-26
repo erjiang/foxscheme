@@ -31,14 +31,14 @@ var should_error = function(expr) {
     else {
         var p = new $fs.Parser(expr)
         try {
-            var r = interp.eval(evto)
+            interp.eval(p.nextObject())
         } catch (e) {
             if(e instanceof FoxScheme.Error)
-                return
+                return true;
             else
                 throw e
         }
-        throw new Error(expr+" should have error'd")
+        throw new Error(expr+" should have evaluated to an error")
     }
 }
 
@@ -119,5 +119,16 @@ describe('Native arithmetic', {
         evto('(* 3)', 3)
         evto('(/ 10)', 0.1)
         evto('(/ 5)', 0.2)
+    }
+})
+
+/*
+ * Tests the basic native pair functions
+ */
+describe('Pairs', {
+    'cons': function() {
+        evto('(cons 1 2)', function(x) { return x instanceof FoxScheme.Pair })
+        should_error('(cons 1)')
+        should_error('(cons 3 4 5)')
     }
 })

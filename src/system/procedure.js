@@ -65,11 +65,14 @@ FoxScheme.NativeProcedure.prototype = function() {
          * Check for invalid number of params
          */
         if(this.arity !== -1) {
-            if(arguments.length < this.arity)
-                throw new FoxScheme.Error("Too few parameters", this.toString())
+            if(ls.length < this.arity)
+                throw new FoxScheme.Error(["Needed ",this.arity," parameters but only got ",ls.length].join(""), 
+                                            this.toString())
             else if (this.maxarity !== -1)
-                if(arguments.length > this.maxarity)
-                    throw new FoxScheme.Error("Too many parameters", this.toString())
+                if(ls.length > this.maxarity)
+                    throw new FoxScheme.Error(["Could only take at most ",this.maxarity,
+                                               " parameters but got ",ls.length].join(""), 
+                                                this.toString())
         }
         /*
          * Do the actual procedure application here.
