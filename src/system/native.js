@@ -18,6 +18,16 @@ var isNumber = function(n) {
     return (typeof(n) === "number")
 }
 
+/*
+ * Void
+ */
+defun("void", 0, 0,
+    function() {
+        return FoxScheme.void
+    })
+/*
+ * Pair operators
+ */
 defun("cons", 2, 2,
     function(a, b) {
         return new FoxScheme.Pair(a, b)
@@ -39,6 +49,10 @@ defun("cdr", 1, 1,
         return p.cdr()
     })
 
+/*
+ * Arithmetic operators that are native by necessity or 
+ * for obvious performance reasons.
+ */
 defun("+", undefined, undefined,
     function(/* args */) {
         var acc = 0;
@@ -105,6 +119,9 @@ defun("/", 1, undefined,
         return acc
     })
 
+/*
+ * Some basic type-checking predicates!
+ */
 defun("pair?", 1, 1,
     function(p) {
         return p instanceof FoxScheme.Pair

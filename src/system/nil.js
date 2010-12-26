@@ -11,3 +11,14 @@ FoxScheme.nil = {
         return "()";
     }
 };
+
+/*
+ * FoxScheme.void
+ * 
+ * A special object representing the output of (void)
+ */
+FoxScheme.void = {
+    toString: function() {
+        return "#<void>";
+    }
+};
