@@ -126,9 +126,37 @@ describe('Native arithmetic', {
  * Tests the basic native pair functions
  */
 describe('Pairs', {
-    'cons': function() {
+    nil: function() {
+        evto("'()", FoxScheme.nil)
+    },
+    cons: function() {
         evto('(cons 1 2)', function(x) { return x instanceof FoxScheme.Pair })
         should_error('(cons 1)')
         should_error('(cons 3 4 5)')
+    },
+    car: function() {
+        evto("(car '(1 . 2))", 1)
+        evto("(car (cons 5 6))", 5)
+        evto("(car (car (car (cons (cons (cons 5 7) 4) 2))))", 5)
+        evto("(car (cons '() 5))", FoxScheme.nil)
+        should_error('(car 3)')
+    },
+    cdr: function() {
+        evto("(cdr '(1 . 3))", 3)
+        evto("(cdr '(1))", FoxScheme.nil)
+        evto("(cdr (car '((1 . 3) 5)))", 3)
+        should_error("(cdr 5)")
+        should_error("(cdr (cdr '(5)))")
+    },
+    'pair?': function() {
+        evto("(pair? (cons 4 5))", true)
+        evto("(pair? '())", false)
+        evto("(pair? 5)", false)
+        evto("(pair? (car (cons '() 5)))", false)
+    },
+    pairs: function() {
+        evto("(car (cdr '(4 5 6)))", 5)
+        evto("(car (cdr (car '((1 5) 2))))", 5)
+        evto("((car (cdr (cons car (cons cdr '())))) (cons 5 6))", 6)
     }
 })
