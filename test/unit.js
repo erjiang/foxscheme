@@ -8,7 +8,12 @@ var interp = new $fs.Interpreter()
 var evto = function(expr, test) {
     var p = new $fs.Parser(expr)
     var e = p.nextObject()
-    var r = interp.eval(e)
+    var r;
+    try {
+        r = interp.eval(e)
+    } catch (e) {
+        throw new Error(["Got error \"", e.message, "\" while evaluating ", expr].join(""))
+    }
     if(test instanceof Function) {
         if(!test(r))
             throw new Error("Value "+r+" did not pass test")
@@ -158,5 +163,28 @@ describe('Pairs', {
         evto("(car (cdr '(4 5 6)))", 5)
         evto("(car (cdr (car '((1 5) 2))))", 5)
         evto("((car (cdr (cons car (cons cdr '())))) (cons 5 6))", 6)
+    }
+})
+
+describe('Lambdas', {
+    'listify params': function () {
+        evto("((lambda x (car x)) 1 2 3)", 1)
+        evto("((lambda x (car (cdr x))) 1 2 3)", 2)
+        evto("((lambda x x))", FoxScheme.nil)
+        evto("((lambda x (car x)) 1)", 1)
+        evto("((lambda x (cdr x)) 1)", FoxScheme.nil)
+    },
+    'list of params': function () {
+        evto("((lambda (a b c) c) 1 2 3)", 3)
+        evto("((lambda (x) x) 5)", 5)
+        evto("((lambda (a b c) (cdr b)) 1 '(2 . 3) 5)", 3)
+    },
+    'no params': function () {
+        evto("((lambda () 5))", 5)
+    },
+    'nested lambdas': function () {
+        // the inner x should shadow the outer x
+        evto(" ((lambda (x) ((lambda (x) x) 5) ) 2) ", 5)
+        evto(" ((lambda x ((lambda y (car (car y))) (car (cdr x))))  1 '(5 . 6) 4 2) ", 5)
     }
 })

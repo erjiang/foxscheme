@@ -86,3 +86,71 @@ FoxScheme.NativeProcedure.prototype = function() {
     }
     return constructor;
 }();
+
+/*
+ * FoxScheme.InterpretedProcedure
+ * A prototype for lambdas. 
+ */
+
+FoxScheme.InterpretedProcedure = function () {
+    if(!(this instanceof FoxScheme.InterpretedProcedure)) {
+        throw new FoxScheme.Bug("Improper use of FoxScheme.InterpretedProcedure()")
+    }
+
+    this.initialize.apply(this, arguments)
+}
+
+FoxScheme.InterpretedProcedure.prototype = function() {
+    
+    var constructor = new FoxScheme.Procedure();
+    var env = [];
+    var interpreter
+    /*
+     * To create a function, pass a function in as a_proc,
+     * and optionally specify the arity, and a boolean for whether
+     * extra arguments arer passed in as a list.
+     *
+     * When fapply is called, it will call the procedure it was initialized
+     * with, passing it all of fapply's arguments.
+     *
+     * For example: cons, 2
+     * because cons takes only two arguments.
+     */
+    constructor.initialize = function(a_proc, a_arity, a_improper) {
+        this.proc = a_proc
+        this.arity = a_arity
+        if(typeof(a_arity) === "undefined")
+            this.arity = 0;
+        this.improper = a_improper
+            if(typeof(a_improper) === "undefined")
+                this.improper = false;
+    }
+    constructor.fapply = function(ls) {
+        /*
+         * Check for invalid number of params
+         */
+        if(this.improper === true) {
+            if(ls.length < this.arity)
+                throw new FoxScheme.Error(["Needed at least ",this.arity,
+                                           " parameters but only got ",ls.length].join(""), 
+                                            this.toString())
+        }
+        else {
+            if(ls.length < this.arity)
+                throw new FoxScheme.Error(["Needed ",this.arity," parameters but only got ",ls.length].join(""), 
+                                            this.toString())
+            else if (ls.length > this.arity)
+                throw new FoxScheme.Error(["Could only take at most ",this.arity,
+                                           " parameters but got ",ls.length].join(""), 
+                                            this.toString())
+        }
+        /*
+         * Do the actual procedure application here.
+         */
+        return this.proc.apply(this.proc, ls)
+    }
+    constructor.toString = function() {
+        return "#<InterpretedProcedure>";
+    }
+    return constructor;
+}();
