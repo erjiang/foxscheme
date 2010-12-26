@@ -22,20 +22,75 @@ FoxScheme.Interpreter = function() {
 }
 
 FoxScheme.Interpreter.prototype = function() {
-  var globals;
   var initialize = function () {
-    globals = new FoxScheme.Hash();
+    this._globals = new FoxScheme.Hash();
   }
+  /*
+   * Arrayify can convert both FoxScheme lists
+   * and arguments "arrays" into arrays
+   */
   var arrayify = function(list) {
     var ls = []
-    while(list !== FoxScheme.nil) {
-      ls.push(list.car())
-      list = list.cdr()
+    /*
+     * Converts a FoxScheme list into an array by
+     * walking the list
+     */
+    if(list instanceof FoxScheme.Pair ||
+       list === FoxScheme.nil) {
+      while(list instanceof FoxScheme.Pair) {
+        ls.push(list.car())
+        list = list.cdr()
+      }
+      /*
+       * Check if last item is improper (not nil)
+       * This means that '(1 2 . 3) => [1, 2, 3] !!
+       * Careful!
+       */
+      if(!(list === FoxScheme.nil))
+        ls.push(list)
+    }
+    /*
+     * Converts arguments into an array
+     */
+    else {
+      var i = ls.length
+      while(i--)
+        ls[i] = ls[i]
     }
     return ls;
   }
 
+  /*
+   * Listify converts an array into a FoxScheme list
+   */
+  listify = function(arg, end) {
+    /*
+     * "end" allows us to override what goes at the
+     * end of the list (the empty list by default)
+     */
+    var list = end;
+    if(!end)
+      list = FoxScheme.nil;
+    /*
+     * Build a list out of an Array
+     */
+    if(arg instanceof Array || arg.length) {
+      var i = arg.length;
+      while(i--) {
+        list = new FoxScheme.Pair(arg[i], list);
+      }
+    }
+    else
+      list = new FoxScheme.Pair(arg, list);
+ 
+    return list;
+  }
 
+
+  /*
+   * Checks if an array contains an item by doing
+   * simple for loop through the keys
+   */
   var contains = function(arr, item) {
     for (i in arr)
       if(arr[i] === item)
@@ -111,6 +166,59 @@ FoxScheme.Interpreter.prototype = function() {
             return expr.second()
             break;
           case "lambda":
+            if(expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+expr)
+
+            var body = expr.third()
+            var params = expr.second()
+            if(params instanceof FoxScheme.Symbol) {
+              var newenv = env.clone()
+              var sym = expr.second().name()
+              /* 
+               * Catches the special case of (lambda x body)
+               */
+              return new FoxScheme.InterpretedProcedure(
+                function() {
+                  newenv.set(sym, listify(arguments))
+                  return eval(body, newenv)
+                },
+                0,     // minimum number of args
+                true); // yes, improper parameters list
+            }
+            else if(params instanceof FoxScheme.Pair) {
+              // (lambda (a b c) body)
+              if(params.isProper()) {
+                params = listify(params)
+                var newenv = env.clone()
+                return new FoxScheme.InterpretedProcedure(
+                  function() {
+                    var i = params.length
+                    while(i--) {
+                      if(!(params instanceof FoxScheme.Symbol))
+                        throw new FoxScheme.Error("Non-symbol in parameters list: "+expr)
+                      newenv.set(params[i].name(), arguments[i])
+                    }
+                    eval(body, newenv)
+                  },
+                  params.length,
+                  false);
+              }
+              // (lambda (a b . c) body)
+              else {
+                throw new FoxScheme.Bug("Improper parameter list not supported")
+              }
+            }
+            else if(params === FoxScheme.nil) {
+              return new FoxScheme.InterpretedProcedure(
+                function() {
+                  eval(body, env)
+                }, 0, false);
+            }
+            else {
+              throw new FoxScheme.Error("Invalid parameter list in "+expr)
+            }
+            break;
+          case "begin":
             //TODO
             break;
           case "if":
