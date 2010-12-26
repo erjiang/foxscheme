@@ -104,6 +104,11 @@ FoxScheme.Parser.prototype = {
             case ",":
                 return new FoxScheme.Pair(new FoxScheme.Symbol("unquote"),
                                             this.listify(this.nextObject()));
+            case ".":
+            case ")":
+            case "]":
+                throw new FoxScheme.Error(t+" should not appear outside a list")
+                break
             default:
                 /*
                  * Could be a number
@@ -168,6 +173,7 @@ FoxScheme.Parser.prototype = {
 
             list.push(this.nextObject());
         }
+        throw new FoxScheme.Error("Unexpected end of list encountered", "Parser")
     },
     
     nextVector: function() {
