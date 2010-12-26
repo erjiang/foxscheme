@@ -101,7 +101,7 @@ FoxScheme.Interpreter.prototype = function() {
 
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
-  var syntax = ["lambda", "if", "let", "set!", "call/cc", "quote"]
+  var syntax = ["lambda", "begin", "if", "set!", "quote"]
 
   /*
    * eval makes up most of the interpreter.  It is a simple cased
@@ -244,16 +244,7 @@ FoxScheme.Interpreter.prototype = function() {
           case "if":
             //TODO
             break;
-          case "let":
-            //TODO
-            break;
           case "set!":
-            //TODO
-            break;
-          case "call/cc":
-            //TODO
-            break;
-          case "if":
             //TODO
             break;
           default:
