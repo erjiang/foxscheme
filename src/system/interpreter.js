@@ -163,7 +163,10 @@ FoxScheme.Interpreter.prototype = function() {
        * Go to the switch only if the first item is syntax
        */
       if(expr.car() instanceof FoxScheme.Symbol &&
-         contains(syntax, expr.car().name())) {
+         contains(syntax, expr.car().name()) &&
+         // make sure the syntax keyword hasn't been shadowed
+         env.get(expr.car().name()) === undefined &&
+         this._globals.get(expr.car().name()) === undefined) {
         var sym = expr.first().name();
         switch (sym) {
           case "quote":

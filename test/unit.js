@@ -300,3 +300,10 @@ describe("Vectors", {
         evto("(vector-ref '#(1 2 3 5) 3)", 5)
     }
 })
+
+describe("Scope", {
+    "Shadow syntax": function() {
+        // if we let if be +, then (if 1 2 3) => 6
+        evto("((lambda (if) (if 1 2 3)) +)", 6)
+    }
+})
