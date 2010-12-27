@@ -9,7 +9,7 @@ FoxScheme.Vector = function(elements) {
     /*
      * Allow vector to be created from an existing JS array
      */
-    if(typeof(elements) !== "undefined") {
+    if(elements !== undefined) {
         if(elements instanceof Array) {
             for(i in elements) {
                 this._array.push(elements[i]);
@@ -23,5 +23,20 @@ FoxScheme.Vector = function(elements) {
 FoxScheme.Vector.prototype = {
     toString: function() { 
         return "#("+this._array.join(" ")+")";
+    },
+    length: function() {
+        return this._array.length;
+    },
+    set: function(i, el) {
+        if(i < 0 || i >= this._array.length)
+            throw new FoxScheme.Error("Invalid vector index "+i, "Vector")
+
+        return this._array[i] = el;
+    },
+    get: function(i) {
+        if(i < 0 || i >= this._array.length)
+            throw new FoxScheme.Error("Invalid vector index "+i, "Vector")
+
+        return this._array[i];
     }
 };

@@ -137,5 +137,45 @@ defun("symbol?", 1, 1,
         return s instanceof FoxScheme.Symbol
     })
 
+/*
+ * Vector ops
+ */
+defun("make-vector", 1, 2,
+    function(n, e) {
+        if(e === undefined)
+            e = 0;
+        var fill = [];
+        while(n--)
+            fill.push(e)
+        return new FoxScheme.Vector(fill)
+    })
+defun("vector-length", 1, 1,
+    function(v) {
+        if(!(v instanceof FoxScheme.Vector))
+            throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
+        return v.length()
+    })
+
+defun("vector-set!", 3, 3,
+    function(v, i, el) {
+        if(!(v instanceof FoxScheme.Vector))
+            throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
+        if(!isNumber(i))
+            throw new FoxScheme.Error(i+" is not a number", "vector-length")
+        
+        v.set(i, el)
+        return FoxScheme.void;
+    })
+
+defun("vector-ref", 2, 2,
+    function(v, i) {
+        if(!(v instanceof FoxScheme.Vector))
+            throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
+        if(!isNumber(i))
+            throw new FoxScheme.Error(i+" is not a number", "vector-length")
+
+        return v.get(i)
+    })
+
 return funcs;
 }();
