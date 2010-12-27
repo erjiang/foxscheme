@@ -11,8 +11,9 @@ FoxScheme.Vector = function(elements) {
      */
     if(elements !== undefined) {
         if(elements instanceof Array) {
-            for(i in elements) {
-                this._array.push(elements[i]);
+            var i = elements.length
+            while(i--) {
+                this._array[i] = elements[i];
             }
         }
         else {

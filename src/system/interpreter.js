@@ -120,8 +120,13 @@ FoxScheme.Interpreter.prototype = function() {
      * Can be returned immediately, regardless of the env
      */
     if(!(expr instanceof FoxScheme.Symbol) &&
-       !(expr instanceof FoxScheme.Pair))
-      return expr
+       !(expr instanceof FoxScheme.Pair)) {
+        // can't eval unquoted vector literal
+        if(expr instanceof FoxScheme.Vector)
+            throw new FoxScheme.Error("Don't know how to eval Vector "+expr+". "+
+                                      "Did you forget to quote it?")
+      return expr;
+    }
 
     if(env === undefined)
       var env = new FoxScheme.Hash();
@@ -255,7 +260,7 @@ FoxScheme.Interpreter.prototype = function() {
              * in Chez Scheme, but here it's easier to support natively
              */
             else if(l === 3)
-              return FoxScheme.void;
+              return FoxScheme.nothing;
             else
               return this.eval(expr.fourth(), env)
             break;

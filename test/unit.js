@@ -236,11 +236,67 @@ describe("if", {
         evto("(if #f 1 5)", 5)
     },
     "One-armed if": function() {
-        evto("(if #f 1)", FoxScheme.void)
+        evto("(if #f 1)", FoxScheme.nothing)
         evto("(if #t 5)", 5)
     },
     Truthy: function () {
         evto("(if 3 5 1)", 5)
         evto("(if '() 5 1)", 5)
+    }
+})
+
+describe("Vectors", {
+    "Vector literals": function () {
+        evto("'#()", function(x) {
+            assert_instanceof(x, FoxScheme.Vector)
+            assert_equals(x.length(), 0)
+            return true;
+        })
+        evto("'#(6 2 1 4 7 5)", function(x) {
+            assert_instanceof(x, FoxScheme.Vector)
+            assert_equals(x.length(), 6)
+            assert_equals(x.get(0), 6)
+            assert_equals(x.get(3), 4)
+            assert_equals(x.get(5), 5)
+            return true;
+        })
+        evto("'#(() () 4 #\\a)", function(x) {
+            assert_instanceof(x, FoxScheme.Vector)
+            assert_equals(x.length(), 4)
+            assert_equals(x.get(0), FoxScheme.nil)
+            assert_instanceof(x.get(3), FoxScheme.Char)
+            assert_equals(x.get(3).getValue(), "a")
+            return true;
+        })
+        // vectors must be quoted
+        should_error("#(+ 2 3)")
+    },
+    "make-vector": function() {
+        evto("(make-vector 0)", function(x) {
+            assert_instanceof(x, FoxScheme.Vector)
+            assert_equals(x.length(), 0)
+            return true;
+        })
+        evto("(make-vector 5)", function(x) {
+            assert_instanceof(x, FoxScheme.Vector)
+            assert_equals(x.length(), 5)
+            assert_equals(x.get(0), 0)
+            assert_equals(x.get(3), 0)
+            return true;
+        })
+        evto("(make-vector 5 -1)", function(x) {
+            assert_instanceof(x, FoxScheme.Vector)
+            assert_equals(x.length(), 5)
+            assert_equals(x.get(0), -1)
+            assert_equals(x.get(4), -1)
+            return true;
+        })
+        should_error("(make-vector)")
+        should_error("(make-vector #\\a)")
+        should_error("(make-vector 3 5 3)")
+    },
+    "vector-ref": function() {
+        evto("(vector-ref '#(1 2 3) 0)", 1)
+        evto("(vector-ref '#(1 2 3 5) 3)", 5)
     }
 })

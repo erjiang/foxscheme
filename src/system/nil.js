@@ -13,11 +13,13 @@ FoxScheme.nil = {
 };
 
 /*
- * FoxScheme.void
+ * FoxScheme.nothing
  * 
- * A special object representing the output of (void)
+ * A special object representing the output of (void).
+ * Rhino does not like properties being called "void", so
+ * it's called nothing here.
  */
-FoxScheme.void = {
+FoxScheme.nothing = {
     toString: function() {
         return "#<void>";
     }

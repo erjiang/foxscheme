@@ -23,7 +23,7 @@ var isNumber = function(n) {
  */
 defun("void", 0, 0,
     function() {
-        return FoxScheme.void
+        return FoxScheme.nothing
     })
 /*
  * Pair operators
@@ -142,6 +142,8 @@ defun("symbol?", 1, 1,
  */
 defun("make-vector", 1, 2,
     function(n, e) {
+        if(!isNumber(n))
+            throw new FoxScheme.Error(n+" is not a number", "make-vector")
         if(e === undefined)
             e = 0;
         var fill = [];
@@ -164,7 +166,7 @@ defun("vector-set!", 3, 3,
             throw new FoxScheme.Error(i+" is not a number", "vector-length")
         
         v.set(i, el)
-        return FoxScheme.void;
+        return FoxScheme.nothing;
     })
 
 defun("vector-ref", 2, 2,
