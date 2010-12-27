@@ -247,7 +247,16 @@ FoxScheme.Interpreter.prototype = function() {
             }
             break;
           case "begin":
-            //TODO
+            if(expr.cdr() === FoxScheme.nil)
+              return FoxScheme.nothing
+            var cursor = expr.cdr()
+            while(cursor.cdr() !== FoxScheme.nil) {
+              this.eval(cursor.car(), env)
+              cursor = cursor.cdr()
+            }
+
+            // return whatever is in Tail position
+            return this.eval(cursor.car(), env)
             break;
           case "if":
             var l = expr.length()
@@ -268,7 +277,28 @@ FoxScheme.Interpreter.prototype = function() {
               return this.eval(expr.fourth(), env)
             break;
           case "set!":
-            //TODO
+            if(expr.length() !== 3)
+              throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
+
+            if(!(expr.second() instanceof FoxScheme.Symbol))
+              throw new FoxScheme.Error("Cannot set! the non-symbol "+expr.second())
+
+            var sym = expr.second().name()
+            // eval the right-hand side
+            // set! the appropriately-scoped symbol
+            if(env.get(sym) !== undefined) {
+              // don't eval unless we can actually set!
+              var val = this.eval(expr.third(), env)
+              env.set(sym, val)
+            }
+            else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
+              throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
+            }
+            else {
+              var val = this.eval(expr.third(), env)
+              this._globals.set(sym, val)
+            }
+            return FoxScheme.nothing;
             break;
           default:
             // this will only happen if a keyword is in the syntax list
@@ -293,7 +323,8 @@ FoxScheme.Interpreter.prototype = function() {
         return proc.fapply(args)
       }
     }
-    throw new FoxScheme.Bug("Don't know what to do with "+expr, "Interpreter")
+    throw new FoxScheme.Bug("Don't know what to do with "+expr+
+                    " (reached past switch/case)", "Interpreter")
   }
 
   /*

@@ -123,7 +123,10 @@ describe('Simple literals', {
         evto("#T", true)
         evto("#f", false)
         evto("#F", false)
-    }
+    },
+    Strings: function() {
+        evto('""', "")
+        evto('"alpha!"'
 })
 
 /*
@@ -301,9 +304,50 @@ describe("Vectors", {
     }
 })
 
+describe("begin", {
+    "basic begin": function() {
+        evto("(begin 1 2 5)", 5)
+        evto("(begin (+ 2 2) (+ 2 1) (+ 2 3))", 5)
+    },
+    singleton: function() {
+        evto("(begin 5)", 5)
+        evto("(begin (+ 2 3))", 5)
+    },
+    nothing: function() {
+        evto("(begin)", FoxScheme.nothing)
+    }
+})
+
+describe("set!", {
+    evals: function() {
+        // just making sure
+        evto("(set! x 5)")
+    },
+    echo: function() {
+        evto("(begin (set! x 5) x)", 5)
+        evto("(begin (set! x 3) (set! y 2) (+ x y))", 5)
+    },
+    "reset!": function() {
+        evto("(begin (set! x 2) (set! x 5) x)", 5)
+    },
+    immutable: function() {
+        should_error("(set! 5 2)")
+        should_error("(begin (set! x '(1 . 2)) "+
+                            "(set! (car x) 5) x)")
+    }
+})
+
 describe("Scope", {
     "Shadow syntax": function() {
         // if we let if be +, then (if 1 2 3) => 6
         evto("((lambda (if) (if 1 2 3)) +)", 6)
+    },
+    "Lexical scoping": function() {
+        /*
+         * the inner lambda should not return the x=5 that was
+         * defined by the outer lambda, since that x was not
+         * in scope when the inner lambda was defined
+         */
+        should_error("((lambda (x y) (y)) 5 (lambda () x))")
     }
 })
