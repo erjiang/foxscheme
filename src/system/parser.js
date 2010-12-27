@@ -137,7 +137,8 @@ FoxScheme.Parser.prototype = {
                 if(t.length > 1 &&
                     t[0] == '"' &&
                     t[t.length - 1] == '"')
-                    return t.substring(1, t.length - 2);
+                    // can't substring the empty string
+                    return t === '""' ? "" : t.substring(1, t.length - 1);
 
                 /*
                  * Must be a symbol, then.

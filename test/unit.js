@@ -126,7 +126,12 @@ describe('Simple literals', {
     },
     Strings: function() {
         evto('""', "")
-        evto('"alpha!"'
+        evto('"alpha!"', "alpha!")
+    },
+    "Unicode Strings": function() {
+        evto('"このファイルはUTF-8です"',
+              "このファイルはUTF-8です")
+    }
 })
 
 /*
