@@ -92,7 +92,7 @@ FoxScheme.Interpreter.prototype = function() {
    * simple for loop through the keys
    */
   var contains = function(arr, item) {
-    for (i in arr)
+    for (var i in arr)
       if(arr[i] === item)
         return true
 

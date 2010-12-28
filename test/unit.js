@@ -549,6 +549,19 @@ describe("Scope", {
     }
 })
 
+describe("Bugs", {
+    /*
+     * This test catches a bug in which the variable 'i' in a for loop wasn't
+     * being declared using 'var', so it would clobber whatever was 'i' in the
+     * global scope
+     */
+    "Don't clobber i": function() {
+        i = "fox"
+        evto("(+ 2 2)", 4)
+        assert_equals(i, "fox")
+    }
+})
+
 describe('Miscellaneous', {
     // the first exercise from The Seasoned Schemer,
     // rewritten without 'cond' or 'or'
