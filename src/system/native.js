@@ -237,5 +237,22 @@ defun("not", 1, 1,
             return false
     })
 
+/*
+ * eq?
+ */
+defun("eq?", 2, 2,
+    function(a, b) {
+        // Symbols are indistinguishable if they
+        // have the same name
+        if( a instanceof FoxScheme.Symbol &&
+            b instanceof FoxScheme.Symbol)
+            return a.name() === b.name()
+        if( a instanceof FoxScheme.Char &&
+            b instanceof FoxScheme.Char)
+            return a.getValue() === b.getValue()
+
+        return a === b
+    })
+
 return funcs;
 }();

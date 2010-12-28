@@ -19,7 +19,7 @@ var evto = function(expr, test) {
             throw new Error("Value "+r+" did not pass test")
     }
     else if(r != test)
-        throw new Error("Expected "+test+" but got "+r)
+        throw new Error("Expected "+test+" but got "+r+" for "+expr)
 }
 var should_error = function(expr) {
     var interp = new $fs.Interpreter()
@@ -197,6 +197,59 @@ describe('Booleans', {
     "unary not": function() {
         should_error("(not 1 2)")
         should_error("(not)")
+    }
+})
+
+/*
+ * Equality checking
+ */
+describe('Equality', {
+    "eq? numbers": function() {
+        evto("(eq? 1 1)", true)
+        evto("(eq? 1 2)", false)
+        evto("(eq? 5 'a)", false)
+        // Just a limitation of JS
+        // evto("(eq? 1.0 1)", false)
+    },
+    "eq? bools": function() {
+        evto("(eq? #t #t)", true)
+        evto("(eq? #t #f)", false)
+        evto("(eq? #t 5)", false)
+        evto("(eq? #t 'a)", false)
+    },
+    "eq? symbols": function() {
+        evto("(eq? 'abc 'abc)", true)
+        evto("(eq? 'ABC 'abc)", false)
+        evto("(eq? 'a 'b)", false)
+        evto("(eq? 'a \"a\")", false)
+    },
+    "eq? strings": function() {
+        // strings are like vectors:
+        // different instances are not eq
+        evto('(eq? "fox" "fox")', false)
+        evto('(begin (set! x "fox")'+
+                    '(set! y x)'+
+                    '(eq? x y))',
+             true)
+    },
+    "eq? vectors": function() {
+        evto('(eq? (make-vector 5) (make-vector 5))', false)
+        evto('(begin (set! x (make-vector 5))'+
+                    '(set! y x)'+
+                    '(eq? x y))',
+             true)
+    },
+    "eq? lists": function() {
+        evto("(eq? '(1 2 3 4) '(1 2 3 4))", false)
+        evto("((lambda (x) (eq? (cdr x) (cdr x)))"+
+              "'(1 2 3))",
+             true)
+    },
+    "eq? chars": function() {
+        evto("(eq? #\\a #\\a)", true)
+        evto("(eq? #\\b #\\a)", false)
+        // 'a' === 61
+        evto("(eq? #\\a #\\x61)", true)
     }
 })
 
