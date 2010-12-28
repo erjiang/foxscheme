@@ -14,6 +14,7 @@ src/system/error.js \
 src/system/boolean.js \
 src/system/symbol.js \
 src/system/char.js \
+src/system/string.js \
 src/system/pair.js \
 src/system/vector.js \
 src/system/hash.js \
