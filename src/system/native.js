@@ -26,6 +26,34 @@ defun("void", 0, 0,
         return FoxScheme.nothing
     })
 /*
+ * trace-closure
+ * ugh why is debugging so hard
+ *
+ * fyi: hackish solution that was cooked up in a
+ * debugging session. Relies on console.log!
+ */
+defun("trace-closure", 2, undefined,
+    function(symbol, func) {
+        var sym = symbol.name()
+        return new FoxScheme.NativeProcedure(
+            function (/* args */) {
+                var new_args = []
+                var i = arguments.length
+                while(i--) {
+                    new_args[i] = arguments[i]
+                }
+                if(console)
+                    console.log(["(",sym," ",new_args.join(" "),")"].join(""))
+                var r = func.fapply(new_args)
+                if(console)
+                    console.log("and got: "+r)
+                return r
+            },
+            "traced-closure",
+            0,
+            undefined)
+    })
+/*
  * Pair operators
  */
 defun("cons", 2, 2,
