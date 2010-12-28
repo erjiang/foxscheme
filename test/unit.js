@@ -509,12 +509,10 @@ describe("set!", {
         // the lambda
         evto("(begin "+
              "(set! fact "+
-             "  (trace-closure 'fact "+
              "  (lambda (x)"+
              "    (if (= x 1)"+
              "        x"+
              "        (* x (fact (- x 1))))))"+
-             ")"+
              "(fact 5))",
              120)
     }
