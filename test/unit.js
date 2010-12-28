@@ -4,8 +4,8 @@
 // This file is utf-8
 // このファイルはUTF-8です
 
-var interp = new $fs.Interpreter()
 var evto = function(expr, test) {
+    var interp = new $fs.Interpreter()
     var p = new $fs.Parser(expr)
     var e = p.nextObject()
     var r;
@@ -22,6 +22,7 @@ var evto = function(expr, test) {
         throw new Error("Expected "+test+" but got "+r)
 }
 var should_error = function(expr) {
+    var interp = new $fs.Interpreter()
     if(expr instanceof Function) {
         try{
             expr()
@@ -35,15 +36,17 @@ var should_error = function(expr) {
     }
     else {
         var p = new $fs.Parser(expr)
+        var r;
         try {
-            interp.eval(p.nextObject())
+            r = interp.eval(p.nextObject())
         } catch (e) {
             if(e instanceof FoxScheme.Error)
                 return true;
             else
                 throw e
         }
-        throw new Error(expr+" should have evaluated to an error")
+        throw new Error(expr+" should have evaluated to an error, "+
+               "but we got "+r+" instead")
     }
 }
 var assert_true = function(bool) {
