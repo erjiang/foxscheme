@@ -166,6 +166,10 @@ defun("/", 1, undefined,
 /*
  * Some basic type-checking predicates!
  */
+defun("null?", 1, 1,
+    function(p) {
+        return p === FoxScheme.nil
+    })
 defun("pair?", 1, 1,
     function(p) {
         return p instanceof FoxScheme.Pair
@@ -221,6 +225,16 @@ defun("vector-ref", 2, 2,
             throw new FoxScheme.Error(i+" is not a number", "vector-length")
 
         return v.get(i)
+    })
+/*
+ * Boolean operator
+ */
+defun("not", 1, 1,
+    function(v) {
+        if(v === false)
+            return true
+        else
+            return false
     })
 
 return funcs;

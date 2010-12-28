@@ -184,11 +184,33 @@ describe('Native arithmetic', {
 })
 
 /*
+ * Boolean stuff like 'not'
+ */
+describe('Booleans', {
+    not: function() {
+        evto("(not #f)", true)
+        evto("(not #t)", false)
+        evto("(not 5)", false)
+        evto("(not '())", false)
+        evto("(not '(1 2 3))", false)
+    },
+    "unary not": function() {
+        should_error("(not 1 2)")
+        should_error("(not)")
+    }
+})
+
+/*
  * Tests the basic native pair functions
  */
 describe('Pairs', {
     nil: function() {
         evto("'()", FoxScheme.nil)
+    },
+    'null?': function() {
+        evto("(null? '())", true)
+        evto("(null? (car '(5)))", false)
+        evto("(null? (cdr '(5)))", true)
     },
     cons: function() {
         evto('(cons 1 2)', function(x) { return x instanceof FoxScheme.Pair })
@@ -214,6 +236,10 @@ describe('Pairs', {
         evto("(pair? '())", false)
         evto("(pair? 5)", false)
         evto("(pair? (car (cons '() 5)))", false)
+    },
+    'pair? errors': function() {
+        should_error("(pair?)")
+        should_error("(pair? 1 2)")
     },
     pairs: function() {
         evto("(car (cdr '(4 5 6)))", 5)
