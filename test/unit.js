@@ -172,6 +172,14 @@ describe('Native arithmetic', {
         evto('(* 3)', 3)
         evto('(/ 10)', 0.1)
         evto('(/ 5)', 0.2)
+    },
+    '= Binary': function() {
+        evto('(= 2 2)', true)
+        evto('(= 2 3)', false)
+    },
+    '= invalid': function() {
+        should_error('(= 2 #\\a)')
+        should_error("(= 'sym 'sym)")
     }
 })
 

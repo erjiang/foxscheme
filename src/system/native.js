@@ -15,7 +15,7 @@ var defun = function(name, arity, maxarity, proc) {
  * Some type-checking conveniences
  */
 var isNumber = function(n) {
-    return (typeof(n) === "number")
+    return !isNaN(n)
 }
 
 /*
@@ -53,6 +53,22 @@ defun("cdr", 1, 1,
  * Arithmetic operators that are native by necessity or 
  * for obvious performance reasons.
  */
+
+// = folds into boolean
+defun("=", 1, undefined,
+    function(/* args */) {
+        if(isNaN(arguments[0]))
+            throw new FoxScheme.Error(arguments[0]+" is not a number.", "=")
+        var standard = arguments[0]
+        var i = arguments.length
+        while(i--) {
+            if(isNaN(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number.", "=")
+            if(arguments[i] !== standard)
+                return false
+        }
+        return true
+    })
 defun("+", undefined, undefined,
     function(/* args */) {
         var acc = 0;
@@ -61,7 +77,7 @@ defun("+", undefined, undefined,
          */
         var i = arguments.length;
         while(i--) {
-            if(!isNumber(arguments[i]))
+            if(isNaN(arguments[i]))
                 throw new FoxScheme.Error(arguments[i]+" is not a number")
 
             acc += arguments[i]
@@ -70,7 +86,7 @@ defun("+", undefined, undefined,
     })
 defun("-", 1, undefined,
     function(/* args */) {
-        if(!isNumber(arguments[0]))
+        if(isNaN(arguments[0]))
             throw new FoxScheme.Error(arguments[0]+" is not a number")
         var acc = arguments[0]
         var i = arguments.length
@@ -79,7 +95,7 @@ defun("-", 1, undefined,
             return - acc;
 
         while(i-- > 1) { // exclude 1st arg
-            if(!isNumber(arguments[i]))
+            if(isNaN(arguments[i]))
                 throw new FoxScheme.Error(arguments[i]+" is not a number")
 
             acc -= arguments[i]
@@ -92,7 +108,7 @@ defun("*", undefined, undefined,
         var acc = 1;
         var i = arguments.length;
         while(i--) {
-            if(!isNumber(arguments[i]))
+            if(isNaN(arguments[i]))
                 throw new FoxScheme.Error(arguments[i]+" is not a number")
 
             acc *= arguments[i]
@@ -102,7 +118,7 @@ defun("*", undefined, undefined,
 
 defun("/", 1, undefined,
     function(/* args */) {
-        if(!isNumber(arguments[0]))
+        if(isNaN(arguments[0]))
             throw new FoxScheme.Error(arguments[0]+" is not a number")
         var acc = arguments[0]
         var i = arguments.length
@@ -111,7 +127,7 @@ defun("/", 1, undefined,
             return 1/ acc;
 
         while(i-- > 1) { // exclude 1st arg
-            if(!isNumber(arguments[i]))
+            if(isNaN(arguments[i]))
                 throw new FoxScheme.Error(arguments[i]+" is not a number")
 
             acc /= arguments[i]
@@ -142,7 +158,7 @@ defun("symbol?", 1, 1,
  */
 defun("make-vector", 1, 2,
     function(n, e) {
-        if(!isNumber(n))
+        if(isNaN(n))
             throw new FoxScheme.Error(n+" is not a number", "make-vector")
         if(e === undefined)
             e = 0;
@@ -162,7 +178,7 @@ defun("vector-set!", 3, 3,
     function(v, i, el) {
         if(!(v instanceof FoxScheme.Vector))
             throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
-        if(!isNumber(i))
+        if(isNaN(i))
             throw new FoxScheme.Error(i+" is not a number", "vector-length")
         
         v.set(i, el)
@@ -173,7 +189,7 @@ defun("vector-ref", 2, 2,
     function(v, i) {
         if(!(v instanceof FoxScheme.Vector))
             throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
-        if(!isNumber(i))
+        if(isNaN(i))
             throw new FoxScheme.Error(i+" is not a number", "vector-length")
 
         return v.get(i)
