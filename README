@@ -1,0 +1,57 @@
+FoxScheme
+
+FoxScheme is a Scheme interpreter written in JavaScript.
+
+Some key points include:
+  * Minimal native (primitive) procedures
+    Only procedures that must be implemented in JS out of necessity (cons) or
+    obvious performance reasons (expt) are native. The rest is expected to be
+    implemented in pure Scheme, which means less errors in native code.
+ 
+  * Cleanliness and clarity
+    FoxScheme is split into many discrete files, each being reasonably
+    self-contained. The code attempts to be easily-readable where possible, and
+    commented where not, allowing for easy modification and extension.
+ 
+  * Self-containment
+    FoxScheme attempts to be software in its own right, and does not rely on
+    external libraries such as jQuery or Prototype.js. FoxScheme does its best
+    not to pollute the global namespace or otherwise interfere with other JS
+    software. There is no dependence on a browser; for example, early
+    development was done using Rhino. This makes FoxScheme easy to embed in a
+    web page.
+ 
+  * Error-checking
+    FoxScheme attempts to error-check as much of the user input as is
+    reasonable. Many JS Schemes happily accept invalid syntax and other invalid
+    input, which can be confusing to the user.
+
+  * Unit testing
+    FoxScheme has a growing unit-test suite using JSSpec that is run after
+    every atomic change to the codebase.
+ 
+Known issues:
+ 
+  * Boolean prototype augmented
+    Boolean.prototype.toString is defined in src/system/boolean.js, for the
+    reason of showing "#t" instead of "true" when coerced into a String by the
+    browser. Otherwise, we would either need to create our own FoxScheme.Bool
+    object and complicate all boolean testing, or write a new pretty-printer
+    layer that must recursively walk the result to print it. This solution
+    should not break most other JavaScript software.
+ 
+  * No tail-call optimization
+    The current FoxScheme.Interpreter uses native JS recursion. If the
+    underlying JS system does not optimize tail calls, then deep recursion will
+    max out the underlying system's stack. This will hopefully be solved in the
+    future with the addition of a compiler/VM.
+ 
+  * Incomplete
+    Currently, only a few native procedures are implemented for things like
+    pairs, strings, vectors, and other basic values. There is currently no
+    support for continuations, I/O, modules, macros, and so on. Stay tuned.
+
+Contact:
+
+    Eric Jiang <erjiang@indiana.edu>
+
