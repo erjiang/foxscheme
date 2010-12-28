@@ -25,3 +25,15 @@ FoxScheme.Symbol.prototype = {
     toString: function() { return this._name; },
     name: function() { return this._name }
 };
+FoxScheme.Symbol.gensymcount = 0
+FoxScheme.Symbol.gensym = function(name) {
+    if(name === undefined)
+        name = "g"
+
+    FoxScheme.Symbol.gensymcount++;
+    return new FoxScheme.Symbol(
+            "_"+name+"__fox"+
+            // randomness unneeded
+            //(new Date()).getMilliseconds()+
+            "-"+FoxScheme.Symbol.gensymcount)
+}

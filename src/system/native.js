@@ -307,5 +307,21 @@ defun("eq?", 2, 2,
         return a === b
     })
 
+/*
+ * Symbols
+ */
+defun("gensym", 0, 1,
+    function(nameString) {
+        var name
+        if(nameString === undefined)
+            name = "g"
+        else if(nameString instanceof FoxScheme.String)
+            name = nameString.getValue()
+        else
+            throw new FoxScheme.Error(nameString+" is not a string")
+
+        return FoxScheme.Symbol.gensym(name)
+    })
+
 return funcs;
 }();
