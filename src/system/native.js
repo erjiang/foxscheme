@@ -209,9 +209,9 @@ defun("vector-length", 1, 1,
 defun("vector-set!", 3, 3,
     function(v, i, el) {
         if(!(v instanceof FoxScheme.Vector))
-            throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
+            throw new FoxScheme.Error(v+" is not a Vector", "vector-set!")
         if(isNaN(i))
-            throw new FoxScheme.Error(i+" is not a number", "vector-length")
+            throw new FoxScheme.Error(i+" is not a number", "vector-set!")
         
         v.set(i, el)
         return FoxScheme.nothing;
@@ -220,12 +220,65 @@ defun("vector-set!", 3, 3,
 defun("vector-ref", 2, 2,
     function(v, i) {
         if(!(v instanceof FoxScheme.Vector))
-            throw new FoxScheme.Error(v+" is not a Vector", "vector-length")
+            throw new FoxScheme.Error(v+" is not a Vector", "vector-ref")
         if(isNaN(i))
-            throw new FoxScheme.Error(i+" is not a number", "vector-length")
+            throw new FoxScheme.Error(i+" is not a number", "vector-ref")
 
         return v.get(i)
     })
+
+/*
+ * String ops
+ */
+defun("make-string", 1, 2,
+    function(n, e) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "make-string")
+        var ev;
+        if(e === undefined)
+            ev = "\0"
+        else {
+            if(!(e instanceof FoxScheme.Char))
+                throw new FoxScheme.Error(e+" is not a Char", "make-string")
+            ev = e.getValue()
+        }
+        var fill = []
+        while(n--)
+            fill.push(ev)
+        return new FoxScheme.String(fill.join(""))
+    })
+defun("string-length", 1, 1,
+    function(v) {
+        if(!(v instanceof FoxScheme.String))
+            throw new FoxScheme.Error(v+" is not a String", "string-length")
+        return v.length()
+    })
+defun("string-set!", 3, 3,
+    function(v, i, el) {
+        if(!(v instanceof FoxScheme.String))
+            throw new FoxScheme.Error(v+" is not a String", "string-set!")
+        if(isNaN(i))
+            throw new FoxScheme.Error(i+" is not a number", "string-set!")
+        if(!(el instanceof FoxScheme.Char))
+            throw new FoxScheme.Error(el+" is not a Char", "string-set!")
+        if(i < 0 || i >= v.length())
+            throw new FoxScheme.Error("Invalid index "+i, "string-set!")
+        
+        v.set(i, el)
+        return FoxScheme.nothing;
+    })
+defun("string-ref", 2, 2,
+    function(v, i) {
+        if(!(v instanceof FoxScheme.String))
+            throw new FoxScheme.Error(v+" is not a String", "string-ref")
+        if(isNaN(i))
+            throw new FoxScheme.Error(i+" is not a number", "string-ref")
+        if(i < 0 || i >= v.length())
+            throw new FoxScheme.Error("Invalid index "+i, "string-ref")
+
+        return new FoxScheme.Char(v.get(i))
+    })
+
 /*
  * Boolean operator
  */

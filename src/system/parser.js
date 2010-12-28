@@ -133,15 +133,16 @@ FoxScheme.Parser.prototype = {
 
                 /*
                  * Strings start and end with "
-                 * TODO: Strings should be an instantiated FoxScheme class,
-                 *   so that (eq? (make-string 3) (make-string 3)) => #f
+                 * We use our own FoxScheme.String so that
+                     (eq? (make-string 3) (make-string 3)) => #f
                  *   and so we can override toString()
                  */
                 if(t.length > 1 &&
                     t[0] == '"' &&
                     t[t.length - 1] == '"')
                     // can't substring the empty string
-                    return t === '""' ? "" : t.substring(1, t.length - 1);
+                    return t === '""' ? new FoxScheme.String("") : 
+                            new FoxScheme.String(t.substring(1, t.length - 1));
 
                 /*
                  * Must be a symbol, then.

@@ -18,8 +18,15 @@ var evto = function(expr, test) {
         if(!test(r))
             throw new Error("Value "+r+" did not pass test")
     }
-    else if(r != test)
+    else if(r instanceof FoxScheme.String ||
+            r instanceof FoxScheme.Char) {
+        if(r.getValue() != test)
+            throw new Error("Expected "+test+" but got "+r.getValue()+" for "+expr)
+    }
+    else if(r != test) {
         throw new Error("Expected "+test+" but got "+r+" for "+expr)
+    }
+    return true;
 }
 var should_error = function(expr) {
     var interp = new $fs.Interpreter()
@@ -127,14 +134,6 @@ describe('Simple literals', {
         evto("#f", false)
         evto("#F", false)
     },
-    Strings: function() {
-        evto('""', "")
-        evto('"alpha!"', "alpha!")
-    },
-    "Unicode Strings": function() {
-        evto('"このファイルはUTF-8です"',
-              "このファイルはUTF-8です")
-    }
 })
 
 /*
@@ -357,6 +356,64 @@ describe("if", {
              "       (* x 2)))"+
              " 0)",
              5)
+    }
+})
+
+describe("Strings", {
+    "String literals": function() {
+        evto('""', "")
+        evto('"alpha!"', "alpha!")
+    },
+    "Unicode Strings": function() {
+        evto('"このファイルはUTF-8です"',
+              "このファイルはUTF-8です")
+    },
+    "make-string nulls": function() {
+        evto('(make-string 5)', "\0\0\0\0\0")
+        evto('(make-string 0)', "")
+    },
+    "make-string fill": function() {
+        evto('(make-string 5 #\\f)', "fffff")
+        evto('(make-string 0 #\\f)', "")
+    },
+    "make-string invalid": function() {
+        should_error("(make-string)")
+        should_error("(make-string #\\a")
+        should_error('(make-string 3 "a")')
+        should_error('(make-string 3 5)')
+    },
+    "string-length": function() {
+        evto('(string-length "fox!!")', 5)
+        evto('(string-length "")', 0)
+    },
+    "string-length invalid": function() {
+        should_error('(string-length #\\a)')
+        should_error('(string-length)')
+        should_error('(string-length "a" "bb")')
+    },
+    'string-ref': function() {
+        evto('(string-ref "FOX" 0)', function(x) {
+            assert_instanceof(x, FoxScheme.Char)
+            assert_equals(x.getValue(), "F")
+            return true
+        })
+        evto('(string-ref "fox!" 3)', '!')
+    },
+    'string-ref invalid': function() {
+        should_error('(string-ref "fox!" -1)')
+        should_error('(string-ref "fox!" 4)')
+    },
+    'string-set!': function() {
+        evto('(string-set! "abc" 0 #\\f)', FoxScheme.nothing)
+        evto('(begin (set! x "fox.")'+
+               '(set! y x)'+
+               '(string-set! x 3 #\\!)'+
+               '(string-ref y 3))',
+             '!')
+    },
+    'string-set! invalid': function() {
+        should_error('(string-set! "" 0 #\\f)')
+        should_error('(string-set! "a" 0 "a")')
     }
 })
 
