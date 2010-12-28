@@ -133,6 +133,9 @@ FoxScheme.Parser.prototype = {
 
                 /*
                  * Strings start and end with "
+                 * TODO: Strings should be an instantiated FoxScheme class,
+                 *   so that (eq? (make-string 3) (make-string 3)) => #f
+                 *   and so we can override toString()
                  */
                 if(t.length > 1 &&
                     t[0] == '"' &&
