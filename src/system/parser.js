@@ -22,25 +22,6 @@ FoxScheme.Parser = function(txt){
     this.i = 0;
 };
 FoxScheme.Parser.prototype = {
-    listify: function(arg, end) {
-        var list = end;
-        if(!end)
-            list = FoxScheme.nil;
-        /*
-         * Build a list out of an Array
-         */
-        if(arg instanceof Array) {
-            var i = arg.length;
-            while(i--) {
-                list = new FoxScheme.Pair(arg[i], list);
-            }
-        }
-        else
-            list = new FoxScheme.Pair(arg, list);
-
-        return list;
-    },
-
     inspect: function () {
         return ["#<Parser:", this.i, "/", this.tokens.length, " ", Object.inspect(this.tokens), ">"].join("");
     },
@@ -97,13 +78,13 @@ FoxScheme.Parser.prototype = {
                 return this.nextVector();
             case "'": // convert '... into (quote ...)
                 return new FoxScheme.Pair(new FoxScheme.Symbol("quote"),
-                                            this.listify(this.nextObject()));
+                                            FoxScheme.Util.listify(this.nextObject()));
             case "`":
                 return new FoxScheme.Pair(new FoxScheme.Symbol("quasiquote"),
-                                            this.listify(this.nextObject()));
+                                            FoxScheme.Util.listify(this.nextObject()));
             case ",":
                 return new FoxScheme.Pair(new FoxScheme.Symbol("unquote"),
-                                            this.listify(this.nextObject()));
+                                            FoxScheme.Util.listify(this.nextObject()));
             case "#t":
             case "#T":
                 return true;
@@ -166,14 +147,14 @@ FoxScheme.Parser.prototype = {
              */
             if(t === ")" || t === "]") {
                 this.i++;
-                return this.listify(list);
+                return FoxScheme.Util.listify(list);
             }
             /*
              * Check for improper list
              */
             if(t === ".") {
                 this.i++
-                var ls = this.listify(list, this.nextObject())
+                var ls = FoxScheme.Util.listify(list, this.nextObject())
                 if(this.tokens[this.i] !== ")" &&
                    this.tokens[this.i] !== "]")
                     throw new FoxScheme.Error("Only one item should follow dot (.)",  "FoxScheme.Parser")

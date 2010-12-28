@@ -26,68 +26,6 @@ FoxScheme.Interpreter.prototype = function() {
     this._globals = new FoxScheme.Hash();
   }
   /*
-   * Arrayify can convert both FoxScheme lists
-   * and arguments "arrays" into arrays
-   */
-  var arrayify = function(list) {
-    var ls = []
-    /*
-     * Converts a FoxScheme list into an array by
-     * walking the list
-     */
-    if(list instanceof FoxScheme.Pair ||
-       list === FoxScheme.nil) {
-      while(list instanceof FoxScheme.Pair) {
-        ls.push(list.car())
-        list = list.cdr()
-      }
-      /*
-       * Check if last item is improper (not nil)
-       * This means that '(1 2 . 3) => [1, 2, 3] !!
-       * Careful!
-       */
-      if(!(list === FoxScheme.nil))
-        ls.push(list)
-    }
-    /*
-     * Converts arguments into an array
-     */
-    else {
-      var i = list.length
-      while(i--)
-        ls[i] = list[i]
-    }
-    return ls;
-  }
-
-  /*
-   * Listify converts an array into a FoxScheme list
-   */
-  listify = function(arg, end) {
-    /*
-     * "end" allows us to override what goes at the
-     * end of the list (the empty list by default)
-     */
-    var list = end;
-    if(!end)
-      list = FoxScheme.nil;
-    /*
-     * Build a list out of an Array
-     */
-    if(arg instanceof Array || arg.length !== undefined) {
-      var i = arg.length;
-      while(i--) {
-        list = new FoxScheme.Pair(arg[i], list);
-      }
-    }
-    else
-      list = new FoxScheme.Pair(arg, list);
- 
-    return list;
-  }
-
-
-  /*
    * Checks if an array contains an item by doing
    * simple for loop through the keys
    */
@@ -190,7 +128,7 @@ FoxScheme.Interpreter.prototype = function() {
               return new FoxScheme.InterpretedProcedure(
                 function() {
                   var newenv = env.clone()
-                  newenv.set(sym, listify(arguments))
+                  newenv.set(sym, FoxScheme.Util.listify(arguments))
                   return that.eval(body, newenv)
                 },
                 0,     // minimum number of args
@@ -199,7 +137,7 @@ FoxScheme.Interpreter.prototype = function() {
             else if(params instanceof FoxScheme.Pair) {
               // (lambda (a b c) body)
               if(params.isProper()) {
-                params = arrayify(params)
+                params = FoxScheme.Util.arrayify(params)
                 return new FoxScheme.InterpretedProcedure(
                   function() {
                     var newenv = env.clone()
@@ -214,12 +152,12 @@ FoxScheme.Interpreter.prototype = function() {
               }
               // (lambda (a b . c) body)
               else {
-                params = arrayify(params)
+                params = FoxScheme.Util.arrayify(params)
                 return new FoxScheme.InterpretedProcedure(
                   function () {
                     var newenv = env.clone()
                     // (a b . c) => [a, b, c]
-                    var args = arrayify(arguments)
+                    var args = FoxScheme.Util.arrayify(arguments)
                     // process everything but last item
                     var i = params.length - 1
                     while(i--) {
@@ -227,7 +165,7 @@ FoxScheme.Interpreter.prototype = function() {
                     }
                     // now process the last item to be a new list of 
                     // everything else
-                    newenv.set(params[params.length - 1].name(), listify(args.slice(params.length - 1)))
+                    newenv.set(params[params.length - 1].name(), FoxScheme.Util.listify(args.slice(params.length - 1)))
 
                     // now that environment is all set up
                     return that.eval(body, newenv)
@@ -314,7 +252,7 @@ FoxScheme.Interpreter.prototype = function() {
           throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
 
         // something like (map eval (cdr expr))
-        var args = arrayify(expr.cdr())
+        var args = FoxScheme.Util.arrayify(expr.cdr())
         for(var i in args) {
           args[i] = this.eval(args[i], env)
         }

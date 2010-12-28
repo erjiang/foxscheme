@@ -18,6 +18,7 @@ src/system/string.js \
 src/system/pair.js \
 src/system/vector.js \
 src/system/hash.js \
+src/system/util.js \
 src/system/parser.js \
 src/system/procedure.js \
 src/system/native.js \
