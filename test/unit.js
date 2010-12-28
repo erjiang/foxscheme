@@ -261,6 +261,23 @@ describe("if", {
     Truthy: function () {
         evto("(if 3 5 1)", 5)
         evto("(if '() 5 1)", 5)
+    },
+    /*
+     * Catches a bug in which the local env
+     * wasn't passed to the if statement
+     */
+    Scope: function() {
+        evto("((lambda (x)"+
+             "   (if (= x 1)"+
+             "     5    3))"+
+             " 1)",
+             5)
+        evto("((lambda (x)"+
+             "   (if #t"+
+             "       (+ x 5)"+
+             "       (* x 2)))"+
+             " 0)",
+             5)
     }
 })
 
@@ -335,9 +352,9 @@ describe("begin", {
 })
 
 describe("set!", {
-    evals: function() {
+    evaluates: function() {
         // just making sure
-        evto("(set! x 5)")
+        evto("(set! x 5)", FoxScheme.nothing)
     },
     echo: function() {
         evto("(begin (set! x 5) x)", 5)
@@ -350,6 +367,20 @@ describe("set!", {
         should_error("(set! 5 2)")
         should_error("(begin (set! x '(1 . 2)) "+
                             "(set! (car x) 5) x)")
+    },
+    recursion: function() {
+        // set! should put the new var in scope for
+        // the lambda
+        evto("(begin "+
+             "(set! fact "+
+             "  (trace-closure 'fact "+
+             "  (lambda (x)"+
+             "    (if (= x 1)"+
+             "        x"+
+             "        (* x (fact (- x 1))))))"+
+             ")"+
+             "(fact 5))",
+             120)
     }
 })
 
@@ -365,5 +396,21 @@ describe("Scope", {
          * in scope when the inner lambda was defined
          */
         should_error("((lambda (x y) (y)) 5 (lambda () x))")
+    },
+    "set! globals": function() {
+        /*
+         * set!ing globals should not affect lambda vars
+         */
+        evto("(begin (set! x 2) ((lambda (x) x) 5))", 5)
+    },
+    "set! globals 2": function() {
+        /*
+         * However, unbound global vars can be set!'d
+         */
+        evto("(begin "+
+                " (set! y (lambda () x))"+
+                " (set! x 5)"+
+                " (y))",
+                5)
     }
 })

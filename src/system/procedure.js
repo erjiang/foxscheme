@@ -126,6 +126,7 @@ FoxScheme.InterpretedProcedure.prototype = function() {
                 this.improper = false;
     }
     constructor.fapply = function(ls) {
+        console.log("Applying IP to "+ls.join())
         /*
          * Check for invalid number of params
          */
