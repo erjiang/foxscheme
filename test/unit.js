@@ -550,3 +550,28 @@ describe("Scope", {
                 5)
     }
 })
+
+describe('Miscellaneous', {
+    // the first exercise from The Seasoned Schemer,
+    // rewritten without 'cond' or 'or'
+    'two-in-a-row?': function() {
+        evto("(begin "+
+             "(set! is-first?"+
+             "  (lambda (a lat)"+
+             "   (if (null? lat)"+
+             "    #f"+
+             "    (eq? (car lat) a))))"+
+             "(set! two-in-a-row?"+
+             "  (lambda (lat)"+
+             "    (if (null? lat)"+
+             "         #f"+
+             "         (if (is-first? (car lat) (cdr lat))"+
+             "             #t"+
+             "             (two-in-a-row? (cdr lat))))))"+
+             "(if (two-in-a-row? '(f o x sc he me))"+
+             "    #f"+
+             "    (two-in-a-row? '(8 6 7 5 3 0 0 9)))"+
+             ")",
+             true)
+    }
+})
