@@ -22,6 +22,7 @@ src/system/util.js \
 src/system/parser.js \
 src/system/procedure.js \
 src/system/native.js \
+src/system/expand.js \
 src/system/interpreter.js
 
 OUTPUT=bin/foxscheme.js

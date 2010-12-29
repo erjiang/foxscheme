@@ -549,6 +549,64 @@ describe("Scope", {
     }
 })
 
+/*
+ * Tests the native gensym functionality
+ */
+describe("gensym", {
+    "unique": function() {
+        var x1 = $fs.Symbol.gensym("x")
+        var x2 = $fs.Symbol.gensym("x")
+        assert_true(x1.name() !== x2.name())
+    },
+    "(gensym)": function() {
+        evto("(gensym)", function(x) {
+            assert_instanceof(x, FoxScheme.Symbol)
+            return true
+        })
+        evto("(eq? (gensym) (gensym))", false)
+    },
+    '(gensym "x")': function() {
+        evto('(gensym "x")', function(x) {
+            assert_instanceof(x, FoxScheme.Symbol)
+            assert_true(x.name() !== "x")
+            return true
+        })
+        evto('(eq? (gensym "x") (gensym "x"))', false)
+    }
+})
+
+/* 
+ * Tests the macro expander
+ */
+describe("Simple Expand", {
+    gensyms: function() {
+        // (lambda (x) (+ x y))
+        // => (lambda (<gensym>) (+ <gensym> y))
+        var e = new $fs.Expand()
+        var p = new $fs.Parser("(lambda (x) (+ x y))")
+        var r = e.expand(p.nextObject())
+        assert_true(r.second().car().name() !== "x")
+        // make sure the two x's become the same thing
+        assert_equals(r.second().car(),
+                    r.third().second())
+        // make sure the y didn't change
+        assert_equals(r.third().third().name(), "y")
+    },
+    /*
+     * (lambda (x y) x y)
+     * => (lambda (<gensym-x> <gensym-y>) (begin <gensym-x> <gensym-y>))
+     */
+    "lambda implicit begin": function() {
+        var e = new $fs.Expand()
+        var p = new $fs.Parser("(lambda (x y) x y)")
+        var r = e.expand(p.nextObject())
+        assert_true(r.second().car().name() !== "x")
+        assert_equals(r.second().car(), r.third().second())
+        assert_equals(r.second().second(), r.third().third())
+        assert_equals(r.third().car().name(), "begin")
+    }
+})
+
 describe("Bugs", {
     /*
      * This test catches a bug in which the variable 'i' in a for loop wasn't
@@ -586,3 +644,4 @@ describe('Miscellaneous', {
              true)
     }
 })
+
