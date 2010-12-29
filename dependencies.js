@@ -55,6 +55,8 @@ for(var i = 0; i < arguments.length; i++) {
     }
 }
 
+print("digraph FoxScheme {")
+
 for(var i in nodes) {
     print(['"',nodes[i],'"'].join(""))
 }
@@ -62,3 +64,5 @@ for(var i in nodes) {
 for(var i in edges) {
     print(i)
 }
+
+print("}")
