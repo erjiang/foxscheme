@@ -74,5 +74,22 @@ FoxScheme.Util = {
     }
     return ls;
   }
+    /*
+     * Map a function to a list
+     */
+    ,
+    map: function(func, ls) {
+        if(!(ls instanceof FoxScheme.Pair))
+            throw new FoxScheme.Bug("Attempt to map on non-list "+ls)
+        if(!ls.isProper())
+            throw new FoxScheme.Bug("Attempt to map on improper list "+ls)
+
+        var arr = FoxScheme.Util.arrayify(ls)
+        var i = arr.length
+        while(i--) {
+            arr[i] = func(arr[i])
+        }
+        return FoxScheme.Util.listify(arr)
+    }
 }
 
