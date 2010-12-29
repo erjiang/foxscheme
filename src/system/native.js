@@ -280,17 +280,6 @@ defun("string-ref", 2, 2,
     })
 
 /*
- * Boolean operator
- */
-defun("not", 1, 1,
-    function(v) {
-        if(v === false)
-            return true
-        else
-            return false
-    })
-
-/*
  * eq?
  */
 defun("eq?", 2, 2,
