@@ -77,7 +77,7 @@ FoxScheme.Expand.prototype = function() {
                 if(rator.name() === "lambda") {
                     // (lambda x body ...) case
                     if(bindings instanceof FoxScheme.Symbol) {
-                        newbindings = FoxScheme.Symbol.gensym(bindings.name())
+                        newbindings = new FoxScheme.Gensym(bindings.name())
                         newenv.set(bindings.name(), newbindings)
                     }
                     // (lambda (a b c ...) body ...)
@@ -90,7 +90,7 @@ FoxScheme.Expand.prototype = function() {
                                         bindarr[i], "Expand")
 
                             var oldsym = bindarr[i].name()
-                            bindarr[i] = FoxScheme.Symbol.gensym(oldsym)
+                            bindarr[i] = new FoxScheme.Gensym(oldsym)
                             newenv.set(oldsym, bindarr[i])
                             if(bindings.isProper()) {
                                 newbindings = FoxScheme.Util.listify(bindarr)
@@ -133,7 +133,7 @@ FoxScheme.Expand.prototype = function() {
                                 throw new FoxScheme.Error("In let statement, cannot bind "+oldvar, "Expand")
 
                             // replace lhs with gensym, expand rhs
-                            var newlhs = FoxScheme.Symbol.gensym(lhs.name())
+                            var newlhs = new FoxScheme.Gensym(lhs.name())
                             var rhs = this.expand(bindarr[i].second(), env)
                             
                             // augment the environment and replace the binding

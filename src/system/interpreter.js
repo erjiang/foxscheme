@@ -39,7 +39,7 @@ FoxScheme.Interpreter.prototype = function() {
 
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
-  var syntax = ["lambda", "begin", "if", "set!", "quote"]
+  var syntax = ["lambda", "let", "begin", "if", "set!", "quote"]
 
   /*
    * eval makes up most of the interpreter.  It is a simple cased
@@ -184,6 +184,38 @@ FoxScheme.Interpreter.prototype = function() {
               throw new FoxScheme.Error("Invalid parameter list in "+expr)
             }
             break;
+          /*
+           * This section is a lot like that for lambda as
+           * far as syntax checks go
+           */
+          case "let":
+            if(expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+expr)
+            var body = expr.third()
+            var bindings = expr.second()
+            /*
+             * Well, the macro expander should do this
+             * optimization, but we can't assume the expander
+             */
+            if(bindings === FoxScheme.nil)
+              return this.eval(body, env)
+
+            else if(bindings instanceof FoxScheme.Pair) {
+              var newenv = env.clone()
+              var bindarr = FoxScheme.Util.arrayify(bindings)
+              var i = bindarr.length
+              while(i--) {
+                // check binding syntax
+                if(bindarr[i].length() !== 2)
+                  throw new FoxScheme.Error("Invalid syntax for let binding: "+bindings)
+                if(!(bindarr[i].car() instanceof FoxScheme.Symbol))
+                  throw new FoxScheme.Error("Cannot bind "+bindarr[i].car()+" in "+bindings)
+                newenv.set(bindarr[i].car().name(),
+                    this.eval(bindarr[i].second(), env))
+              }
+              return this.eval(body, newenv)
+            }
+
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
               return FoxScheme.nothing

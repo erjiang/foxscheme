@@ -5,6 +5,10 @@ FoxScheme.Symbol = function(name) {
         return null;
     }
 
+    // allow us to subclass without going through this initialization
+    if(name === false)
+        return;
+
     // check to see if the symbol name is proper
     if(name === null)
         throw new FoxScheme.Error("Tried to create a symbol without a name");
@@ -25,15 +29,31 @@ FoxScheme.Symbol.prototype = {
     toString: function() { return this._name; },
     name: function() { return this._name }
 };
-FoxScheme.Symbol.gensymcount = 0
-FoxScheme.Symbol.gensym = function(name) {
-    if(name === undefined)
-        name = "g"
 
-    FoxScheme.Symbol.gensymcount++;
-    return new FoxScheme.Symbol(
-            "_"+name+"__fox"+
-            // randomness unneeded
-            //(new Date()).getMilliseconds()+
-            "-"+FoxScheme.Symbol.gensymcount)
+FoxScheme.Gensym = function() {
+    if(!(this instanceof FoxScheme.Gensym))
+        throw new FoxScheme.Bug("Improper use of FoxScheme.Gensym()")
+
+    this.initialize.apply(this, arguments)
 }
+FoxScheme.Gensym.gensymcount = 0
+FoxScheme.Gensym.printgensym = true
+FoxScheme.Gensym.prototype = function() {
+    var constructor = new FoxScheme.Symbol(false) // skip init
+    constructor.initialize = function(name) {
+        if(name === undefined)
+            name = "g"+FoxScheme.Gensym.gensymcount
+
+        this._shortname = name
+        this._name = "_"+name+"__fox-"+FoxScheme.Gensym.gensymcount
+
+        FoxScheme.Gensym.gensymcount++
+    }
+    constructor.toString = function() {
+        if(FoxScheme.Gensym.printgensym)
+            return ["#{",this._shortname," ",this._name,"}"].join("")
+        else
+            return this._shortname
+    }
+    return constructor;
+}();
