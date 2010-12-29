@@ -323,5 +323,14 @@ defun("gensym", 0, 1,
         return FoxScheme.Symbol.gensym(name)
     })
 
+/*
+ * System stuff
+ */
+defun("expand", 1, 1,
+    function(expr) {
+        var e = new FoxScheme.Expand()
+        return e.expand(expr)
+    })
+
 return funcs;
 }();

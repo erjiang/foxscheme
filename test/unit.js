@@ -640,6 +640,16 @@ describe("Simple Expand", {
         assert_equals(r.car().name(), "begin")
         // make sure answer is still correct
         evto(r, 5)
+    },
+    /*
+     * Provide an (expand <expr>) function to Scheme
+     */
+    "(expand)": function() {
+        evto("(expand '(let () x))", function(sym) {
+            assert_instanceof(sym, FoxScheme.Symbol)
+            assert_equals(sym.name(), "x")
+            return true
+        })
     }
 })
 
