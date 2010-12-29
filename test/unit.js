@@ -320,6 +320,9 @@ describe('Lambdas', {
         evto("((lambda (a b . c) (car c)) 1 2 5)", 5)
         evto("((lambda (a b . c) b) 1 5 2)", 5)
     },
+    'empty improper params': function () {
+        evto("((lambda (x y . z) z) 3 4)", FoxScheme.nil)
+    },
     'nested lambdas': function () {
         // the inner x should shadow the outer x
         evto(" ((lambda (x) ((lambda (x) x) 5) ) 2) ", 5)
