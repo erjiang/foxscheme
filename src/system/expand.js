@@ -57,24 +57,32 @@ FoxScheme.Expand.prototype = function() {
                 var rator = this.expand(expr.first(), env)
                 // don't keep going if it's not syntax
                 // TODO: better organize this part
+                // (cons rator (map expand (cdr expr)))
                 if(rator.name() !== "lambda" && rator.name() !== "let") {
                     var that = this
                     return new FoxScheme.Pair(rator,
                             FoxScheme.Util.map(function (x) {
                                 return that.expand(x, env) }, expr.cdr()))
                 }
+                /* 
+                 * Now that we know for sure it's lambda or let syntax, check
+                 * to make sure it's complete
+                 */
+                if(expr.length() < 3)
+                    throw new FoxScheme.Error("Invalid syntax: "+expr)
                 var newenv = env.clone()
-                var bindings
+                var bindings = expr.second()
+                var newbindings
                 var body
                 if(rator.name() === "lambda") {
                     // (lambda x body ...) case
-                    if(expr.second() instanceof FoxScheme.Symbol) {
-                        bindings = FoxScheme.Symbol.gensym(expr.second().name())
-                        newenv.set(expr.second().name(), bindings)
+                    if(bindings instanceof FoxScheme.Symbol) {
+                        newbindings = FoxScheme.Symbol.gensym(bindings.name())
+                        newenv.set(bindings.name(), newbindings)
                     }
                     // (lambda (a b c ...) body ...)
-                    else if(expr.second() instanceof FoxScheme.Pair) {
-                        var bindarr = FoxScheme.Util.arrayify(expr.second())
+                    else if(bindings instanceof FoxScheme.Pair) {
+                        var bindarr = FoxScheme.Util.arrayify(bindings)
                         var i = bindarr.length
                         while(i--) {
                             if(!(bindarr[i] instanceof FoxScheme.Symbol))
@@ -84,19 +92,57 @@ FoxScheme.Expand.prototype = function() {
                             var oldsym = bindarr[i].name()
                             bindarr[i] = FoxScheme.Symbol.gensym(oldsym)
                             newenv.set(oldsym, bindarr[i])
-                            if(expr.second().isProper()) {
-                                bindings = FoxScheme.Util.listify(bindarr)
+                            if(bindings.isProper()) {
+                                newbindings = FoxScheme.Util.listify(bindarr)
                             } else {
+                                // TODO: Improper lambda bindings
                                 throw new FoxScheme.Bug("TODO: Improper lambda bindings ...", "Expand")
                             }
                         }
                     }
                     // (lambda () body)
-                    else if(expr.second() === FoxScheme.nil) {
-                        bindings = FoxScheme.nil
+                    else if(bindings === FoxScheme.nil) {
+                        newbindings = FoxScheme.nil
                     }
                     else
                         throw new FoxScheme.Error("Invalid parameter list in "+expr, "Expand")
+                }
+                /*
+                 * Let bindings:
+                 *
+                 * (let ((x 5) (y 6))
+                 *   (let ((z x) (w v))
+                 *     (+ w x y z))) =>
+                 *
+                 * (let ((_g_x-1 5) (_g_y-2 6))
+                 *   (let ((_g_z-3 _g_x-1) (_g_w-4 v))
+                 *     (+ _g_w-4 _g_x-1 _g_y-2 _g_z-3)))
+                 */
+                else if(rator.name() === "let") {
+                    if(bindings === FoxScheme.nil)
+                        body = FoxScheme.nil
+                    else {
+                        var bindarr = FoxScheme.Util.arrayify(bindings)
+                        var i = bindarr.length
+                        while(i--) {
+                            // error checking
+                            if(!(bindarr[i] instanceof FoxScheme.Pair))
+                                throw new FoxScheme.Error("Invalid binding in let: "+bindarr[i], "Expand")
+                            var lhs = bindarr[i].car()
+                            if(!(lhs instanceof FoxScheme.Symbol))
+                                throw new FoxScheme.Error("In let statement, cannot bind "+oldvar, "Expand")
+
+                            // replace lhs with gensym, expand rhs
+                            var newlhs = FoxScheme.Symbol.gensym(lhs.name())
+                            var rhs = this.expand(bindarr[i].second(), env)
+                            
+                            // augment the environment and replace the binding
+                            newenv.set(lhs.name(), newlhs)
+                            //bindarr[i] = FoxScheme.Util.listify([newlhs, rhs])
+                            bindarr[i] = new FoxScheme.Pair(newlhs, new FoxScheme.Pair(rhs, FoxScheme.nil))
+                        }
+                        newbindings = FoxScheme.Util.listify(bindarr)
+                    }
                 }
                 /*
                  * multiple bodies:
@@ -115,10 +161,13 @@ FoxScheme.Expand.prototype = function() {
                 else if(expr.length() === 3) {
                     body = this.expand(expr.third(), newenv)
                 }
-                else
-                    throw new FoxScheme.Error("No body in lambda: "+expr)
 
-                return FoxScheme.Util.listify([expr.car(), bindings, body])
+                // optimize (let () x) => x
+                if(rator.name() === "let" &&
+                   bindings === FoxScheme.nil)
+                    return body
+
+                return FoxScheme.Util.listify([expr.car(), newbindings, body])
             }
             // if the first element is not a symbol, then it's not a macro
             else { // if not symbol
@@ -126,7 +175,10 @@ FoxScheme.Expand.prototype = function() {
                 return FoxScheme.Util.map(function (expr) {
                     return that.expand(expr, env) }, expr)
             }
-            throw new FoxScheme.Bug("Expand fell through cases", "Expand")
+        }
+
+        else { // if not a symbol or pair
+            return expr
         }
     }
     return {

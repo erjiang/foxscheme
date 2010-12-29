@@ -6,9 +6,13 @@
 
 var evto = function(expr, test) {
     var interp = new $fs.Interpreter()
-    var p = new $fs.Parser(expr)
-    var e = p.nextObject()
-    var r;
+    var e, p, r
+    if(typeof(expr) === "string") {
+        p = new $fs.Parser(expr)
+        e = p.nextObject()
+    } else {
+        e = expr
+    }
     try {
         r = interp.eval(e)
     } catch (e) {
@@ -607,6 +611,35 @@ describe("Simple Expand", {
         assert_equals(r.second().car(), r.third().second())
         assert_equals(r.second().second(), r.third().third())
         assert_equals(r.third().car().name(), "begin")
+    }
+    ,
+    /*
+     * (let ((x 5)) x)
+     * => (let ((<gen-x> 5)) <gen-x>)
+     */
+    "let gensym": function() {
+        var e = new $fs.Expand()
+        var p = new $fs.Parser("(let ((x 5)) x)")
+        var o = p.nextObject()
+        var r = e.expand(o)
+        // make sure x got replaced
+        assert_true(o.third().name() !== r.third().name())
+        // make sure both occurrences of x got replaced
+        assert_equals(r.second().car().car(), r.third())
+        // make sure the answer is still the same
+    }
+    ,
+    /*
+     * (let () x y z) => (begin x y z)
+     */
+    "empty let": function() {
+        var e = new $fs.Expand()
+        var p = new $fs.Parser("(let () (set! x 2) (set! y 3) (+ x y))")
+        var o = p.nextObject()
+        var r = e.expand(o)
+        assert_equals(r.car().name(), "begin")
+        // make sure answer is still correct
+        evto(r, 5)
     }
 })
 
