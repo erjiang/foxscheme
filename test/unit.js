@@ -643,5 +643,33 @@ describe('Miscellaneous', {
              ")",
              true)
     }
+    ,
+    /*
+     * Length by Y Combinator, copied from BiwaScheme
+     */
+    'Y combinator': function() {
+        evto("(((lambda (f) ((lambda (proc) (f (lambda (arg) ((proc proc) arg)))) (lambda (proc) (f (lambda (arg) ((proc proc) arg)))))) (lambda (self) (lambda (ls) (if (null? ls) 0 (+ 1 (self (cdr ls))))))) '(1 2 3 4 5))",
+             5)
+    }
+    ,
+    /*
+     * Length by Y Combinator, tail-recursive, copied from
+     * BiwaScheme
+     */
+    'Y combinator (tail recursive)': function() {
+        evto("(((lambda (f) ((lambda (proc) (f (lambda (arg1 arg2) ((proc proc) arg1 arg2)))) (lambda (proc) (f (lambda (arg1 arg2) ((proc proc) arg1 arg2)))))) (lambda (self) (lambda (ls acc) (if (null? ls) acc (self (cdr ls) (+ 1 acc)))))) '(1 2 3 4 5) 0)",
+             5)
+    }
+    ,
+    /*
+     * AddN function generator
+     */
+    addN: function() {
+        evto("(begin (set! addN"+
+               "(lambda (n) (lambda (x) (+ x n))))"+
+               "(set! add7 (addN 7))"+
+               "(add7 -2))",
+             5)
+    }
 })
 
