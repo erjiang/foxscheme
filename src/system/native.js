@@ -320,6 +320,23 @@ defun("expand", 1, 1,
         var e = new FoxScheme.Expand()
         return e.expand(expr)
     })
+defun("error", 2, undefined,
+    function(who, message) {
+        if(!(who instanceof FoxScheme.Symbol) &&
+           !(who instanceof FoxScheme.String))
+            throw new FoxScheme.Error("who must be a symbol or string", "error")
+        if(!(message instanceof FoxScheme.String))
+            throw new FoxScheme.Error("message must be a string", "error")
+
+        var whoStr = (who instanceof FoxScheme.Symbol) ? who.name() : who.getValue()
+        if(arguments.length > 2) {
+            var irritants = FoxScheme.Util.arrayify(arguments).slice(2).join(" ")
+            // we actually want to throw an error
+            throw new FoxScheme.Error(message+" with irritants ("+irritants+")", whoStr)
+        } else {
+            throw new FoxScheme.Error(message, whoStr)
+        }
+    })
 
 return funcs;
 }();
