@@ -12,6 +12,7 @@ FILES=src/fox.js \
 src/system/nil.js \
 src/system/error.js \
 src/system/boolean.js \
+src/system/number.js \
 src/system/symbol.js \
 src/system/char.js \
 src/system/string.js \
