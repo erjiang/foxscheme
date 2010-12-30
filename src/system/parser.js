@@ -76,6 +76,15 @@ FoxScheme.Parser.prototype = {
             case "#(":
             case "#[":
                 return this.nextVector();
+            case "#{":
+                if(this.tokens[this.i + 2] !== "}")
+                    throw new FoxScheme.Error("Invalid gensym literal: #{"+
+                            this.tokens[this.i]+" "+this.tokens[this.i + 1]+
+                            this.tokens[this.i + 2])
+                var r = new FoxScheme.Gensym(this.tokens[this.i],
+                                             this.tokens[this.i + 1])
+                this.i += 3
+                return r;
             case "'": // convert '... into (quote ...)
                 return new FoxScheme.Pair(new FoxScheme.Symbol("quote"),
                                             FoxScheme.Util.listify(this.nextObject()));

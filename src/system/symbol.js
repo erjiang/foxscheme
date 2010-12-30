@@ -40,12 +40,16 @@ FoxScheme.Gensym.gensymcount = 0
 FoxScheme.Gensym.printgensym = true
 FoxScheme.Gensym.prototype = function() {
     var constructor = new FoxScheme.Symbol(false) // skip init
-    constructor.initialize = function(name) {
-        if(name === undefined)
-            name = "g"+FoxScheme.Gensym.gensymcount
+    constructor.initialize = function(shortname, name) {
+        if(shortname === undefined)
+            shortname = "g"+FoxScheme.Gensym.gensymcount
 
-        this._shortname = name
-        this._name = "_"+name+"__fox-"+FoxScheme.Gensym.gensymcount
+        this._shortname = shortname
+
+        if(name === undefined)
+            this._name = "_"+shortname+"__fox-"+FoxScheme.Gensym.gensymcount
+        else
+            this._name = name
 
         FoxScheme.Gensym.gensymcount++
     }
