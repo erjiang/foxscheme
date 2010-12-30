@@ -188,7 +188,7 @@ describe('Native arithmetic', {
 
 /*
  * Boolean stuff like 'not'
- */
+ * (commented out because it's not native)
 describe('Booleans', {
     not: function() {
         evto("(not #f)", true)
@@ -202,6 +202,7 @@ describe('Booleans', {
         should_error("(not)")
     }
 })
+ */
 
 /*
  * Equality checking
@@ -561,8 +562,8 @@ describe("Scope", {
  */
 describe("gensym", {
     "unique": function() {
-        var x1 = $fs.Symbol.gensym("x")
-        var x2 = $fs.Symbol.gensym("x")
+        var x1 = new $fs.Gensym("x")
+        var x2 = new $fs.Gensym("x")
         assert_true(x1.name() !== x2.name())
     },
     "(gensym)": function() {
