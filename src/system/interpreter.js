@@ -11,7 +11,10 @@
  *     var i = new FoxScheme.Interpreter();
  *     while((var expr = p.nextObject()) != p.EOS)
  *         print(i.this.eval(expr))
+ *
+ * vim:sw=2 ts=2
  */
+lastevald = []
 FoxScheme.Interpreter = function() {
     if(!(this instanceof FoxScheme.Interpreter)) {
         throw FoxScheme.Error("Improper use of FoxScheme.Interpreter()")
@@ -39,7 +42,8 @@ FoxScheme.Interpreter.prototype = function() {
 
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
-  var syntax = ["lambda", "let", "begin", "if", "set!", "quote"]
+  var syntax = ["lambda", "let", "letrec", "interaction-environment", "begin", "if",
+      "set!", "define", "quote"]
 
   /*
    * eval makes up most of the interpreter.  It is a simple cased
@@ -69,6 +73,8 @@ FoxScheme.Interpreter.prototype = function() {
     if(env === undefined)
       var env = new FoxScheme.Hash();
 
+    lastevald.push(expr)
+
     /*
      * Symbol:
      * Look up the symbol first in the env, then in this instance's
@@ -79,17 +85,20 @@ FoxScheme.Interpreter.prototype = function() {
         var val
         if((val = env.get(sym)) === undefined)
           if((val = this._globals.get(sym)) === undefined)
-            if((val = FoxScheme.nativeprocedures.get(sym)) === undefined)
+            if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
               if(contains(syntax, sym))
                 throw new FoxScheme.Error("Invalid syntax "+sym)
-              else
-                throw new FoxScheme.Error("Unbound symbol "+expr)
+              else {
+                irritant = expr
+                throw new FoxScheme.Error("Unbound symbol "+expr.toString()+" ("+sym+")")
+              }
+            }
 
         return val;
     }
 
     /*
-     * List:
+     * List: (rator rand1 rand2 ...)
      * Eval the first item and make sure it's a procedure.  Then,
      * apply it to the rest of the list.
      */
@@ -185,8 +194,15 @@ FoxScheme.Interpreter.prototype = function() {
             }
             break;
           /*
+           * Yes, "let" can be converted to immediately-applied lambdas,
+           * but implementing it natively is quite a bit simpler and doesn't
+           * involve creating and then immediately consuming a lambda (which
+           * may be quite expensive). Additionally, an immediately-applied
+           * lambda of the form ((lambda (x) x) 5)
+           * may be optimized to be (let ((x 5)) x) instead.
+           *
            * This section is a lot like that for lambda as
-           * far as syntax checks go
+           * far as syntax checks go.
            */
           case "let":
             if(expr.length() < 3)
@@ -215,7 +231,41 @@ FoxScheme.Interpreter.prototype = function() {
               }
               return this.eval(body, newenv)
             }
+          /* TODO: Read Dybvig, Ghuloum, "Letrec reloaded"
+           * This code is much like let, except that each rhs is evaluated with
+           * NEWENV instead of ENV
+           */
+          case "letrec":
+            if(expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+expr)
+            var body = expr.third()
+            var bindings = expr.second()
+            // see note above at: [case "let":]
+            if(bindings === FoxScheme.nil)
+              return this.eval(body, env)
 
+            else if(bindings instanceof FoxScheme.Pair) {
+              var newenv = env.clone()
+              var bindarr = FoxScheme.Util.arrayify(bindings)
+              var i = bindarr.length
+              while(i--) {
+                // check binding syntax
+                if(bindarr[i].length() !== 2)
+                  throw new FoxScheme.Error("Invalid syntax for letrec binding: "+bindings)
+                if(!(bindarr[i].car() instanceof FoxScheme.Symbol))
+                  throw new FoxScheme.Error("Cannot bind "+bindarr[i].car()+" in "+bindings)
+                newenv.set(bindarr[i].car().name(),
+                    /*
+                     * The only difference between letrec and let is that we
+                     * eval each rhs with NEWENV instead of ENV. Since NEWENV
+                     * is an object, modifying NEWENV here will also affect any
+                     * captured references to NEWENV in lambdas in the rhs,
+                     * allowing recursion to work
+                     */
+                    this.eval(bindarr[i].second(), newenv))
+              }
+            }
+            return this.eval(body, newenv);
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
               return FoxScheme.nothing
@@ -246,7 +296,19 @@ FoxScheme.Interpreter.prototype = function() {
             else
               return this.eval(expr.fourth(), env)
             break;
+          /*
+           * We define define to be set! because psyntax.pp depends on define
+           * being available, but we cannot (set! define set!) because set! is
+           * syntax and we do not have first-class syntax, and we cannot write
+           * a macro to do so without psyntax.pp!
+           * 
+           * In FoxScheme, define is exactly set!, unlike Chez Scheme, which
+           * allows you to (define + *) but not (set! + *)
+           */
+          case "define":
           case "set!":
+            if(sym=="set!")
+                setbangs++
             if(expr.length() !== 3)
               throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
 
@@ -270,15 +332,37 @@ FoxScheme.Interpreter.prototype = function() {
             }
             return FoxScheme.nothing;
             break;
+          /*
+           * This is for compatibility with psyntax.pp, which needs eval-core. 
+           *
+           * (define (eval-core expr)
+           *   (eval expr (interaction-environment)))
+           *
+           * i.e. evaluate expr in the TOP-LEVEL environment. To accomplish
+           * this, eval is defined in src/system/native.js and eval-core
+           * defined in fox.r6rs.ss, but native procedures have no way of
+           * getting the top-level environment since they don't have access to
+           * the interpreter.  Thus, interaction-environment is implemented in
+           * Interpreter.
+           */
+          case "interaction-environment":
+            if(expr.length() !== 1)
+              throw new FoxScheme.Error("Invalid syntax "+expr)
+            return this._globals;
+          /*
+           * this will only happen if a keyword is in the syntax list
+           * but there is no case for it
+           */
           default:
-            // this will only happen if a keyword is in the syntax list
-            // but there is no case for it
             throw new FoxScheme.Bug("Unknown syntax "+sym, "Interpreter")
             break;
         }
       }
       // means that first item is not syntax
       else {
+        if(expr.car() instanceof FoxScheme.Symbol &&
+                expr.car().name() == "x")
+            print("about to eval x in: "+expr.toString())
         var proc = this.eval(expr.car(), env)
         if(!(proc instanceof FoxScheme.Procedure))
           throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)

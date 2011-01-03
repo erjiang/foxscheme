@@ -17,6 +17,16 @@ FoxScheme.Pair.prototype = {
     car: function() {
         return this._car;
     },
+    setCar: function(v) {
+        var r = this._car
+        this._car = v
+        return r
+    },
+    setCdr: function(v) {
+        var r = this._cdr
+        this._cdr = v
+        return r
+    },
     cdr: function() {
         return this._cdr;
     },

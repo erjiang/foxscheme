@@ -174,15 +174,21 @@ defun("pair?", 1, 1,
     function(p) {
         return p instanceof FoxScheme.Pair
     })
-
 defun("number?", 1, 1,
     function(n) {
         return isNumber(n)
     })
-
 defun("symbol?", 1, 1,
     function(s) {
         return s instanceof FoxScheme.Symbol
+    })
+defun("procedure?", 1, 1,
+    function(p) {
+        return p instanceof FoxScheme.Procedure
+    })
+defun("string?", 1, 1,
+    function(s) {
+        return s instanceof FoxScheme.String
     })
 
 /*
@@ -297,6 +303,27 @@ defun("eq?", 2, 2,
     })
 
 /*
+ * Function stuff
+ */
+defun("apply", 2, undefined,
+    function(proc) {
+        if(!(proc instanceof FoxScheme.Procedure))
+            throw new FoxScheme.Error("Attempt to apply non-procedure", "apply")
+        var args = FoxScheme.Util.arrayify(arguments).slice(1, -1)
+        var lastarg = arguments[arguments.length - 1]
+        if(lastarg === FoxScheme.nil) {
+            // do nothing
+        }
+        else if(lastarg instanceof FoxScheme.Pair) {
+            args = args.concat(FoxScheme.Util.arrayify(lastarg))
+        }
+        else {
+            throw new FoxScheme.Error("Last argument to apply must be a list", "apply")
+        }
+        return proc.fapply(args)
+    })
+
+/*
  * Symbols
  */
 defun("gensym", 0, 1,
@@ -315,6 +342,14 @@ defun("gensym", 0, 1,
 /*
  * System stuff
  */
+// for use with psyntax
+defun("eval", 1, 2,
+    function(expr, globals) {
+        var i = new $fs.Interpreter()
+        if(globals !== undefined)
+            i._globals = globals.clone()
+        return i.eval(expr)
+    })
 defun("expand", 1, 1,
     function(expr) {
         var e = new FoxScheme.Expand()
