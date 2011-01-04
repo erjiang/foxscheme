@@ -190,6 +190,20 @@ defun("string?", 1, 1,
     function(s) {
         return s instanceof FoxScheme.String
     })
+defun("set-car!", 2, 2,
+    function(p, v) {
+        if(!(p instanceof FoxScheme.Pair))
+            throw new FoxScheme.Error(p+" is not a pair", "set-car!")
+        p.setCar(v)
+        return FoxScheme.nothing
+    })
+defun("set-cdr!", 2, 2,
+    function(p, v) {
+        if(!(p instanceof FoxScheme.Pair))
+            throw new FoxScheme.Error(p+" is not a pair", "set-car!")
+        p.setCdr(v)
+        return FoxScheme.nothing
+    })
 
 /*
  * Vector ops
