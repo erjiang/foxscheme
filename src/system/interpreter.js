@@ -231,9 +231,18 @@ FoxScheme.Interpreter.prototype = function() {
               }
               return this.eval(body, newenv)
             }
-          /* TODO: Read Dybvig, Ghuloum, "Letrec reloaded"
+          /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
            * NEWENV instead of ENV
+           * This code is basically sound if used correctly, but doesn't catch
+           * the case where
+           * 
+           *   (let ([x 5])
+           *     (letrec ([x (+ 5 x)])
+           *       x))
+           *   => Error: Attempt to reference explicitly unbound var x
+           *
+           * TODO: Fix this by adding explicitly unbound vars
            */
           case "letrec":
             if(expr.length() < 3)
