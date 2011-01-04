@@ -21,14 +21,9 @@ FoxScheme.Util = {
     if(arg instanceof Array || 
         /*
          * We need to be able to listify arguments, even though arguments is
-         * not an Array, which we catch by checking for the length property.
-         * Unfortunately, this was a bug because FoxScheme.Pair has method
-         * "length" too, so manually exclude Pairs
-         * TODO: See if there's a better way to check if arguments
+         * not an Array, which we catch by checking for the callee property.
          */
-        (arg.length !== undefined &&
-         !(arg instanceof FoxScheme.Pair) &&
-         !(arg instanceof FoxScheme.Vector))) {
+        arg.callee) {
       var i = arg.length;
       while(i--) {
         list = new FoxScheme.Pair(arg[i], list);
