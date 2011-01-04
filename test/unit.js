@@ -348,6 +348,55 @@ describe('Lambdas', {
     }
 })
 
+describe("let", {
+    "basic let": function() {
+        evto("(let ((x 2) (y 3)) (+ x y))", 5)
+        evto("(let ((x 5) (z 2)) (+ x 0))", 5)
+    },
+    "refer globals": function() {
+        should_error("(let ((x 2)) (+ x y))")
+    },
+    "shadowing": function() {
+        evto("(let ((x 5) (y 3))"+
+               "(let ((x 2)) (+ x y)))",
+             5)
+    },
+    "refer above": function() {
+        evto("(let ((x 2) (y 3))"+
+               "(let ((x (+ x y))) x))",
+             5)
+    },
+    "not letrec": function() {
+        should_error("(let ((zero (lambda (n)"+
+                                   "(if (= n 0) #t"+
+                                     "(zero (- n 1))))))"+
+                        "(zero 10)")
+    }
+})
+
+/*
+ * These letrec tests do not currently check for the subtleties laid out by
+ * R6RS that were not in R5RS.
+ */
+describe("letrec", {
+    "Factorial": function() {
+        evto("(letrec ((fact (lambda (n)"+
+                              "(if (= n 0) 1"+
+                                "(* n (fact (- n 1)))))))"+
+               "(fact 5))",
+             120)
+    },
+    "Cannot bind self": function() {
+        should_error("(letrec ((circ (cons 1 (cons 2 circ))))"+
+                       "(+ 2 2))") // do nothing to avoid infinite loop
+    },
+    "Cannot bind self even if it's in scope above": function() {
+        should_error("(let ((x 5))"+
+                       "(letrec ((x (+ x 5)))"+
+                         "x))") // should error!
+    }
+})
+
 describe("if", {
     "Basic if": function() {
         evto("(if #t 5 1)", 5)
