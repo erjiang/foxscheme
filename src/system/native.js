@@ -354,6 +354,32 @@ defun("gensym", 0, 1,
     })
 
 /*
+ * Hashtable stuff
+ */
+defun("make-eq-hashtable", 0, 1, // ignore initial capacity
+    function() {
+        return new FoxScheme.Hashtable()
+    })
+defun("hashtable-set!", 3, 3,
+    function(ht, key, value) {
+        ht.set(key, value)
+        return FoxScheme.nothing
+    })
+defun("hashtable-ref", 3, 3,
+    function(ht, key, dfault) {
+        var r
+        if((r = ht.get(key)) !== null)
+            return r;
+        else return dfault
+    })
+defun("hashtable-contains?", 2, 2,
+    function(ht, key) {
+        var r
+        if((r = ht.get(key)) !== null)
+            return true;
+        else return false
+    })
+/*
  * System stuff
  */
 // for use with psyntax
