@@ -92,6 +92,13 @@ FoxScheme.Interpreter.prototype = function() {
                 throw new FoxScheme.Error("Unbound symbol "+expr)
               }
             }
+        /*
+         * This trick allows us to bind variables to errors, like in the case of 
+         * (letrec ((x (+ x 5))) x)
+         * so that x => Error: cannot refer to x from inside letrec
+         */
+        if(val instanceof FoxScheme.Error)
+            throw val;
 
         return val;
     }
@@ -257,6 +264,13 @@ FoxScheme.Interpreter.prototype = function() {
             else if(bindings instanceof FoxScheme.Pair) {
               var newenv = env.clone()
               var bindarr = FoxScheme.Util.arrayify(bindings)
+              /*
+               * We run two loops here.
+               * The first time, we go through all of the bindings. We do
+               * syntax checks and then rebind each var with a FoxScheme.Error.
+               * This way, if a letrec tries referring to itself immediately,
+               * the error is thrown and acts as a guard.
+               */
               var i = bindarr.length
               while(i--) {
                 // check binding syntax
@@ -264,6 +278,15 @@ FoxScheme.Interpreter.prototype = function() {
                   throw new FoxScheme.Error("Invalid syntax for letrec binding: "+bindings)
                 if(!(bindarr[i].car() instanceof FoxScheme.Symbol))
                   throw new FoxScheme.Error("Cannot bind "+bindarr[i].car()+" in "+bindings)
+
+                newenv.set(bindarr[i].car().name(), new FoxScheme.Error("Cannot refer to own letrec variable "+bindarr[i].car()))
+              }
+              /*
+               * This next loop actually evals the RHS of each binding and
+               * rebinds the var with the result.
+               */
+              i = bindarr.length
+              while(i--) {
                 newenv.set(bindarr[i].car().name(),
                     /*
                      * The only difference between letrec and let is that we

@@ -393,7 +393,12 @@ describe("letrec", {
     "Cannot bind self even if it's in scope above": function() {
         should_error("(let ((x 5))"+
                        "(letrec ((x (+ x 5)))"+
-                         "x))") // should error!
+                         "x))")
+    },
+    "Cannot bind vars from own letrec": function() {
+        should_error("(let ((x 5) (y 3))"+
+                       "(letrec ((x (+ y 5)) (y (+ x 3)))"+
+                         "(+ x y)))")
     }
 })
 
