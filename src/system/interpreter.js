@@ -89,8 +89,7 @@ FoxScheme.Interpreter.prototype = function() {
               if(contains(syntax, sym))
                 throw new FoxScheme.Error("Invalid syntax "+sym)
               else {
-                irritant = expr
-                throw new FoxScheme.Error("Unbound symbol "+expr.toString()+" ("+sym+")")
+                throw new FoxScheme.Error("Unbound symbol "+expr)
               }
             }
 
@@ -318,8 +317,6 @@ FoxScheme.Interpreter.prototype = function() {
            */
           case "define":
           case "set!":
-            if(sym=="set!")
-                setbangs++
             if(expr.length() !== 3)
               throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
 
