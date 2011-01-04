@@ -1,0 +1,10 @@
+(set! sub1 (lambda (x) (- x 1)))
+(set! add1 (lambda (x) (+ x 1)))
+(set! atom? (lambda (x)
+              (if (pair? x)
+                #f
+                (vector? x))))
+(set! list? (lambda (x)
+              (if (pair? x)
+                (list? (cdr x))
+                (null? x))))
