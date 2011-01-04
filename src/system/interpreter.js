@@ -117,8 +117,10 @@ FoxScheme.Interpreter.prototype = function() {
         var sym = expr.first().name();
         switch (sym) {
           case "quote":
-            if(expr.length() !== 2)
+            if(expr.length() > 2)
               throw new FoxScheme.Error("Can't quote more than 1 thing: "+expr)
+            if(expr.length() === 1)
+              throw new FoxScheme.Error("Can't quote nothing")
 
             return expr.second()
             break;

@@ -115,6 +115,19 @@ describe('Parser', {
             assert_equals(x.cdr(), FoxScheme.nil)
             return true;
         })
+    },
+    /*
+     * Catches a bug in which $fs.Util.listify was used to listify the quoted
+     * objects, but listify incorrectly assumed that JS strings were arguments
+     * arrays (because of the presence of .length) and would simply return the
+     * empty list.
+     */
+    "Quote string literal": function() {
+        evto('\'"hello"', function(s) {
+            assert_instanceof(s, FoxScheme.String)
+            assert_equals(s.getValue(), "hello")
+            return true
+        })
     }
 })
 

@@ -32,6 +32,9 @@ OUTPUT=bin/foxscheme.js
 default: $(FILES)
 	cat $(FILES) > __merged.js
 	$(MINIFY) __merged.js -o $(OUTPUT)
+	# This next line adds FoxScheme.version="9dfa9bb3"; to the end of the file
+	echo FoxScheme.version=\"`git log -1\
+		--pretty=format:%H | cut -c 1-8`'";' >> $(OUTPUT)
 
 uncompressed: $(files)
 	cat $(FILES) > $(OUTPUT)
