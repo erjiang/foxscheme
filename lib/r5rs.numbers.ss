@@ -117,4 +117,13 @@
 ;; Complex numbers
 ;;
 ;; No.
-
+(define real-part
+  (lambda (n)
+    (if (number? n)
+      n
+      (error 'real-part "Non-number received" n))))
+(define complex?
+  (lambda (n)
+    (if (number? n)
+      #t
+      (error 'complex? "Non-number received" n))))

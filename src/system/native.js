@@ -10,13 +10,7 @@ var defun = function(name, arity, maxarity, proc) {
     funcs.set(name,
         new FoxScheme.NativeProcedure(proc, name, arity, maxarity))
 }
-
-/*
- * Some type-checking conveniences
- */
-var isNumber = function(n) {
-    return !isNaN(n)
-}
+funcs.defun = defun
 
 /*
  * Void
@@ -348,7 +342,7 @@ defun("pair?", 1, 1,
     })
 defun("number?", 1, 1,
     function(n) {
-        return isNumber(n)
+        return !isNaN(n)
     })
 defun("symbol?", 1, 1,
     function(s) {
@@ -554,13 +548,23 @@ defun("hashtable-contains?", 2, 2,
 /*
  * System stuff
  */
-// for use with psyntax
+/*
+ * This is for compatibility with psyntax.pp, which needs eval-core. 
+ *
+ * (define (eval-core expr)
+ *   (eval expr (interaction-environment)))
+ *
+ * i.e. evaluate expr in the TOP-LEVEL environment. To accomplish
+ * this, eval is defined in src/system/native.js and eval-core
+ * defined in fox.r6rs.ss.
+ */
 defun("eval", 1, 2,
     function(expr, globals) {
-        var i = new $fs.Interpreter()
-        if(globals !== undefined)
-            i._globals = globals.clone()
-        return i.eval(expr)
+        return this.eval(expr)
+    })
+defun("interaction-environment", 0, 0,
+    function() {
+        return this._globals
     })
 defun("expand", 1, 1,
     function(expr) {

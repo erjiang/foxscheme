@@ -30,7 +30,7 @@ FoxScheme.Hash.prototype = function () {
             return val
         },
         toString: function () {
-            return "#<Hash>"
+            return "#<SystemHash>"
         },
         clone: function () {
             var c = new FoxScheme.Hash()

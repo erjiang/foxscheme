@@ -42,7 +42,7 @@ FoxScheme.Interpreter.prototype = function() {
 
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
-  var syntax = ["lambda", "let", "letrec", "interaction-environment", "begin", "if",
+  var syntax = ["lambda", "let", "letrec", "begin", "if",
       "set!", "define", "quote"]
 
   /*
@@ -363,23 +363,6 @@ FoxScheme.Interpreter.prototype = function() {
             }
             return FoxScheme.nothing;
             break;
-          /*
-           * This is for compatibility with psyntax.pp, which needs eval-core. 
-           *
-           * (define (eval-core expr)
-           *   (eval expr (interaction-environment)))
-           *
-           * i.e. evaluate expr in the TOP-LEVEL environment. To accomplish
-           * this, eval is defined in src/system/native.js and eval-core
-           * defined in fox.r6rs.ss, but native procedures have no way of
-           * getting the top-level environment since they don't have access to
-           * the interpreter.  Thus, interaction-environment is implemented in
-           * Interpreter.
-           */
-          case "interaction-environment":
-            if(expr.length() !== 1)
-              throw new FoxScheme.Error("Invalid syntax "+expr)
-            return this._globals;
           /*
            * this will only happen if a keyword is in the syntax list
            * but there is no case for it

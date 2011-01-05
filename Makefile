@@ -27,7 +27,8 @@ src/system/native.js \
 src/system/expand.js \
 src/system/interpreter.js
 
-OUTPUT=bin/foxscheme.js
+OUTPUT_PATH=bin
+OUTPUT=$(OUTPUT_PATH)/foxscheme.js
 
 default: $(FILES)
 	cat $(FILES) > __merged.js
@@ -38,6 +39,14 @@ default: $(FILES)
 
 uncompressed: $(files)
 	cat $(FILES) > $(OUTPUT)
+
+rhino: $(OUTPUT) shim/rhino.js
+	cp $(OUTPUT) $(OUTPUT_PATH)/foxrhino.js
+	cat shim/rhino.js >> $(OUTPUT_PATH)/foxrhino.js
+
+browser: $(OUTPUT) shim/browser.js
+	cp $(OUTPUT) $(OUTPUT_PATH)/foxbrowser.js
+	cat shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
 
 clean:
 	rm __merged.js

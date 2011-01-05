@@ -1,2 +1,4 @@
-bin/foxscheme.js
+bin/*.js
 __merged.js
+*~
+*.swp

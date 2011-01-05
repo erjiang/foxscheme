@@ -76,8 +76,9 @@ FoxScheme.NativeProcedure.prototype = function() {
         }
         /*
          * Do the actual procedure application here.
+         * Let 'this' be the calling interpreter.
          */
-        return this.proc.apply(this.proc, ls)
+        return this.proc.apply(arguments.callee.caller, ls)
     }
     constructor.toString = function() {
         if(this.name === null)
