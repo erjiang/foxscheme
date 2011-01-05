@@ -111,7 +111,7 @@ FoxScheme.Parser.prototype = {
                  */
                 // JavaScript's parseInt("9x") => 9
                 if(t.match(/[^0-9.+-e]/) === null) {
-                    var n = parseInt(t);
+                    var n = parseFloat(t);
                     if(!isNaN(n))
                         return n;
                 }

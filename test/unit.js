@@ -128,6 +128,12 @@ describe('Parser', {
             assert_equals(s.getValue(), "hello")
             return true
         })
+    },
+    /*
+     * Catches a bug in which parseInt was used always.
+     */
+    "Parse float": function() {
+        evto("123456.654321", 123456.654321)
     }
 })
 
