@@ -97,6 +97,66 @@ defun("=", 1, undefined,
         }
         return true
     })
+defun("<", 1, undefined,
+    function(/* args */) {
+        if(isNaN(arguments[0]))
+            throw new FoxScheme.Error(arguments[0]+" is not a number.", "=")
+        var standard = arguments[arguments.length - 1]
+        var i = arguments.length - 1
+        while(i--) {
+            if(isNaN(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number.", "=")
+            if(!(arguments[i] < standard))
+                return false
+            standard = arguments[i]
+        }
+        return true
+    })
+defun(">", 1, undefined,
+    function(/* args */) {
+        if(isNaN(arguments[0]))
+            throw new FoxScheme.Error(arguments[0]+" is not a number.", "=")
+        var standard = arguments[arguments.length - 1]
+        var i = arguments.length - 1
+        while(i--) {
+            if(isNaN(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number.", "=")
+            if(!(arguments[i] > standard))
+                return false
+            standard = arguments[i]
+        }
+        return true
+    })
+defun("<=", 1, undefined,
+    function(/* args */) {
+        if(isNaN(arguments[0]))
+            throw new FoxScheme.Error(arguments[0]+" is not a number.", "=")
+        var standard = arguments[arguments.length - 1]
+        var i = arguments.length - 1
+        while(i--) {
+            if(isNaN(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number.", "=")
+            if(!(arguments[i] <= standard))
+                return false
+            standard = arguments[i]
+        }
+        return true
+    })
+defun(">=", 1, undefined,
+    function(/* args */) {
+        if(isNaN(arguments[0]))
+            throw new FoxScheme.Error(arguments[0]+" is not a number.", "=")
+        var standard = arguments[arguments.length - 1]
+        var i = arguments.length - 1
+        while(i--) {
+            if(isNaN(arguments[i]))
+                throw new FoxScheme.Error(arguments[i]+" is not a number.", "=")
+            if(!(arguments[i] >= standard))
+                return false
+            standard = arguments[i]
+        }
+        return true
+    })
 defun("+", undefined, undefined,
     function(/* args */) {
         var acc = 0;
@@ -169,20 +229,112 @@ defun("/", 1, undefined,
  * Scheme's remainder == JavaScript's %
  */
 defun("remainder", 2, 2,
-    function(n1, n2) {
-        return n1 % n2;
+    function(n, m) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "remainder")
+        if(isNaN(m))
+            throw new FoxScheme.Error(m+" is not a number", "remainder")
+        return n % m;
     })
 defun("expt", 2, 2, 
     function(n, m) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "expt")
+        if(isNaN(m))
+            throw new FoxScheme.Error(m+" is not a number", "expt")
         return Math.pow(n, m)
     })
 defun("sqrt", 1, 1,
     function(n) {
-        if(n < 0) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "sqrt")
+        if(n < 0)
             throw new FoxScheme.Error("No complex number support", "sqrt")
-        }
+
         return Math.sqrt(n)
     })
+defun("round", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "round")
+        return Math.round(n)
+    })
+defun("ceiling", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "ceiling")
+        return Math.ceil(n)
+    })
+defun("floor", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "floor")
+        return Math.floor(n)
+    })
+/*
+ * Trigonometry functions
+ */
+defun("sin", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "sin")
+
+        return Math.sin(n)
+    })
+defun("cos", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "cos")
+
+        return Math.cos(n)
+    })
+defun("tan", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "tan")
+
+        return Math.tan(n)
+    })
+defun("asin", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "asin")
+
+        return Math.asin(n)
+    })
+defun("acos", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "acos")
+
+        return Math.acos(n)
+    })
+defun("atan", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "atan")
+
+        return Math.atan(n)
+    })
+/*
+ * Exponentials
+ */
+defun("exp", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "exp")
+
+        return Math.exp(n)
+    })
+defun("log", 1, 1,
+    function(n) {
+        if(isNaN(n))
+            throw new FoxScheme.Error(n+" is not a number", "log")
+
+        return Math.exp(n)
+    })
+
+
 /*
  * Some basic type-checking predicates!
  */
