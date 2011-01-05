@@ -162,7 +162,27 @@ defun("/", 1, undefined,
         }
         return acc
     })
-
+/*
+ * In Scheme, modulo's result has the same sign as the second
+ * number, while remainder's has the same sign as the first.  In
+ * JavaScript, modulo's has the same sign as the first.  Thus,
+ * Scheme's remainder == JavaScript's %
+ */
+defun("remainder", 2, 2,
+    function(n1, n2) {
+        return n1 % n2;
+    })
+defun("expt", 2, 2, 
+    function(n, m) {
+        return Math.pow(n, m)
+    })
+defun("sqrt", 1, 1,
+    function(n) {
+        if(n < 0) {
+            throw new FoxScheme.Error("No complex number support", "sqrt")
+        }
+        return Math.sqrt(n)
+    })
 /*
  * Some basic type-checking predicates!
  */

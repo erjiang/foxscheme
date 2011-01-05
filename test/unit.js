@@ -205,9 +205,22 @@ describe('Native arithmetic', {
         evto('(= 2 2)', true)
         evto('(= 2 3)', false)
     },
+    '= Multi': function() {
+        evto('(= 1 1 1 1 2)', false)
+        evto('(= 0 0 0 0 0)', true)
+    },
     '= invalid': function() {
         should_error('(= 2 #\\a)')
         should_error("(= 'sym 'sym)")
+    },
+    'expt': function() {
+        evto('(expt 2 2)', 4)
+        evto('(expt 0 0)', 1)
+    },
+    'sqrt': function() {
+        evto('(sqrt 0)', 0)
+        evto('(sqrt 4)', 2)
+        evto('(sqrt 0.64)', 0.8)
     }
 })
 
