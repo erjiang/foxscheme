@@ -30,7 +30,7 @@ src/system/interpreter.js
 OUTPUT_PATH=bin
 OUTPUT=$(OUTPUT_PATH)/foxscheme.js
 
-default: $(FILES)
+$(OUTPUT): $(FILES)
 	cat $(FILES) > __merged.js
 	$(MINIFY) __merged.js -o $(OUTPUT)
 	# This next line adds FoxScheme.version="9dfa9bb3"; to the end of the file
