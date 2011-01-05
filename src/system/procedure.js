@@ -60,7 +60,7 @@ FoxScheme.NativeProcedure.prototype = function() {
             if(typeof(a_name) === "undefined")
                 this.name = null;
     }
-    constructor.fapply = function(ls) {
+    constructor.fapply = function(interp, ls) {
         /*
          * Check for invalid number of params
          */
@@ -78,7 +78,7 @@ FoxScheme.NativeProcedure.prototype = function() {
          * Do the actual procedure application here.
          * Let 'this' be the calling interpreter.
          */
-        return this.proc.apply(arguments.callee.caller, ls)
+        return this.proc.apply(interp, ls)
     }
     constructor.toString = function() {
         if(this.name === null)
@@ -126,7 +126,7 @@ FoxScheme.InterpretedProcedure.prototype = function() {
             if(typeof(a_improper) === "undefined")
                 this.improper = false;
     }
-    constructor.fapply = function(ls) {
+    constructor.fapply = function(ls, interp) {
         /*
          * Check for invalid number of params
          */
@@ -148,7 +148,7 @@ FoxScheme.InterpretedProcedure.prototype = function() {
         /*
          * Do the actual procedure application here.
          */
-        return this.proc.apply(this.proc, ls)
+        return this.proc.apply(interp, ls)
     }
     constructor.toString = function() {
         return "#<InterpretedProcedure>";

@@ -388,7 +388,7 @@ FoxScheme.Interpreter.prototype = function() {
         }
 
         // actually do (apply (car expr) (cdr expr))
-        return proc.fapply(args)
+        return proc.fapply(this, args)
       }
     }
     throw new FoxScheme.Bug("Don't know what to do with "+expr+
