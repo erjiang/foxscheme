@@ -145,6 +145,12 @@ describe('Simple literals', {
         evto('2', 2)
         evto('-5', -5)
     },
+    Rationals: function() {
+        evto('12/48', 0.25)
+    },
+    Floats: function() {
+        evto('123.321', 123.321)
+    },
     Characters: function() {
         evto('#\\a', function(a) {
             return ((a instanceof FoxScheme.Char) &&

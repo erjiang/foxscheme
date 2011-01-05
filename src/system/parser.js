@@ -111,6 +111,27 @@ FoxScheme.Parser.prototype = {
                  */
                 // JavaScript's parseInt("9x") => 9
                 if(t.match(/[^0-9.+-e]/) === null) {
+                    /*
+                     * Could be a rational, which we'll convert to a float
+                     * anyways
+                     */
+                    var rational
+                    if((rational = t.match(/^([0-9-]+)\/([0-9]+)$/)) !== null)
+                        // type coerce those strings!
+                        return rational[1] / rational[2];
+                    /*
+                     * Not a rational, just parse it like normal
+                     * Note that this differs in Chez Scheme in that parseFloat
+                     * is sloppy about accepting input. Examples:
+                     *
+                     *     chez> 12/48-
+                     *     Exception: variable \x31;2/48- is not bound
+                     *
+                     *     js> parseFloat("12/48-")
+                     *     12
+                     *
+                     * TODO: Better sanitize numbers
+                     */
                     var n = parseFloat(t);
                     if(!isNaN(n))
                         return n;
