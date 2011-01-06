@@ -121,8 +121,8 @@ FoxScheme.Parser.prototype = {
                         return rational[1] / rational[2];
                     /*
                      * Not a rational, just parse it like normal
-                     * Note that this differs in Chez Scheme in that parseFloat
-                     * is sloppy about accepting input. Examples:
+                     * Note that this differs from Chez Scheme in that
+                     * parseFloat is sloppy about accepting input. Examples:
                      *
                      *     chez> 12/48-
                      *     Exception: variable \x31;2/48- is not bound
