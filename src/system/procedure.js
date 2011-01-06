@@ -126,7 +126,7 @@ FoxScheme.InterpretedProcedure.prototype = function() {
             if(typeof(a_improper) === "undefined")
                 this.improper = false;
     }
-    constructor.fapply = function(ls, interp) {
+    constructor.fapply = function(interp, ls) {
         /*
          * Check for invalid number of params
          */
@@ -148,6 +148,8 @@ FoxScheme.InterpretedProcedure.prototype = function() {
         /*
          * Do the actual procedure application here.
          */
+        console.log("About to apply ")
+            console.log(ls)
         return this.proc.apply(interp, ls)
     }
     constructor.toString = function() {
