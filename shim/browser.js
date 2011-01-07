@@ -9,13 +9,33 @@ FoxScheme.nativeprocedures.defun("load", 1, 2,
                 "load")
         if(evalproc === undefined)
             evalproc = this.eval
+        /*
+         * Prepare XMLHttpRequest
+         */
         url = url.getValue()
         var xhr = new XMLHttpRequest()
         xhr.open("GET", url, false)
+        /*
+         * Send XMLHttpRequest
+         */
         try {
             xhr.send(null)
         } catch (e) {
             throw new FoxScheme.Error("Internet request failed: "+e.message, "load")
+        }
+        /*
+         * XMLHttpRequest is now done
+         */
+        if(xhr.status >= 400) {
+            throw new FoxScheme.Error([
+                  "Failed to open "
+                , url
+                , ": Error "
+                , xhr.status
+                , " "
+                , xhr.statusText
+                ].join(""),
+                "load")
         }
         var p = new FoxScheme.Parser(xhr.responseText)
         var o
