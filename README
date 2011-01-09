@@ -32,13 +32,9 @@ Some key points include:
  
 Known issues:
  
-  * Boolean prototype augmented
-    Boolean.prototype.toString is defined in src/system/boolean.js, for the
-    reason of showing "#t" instead of "true" when coerced into a String by the
-    browser. Otherwise, we would either need to create our own FoxScheme.Bool
-    object and complicate all boolean testing, or write a new pretty-printer
-    layer that must recursively walk the result to print it. This solution
-    should not break most other JavaScript software.
+  * No arithmetic stack
+    All numeric computation is done with JavaScript numbers, which are 64-bit
+    floating-point numbers.
  
   * No tail-call optimization
     The current FoxScheme.Interpreter uses native JS recursion. If the
