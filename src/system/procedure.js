@@ -148,8 +148,6 @@ FoxScheme.InterpretedProcedure.prototype = function() {
         /*
          * Do the actual procedure application here.
          */
-        console.log("About to apply ")
-            console.log(ls)
         return this.proc.apply(interp, ls)
     }
     constructor.toString = function() {
