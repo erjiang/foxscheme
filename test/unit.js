@@ -1,5 +1,5 @@
 //
-// test/unit.js - unit tests of BiwaScheme
+// test/unit.js - unit tests of FoxScheme
 //
 // This file is utf-8
 // このファイルはUTF-8です

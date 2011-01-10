@@ -14,7 +14,6 @@
  *
  * vim:sw=2 ts=2
  */
-lastevald = []
 FoxScheme.Interpreter = function() {
     if(!(this instanceof FoxScheme.Interpreter)) {
         throw FoxScheme.Error("Improper use of FoxScheme.Interpreter()")
@@ -72,8 +71,6 @@ FoxScheme.Interpreter.prototype = function() {
 
     if(env === undefined)
       var env = new FoxScheme.Hash();
-
-    lastevald.push(expr)
 
     /*
      * Symbol:
