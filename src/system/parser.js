@@ -5,6 +5,11 @@
  * This takes a string representing an Sexp and converts it
  * into internal FoxScheme data.
  *
+ * Usage:
+ *   p = new $fs.Parser
+ *   while((o = p.nextObject()) !== null)
+ *      eval(o)
+ *
  * TODO: Rescope this to allow better minification.
  */
 
@@ -65,7 +70,7 @@ FoxScheme.Parser.prototype = {
         if(typeof(this.i) === "undefined")
             this.i = 0;
         if(this.i >= this.tokens.length)
-            return FoxScheme.Parser.EOS;
+            return null;
 
         var t = this.tokens[this.i];
         this.i++;
@@ -211,5 +216,3 @@ FoxScheme.Parser.prototype = {
     }
 
 }; // end of = { ...
-// indicates end of source file
-FoxScheme.Parser.EOS = new Object();

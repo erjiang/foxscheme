@@ -9,7 +9,7 @@
  * 
  *     var p = new FoxScheme.Parser("(+ 2 2)")
  *     var i = new FoxScheme.Interpreter();
- *     while((var expr = p.nextObject()) != p.EOS)
+ *     while((var expr = p.nextObject()) != null)
  *         print(i.this.eval(expr))
  *
  * vim:sw=2 ts=2
