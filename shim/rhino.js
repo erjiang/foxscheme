@@ -15,6 +15,7 @@ load("src/system/parser.js")
 load("src/system/procedure.js")
 load("src/system/native.js")
 load("src/system/expand.js")
+load("src/system/looper.js")
 load("src/system/interpreter.js")
 
 FoxScheme.load = function(filename, i) {

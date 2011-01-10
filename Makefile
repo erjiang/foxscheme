@@ -25,6 +25,7 @@ src/system/parser.js \
 src/system/procedure.js \
 src/system/native.js \
 src/system/expand.js \
+src/system/looper.js \
 src/system/interpreter.js
 
 OUTPUT_PATH=bin
