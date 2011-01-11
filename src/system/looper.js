@@ -12,7 +12,7 @@
 
 FoxScheme.Looper = function() {
     if(!(this instanceof FoxScheme.Looper)) {
-        throw FoxScheme.Error("Improper use of FoxScheme.Looper()")
+        throw new FoxScheme.Error("Improper use of FoxScheme.Looper()")
         return null
     }
 
@@ -70,7 +70,7 @@ FoxScheme.Looper.prototype = function() {
     this.cc = cc
     // the procedure code to call with the result. f takes a State
     // object and modifies the state accordingly (no return value)
-    this.f = f
+    this.cont = f
   }
   
   // some reserved keywords that would throw an "invalid syntax"
@@ -86,7 +86,7 @@ FoxScheme.Looper.prototype = function() {
    */
   var eval = function(expr) {
     try {
-      if(expr instanceof FoxScheme.Symbol()) {
+      if(expr instanceof FoxScheme.Symbol) {
         var val = this._globals.get(expr.name())
         if(val === undefined)
           throw new FoxScheme.Error("Unbound symbol "+expr)
@@ -122,8 +122,9 @@ FoxScheme.Looper.prototype = function() {
     }
     catch(e) {
       if(e instanceof State)
-        return State.expr
-      else throw e
+        return state.expr
+      else
+        throw e
     }
   }
   
@@ -180,7 +181,7 @@ FoxScheme.Looper.prototype = function() {
     else if(expr instanceof FoxScheme.Pair) {
       var sym
       // if syntax keyword!
-      if(expr.car() instanceof Symbol &&
+      if(expr.car() instanceof FoxScheme.Symbol &&
           contains(syntax, (sym = expr.car().name())) &&
           // additionally check to see if syntax is shadowed
           state.env.get(sym) === null &&
@@ -219,5 +220,4 @@ FoxScheme.Looper.prototype = function() {
     eval: eval,
     toString: function() { return "#<LooperInterpreter>" }
   }
-}
-
+}()
