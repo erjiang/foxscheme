@@ -104,12 +104,11 @@ FoxScheme.InterpretedProcedure = function () {
 FoxScheme.InterpretedProcedure.prototype = function() {
     
     var constructor = new FoxScheme.Procedure();
-    var env = [];
     var interpreter
     /*
      * To create a function, pass a function in as a_proc,
      * and optionally specify the arity, and a boolean for whether
-     * extra arguments arer passed in as a list.
+     * extra arguments are passed in as a list.
      *
      * When fapply is called, it will call the procedure it was initialized
      * with, passing it all of fapply's arguments.

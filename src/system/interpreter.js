@@ -373,7 +373,6 @@ FoxScheme.Interpreter.prototype = function() {
       else {
         if(expr.car() instanceof FoxScheme.Symbol &&
                 expr.car().name() == "x")
-            print("about to eval x in: "+expr.toString())
         var proc = this.eval(expr.car(), env)
         if(!(proc instanceof FoxScheme.Procedure))
           throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
@@ -398,9 +397,6 @@ FoxScheme.Interpreter.prototype = function() {
   return {
     initialize: initialize,
     eval: eval,
-    toString: function () { return "#<Interpreter>" },
-    whatsup: function () {
-        print(this)
-    }
+    toString: function () { return "#<Interpreter>" }
   }
 }();
