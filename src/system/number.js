@@ -1,8 +1,8 @@
 /*
  * number.js
  *
- * This file simply modifies JS's Number.prototype.toString to better print
- * Infinity as +inf.0
+ * This optional file simply modifies JS's Number.prototype.toString to better
+ * print Infinity like Scheme's +inf.0
  */
 Number.prototype.toString = function() {
     return function() {
