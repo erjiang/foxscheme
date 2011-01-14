@@ -114,6 +114,8 @@ FoxScheme.Looper.prototype = function() {
    */
   var eval = function(expr) {
     looper = this
+    console.log("Want to eval "+expr)
+    console.log("WHere this is "+this)
     try {
       /*
        * The top-level continuation, which escapes the eval loop
@@ -129,7 +131,9 @@ FoxScheme.Looper.prototype = function() {
        * course, is the input expr.
        */
       var topEnv = new FoxScheme.Hash()
+      console.log(topEnv)
       var state = new State(expr, topEnv, topCC)
+      console.log("Created initial state: ")
       console.log(state)
 
       /*
@@ -163,6 +167,8 @@ FoxScheme.Looper.prototype = function() {
    */
   // TODO: recheck file for "obj" -> "expr", "car" -> "car()", etc.
   var evalObj = function(state) {
+    console.log("About to eval "+state.expr.toString())
+    console.log(state)
     var expr = state.expr
     if(expr instanceof FoxScheme.Symbol) {
       var sym = expr.name()
@@ -241,6 +247,7 @@ FoxScheme.Looper.prototype = function() {
 
             if(params instanceof FoxScheme.Symbol) {
                 var sym = expr.second().name()
+                // TODO: does this need to be moved to inside the function??
                 /*
                  * Catches the special case of (lambda x body)
                  */
@@ -329,6 +336,7 @@ FoxScheme.Looper.prototype = function() {
    * this.expr = (5 4) 
    */
   var continueIf = function(state) {
+    console.log("continueIf "+this.expr)
     // everything but #f is true
     if(state.expr !== false)
       state.expr = this.expr.car()
@@ -364,6 +372,7 @@ FoxScheme.Looper.prototype = function() {
   }
 
   var continueApply = function (state) {
+    console.log("Continue apply called on "+state)
     // abuse objects as arrays!
     // this[0] is the procedure
     this[this.i++] = state.expr
@@ -380,6 +389,8 @@ FoxScheme.Looper.prototype = function() {
       state.cc = this.cc
       // by convention, the first of the arguments shall be
       // the state and the second the arguments
+      console.log("About to apply "+state+" to")
+      console.log(args)
       state.expr = this[0].fapply(
           {
               state: state,
