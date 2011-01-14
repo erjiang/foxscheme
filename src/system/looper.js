@@ -244,6 +244,7 @@ FoxScheme.Looper.prototype = function() {
                 /*
                  * Catches the special case of (lambda x body)
                  */
+                var newenv = state.env.extend()
                 state.expr = new FoxScheme.InterpretedProcedure(
                   function() {
                     /*
@@ -251,7 +252,6 @@ FoxScheme.Looper.prototype = function() {
                      *          interpreter: interpreter }
                      */
                     var state = this.state
-                    var newenv = state.env.clone()
                     newenv.set(sym, FoxScheme.Util.listify(arguments))
 
                     /*
