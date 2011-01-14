@@ -9,7 +9,7 @@
 FoxScheme.Error = function(message, proc) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Error)) {
-        console.log("Improper use of FoxScheme.Error()");
+        throw new FoxScheme.Bug("Improper use of FoxScheme.Error()");
         return null;
     }
 

@@ -6,7 +6,7 @@
 FoxScheme.Pair = function(car, cdr) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Pair)) {
-        console.log("Improper use of FoxScheme.Pair()");
+        throw new FoxScheme.Bug("Improper use of FoxScheme.Pair()");
         return null;
     }
     

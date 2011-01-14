@@ -1,7 +1,7 @@
 FoxScheme.Symbol = function(name) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Symbol)) {
-        console.log("Improper use of FoxScheme.Symbol()");
+        throw new FoxScheme.Bug("Improper use of FoxScheme.Symbol()");
         return null;
     }
 

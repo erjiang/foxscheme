@@ -1,7 +1,7 @@
 FoxScheme.Vector = function(elements) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Vector)) {
-        console.log("Improper use of FoxScheme.Vector()");
+        throw new FoxScheme.Bug("Improper use of FoxScheme.Vector()");
         return null;
     }
 
