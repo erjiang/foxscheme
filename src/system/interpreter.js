@@ -136,12 +136,12 @@ FoxScheme.Interpreter.prototype = function() {
             var that = this; // grab reference to this
             if(params instanceof FoxScheme.Symbol) {
               var sym = expr.second().name()
+              var newenv = env.extend()
               /* 
                * Catches the special case of (lambda x body)
                */
               return new FoxScheme.InterpretedProcedure(
                 function() {
-                  var newenv = env.clone()
                   newenv.set(sym, FoxScheme.Util.listify(arguments))
                   return that.eval(body, newenv)
                 },
@@ -152,9 +152,9 @@ FoxScheme.Interpreter.prototype = function() {
               // (lambda (a b c) body)
               if(params.isProper()) {
                 params = FoxScheme.Util.arrayify(params)
+                var newenv = env.extend()
                 return new FoxScheme.InterpretedProcedure(
                   function() {
-                    var newenv = env.clone()
                     var i = params.length
                     while(i--) {
                       newenv.set(params[i].name(), arguments[i])
@@ -167,9 +167,9 @@ FoxScheme.Interpreter.prototype = function() {
               // (lambda (a b . c) body)
               else {
                 params = FoxScheme.Util.arrayify(params)
+                var newenv = env.extend()
                 return new FoxScheme.InterpretedProcedure(
                   function () {
-                    var newenv = env.clone()
                     // (a b . c) => [a, b, c]
                     var args = FoxScheme.Util.arrayify(arguments)
                     // process everything but last item
@@ -222,7 +222,7 @@ FoxScheme.Interpreter.prototype = function() {
               return this.eval(body, env)
 
             else if(bindings instanceof FoxScheme.Pair) {
-              var newenv = env.clone()
+              var newenv = env.extend()
               var bindarr = FoxScheme.Util.arrayify(bindings)
               var i = bindarr.length
               while(i--) {
@@ -259,7 +259,7 @@ FoxScheme.Interpreter.prototype = function() {
               return this.eval(body, env)
 
             else if(bindings instanceof FoxScheme.Pair) {
-              var newenv = env.clone()
+              var newenv = env.extend()
               var bindarr = FoxScheme.Util.arrayify(bindings)
               /*
                * We run two loops here.
