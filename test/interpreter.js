@@ -351,6 +351,21 @@ describe('Lambdas', {
         evto("((lambda x (car x)) 1)", 1)
         evto("((lambda x (cdr x)) 1)", FoxScheme.nil)
     },
+    /*
+     * Catches the potential bug where a listify'd lambda would clone its
+     * environment at creation time rather than at run-time, thus missing the
+     * changed x.
+     */
+    'scope listified': function() {
+        evto("(((lambda (x y)"+
+                 "(begin (set! ret "+
+                   "(lambda z "+
+                     "(+ x y)))"+
+                 "(set! x 3)"+
+                 " ret))"+
+               "1 2) 'a 'b 'c)",
+             5)
+    },
     'list of params': function () {
         evto("((lambda (a b c) c) 1 2 3)", 3)
         evto("((lambda (x) x) 5)", 5)
@@ -623,13 +638,32 @@ describe("Scope", {
         // if we let if be +, then (if 1 2 3) => 6
         evto("((lambda (if) (if 1 2 3)) +)", 6)
     },
-    "Lexical scoping": function() {
+    "Attempt to reach in other scope": function() {
         /*
          * the inner lambda should not return the x=5 that was
          * defined by the outer lambda, since that x was not
          * in scope when the inner lambda was defined
          */
         should_error("((lambda (x y) (y)) 5 (lambda () x))")
+    },
+    "lexical set!": function() {
+        /*
+         * A slightly fat example, but this will fail in interpreters where the
+         * environment is not properly extended, but is statically cloned.  In
+         * that case, the set! will update the old environment while the cloned
+         * env is unaffected.
+         */
+        evto("(let ((ret #f) (thunky #f) (v1 #f) (v2 #f))"+
+               "(begin (let ((x 1) (y 2))"+
+                 "(begin"+
+                   "(set! ret (lambda z (+ x y)))"+
+                   "(set! thunky (lambda () (set! x (add1 x))))"+
+                   "(set! x 3)))"+
+                 "(set! v1 (ret 'a 'b 'c))"+
+                 "(thunky)"+
+                 "(set! v2 (ret 'a 'b 'c))"+
+                 "(+ v1 v2)))",
+             11)
     },
     "set! globals": function() {
         /*
