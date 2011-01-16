@@ -38,7 +38,7 @@ defun("trace-closure", 2, undefined,
                 }
                 if(console)
                     console.log(["(",sym," ",new_args.join(" "),")"].join(""))
-                var r = func.fapply(new_args)
+                var r = func.fapply(this, new_args)
                 if(console)
                     console.log("and got: "+r)
                 return r
