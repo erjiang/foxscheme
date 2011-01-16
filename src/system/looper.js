@@ -238,7 +238,6 @@ FoxScheme.Looper.prototype = function() {
                                         body])
              */
 
-            var newenv = state.env.extend()
 
             if(params instanceof FoxScheme.Symbol) {
                 var sym = expr.second().name()
@@ -253,6 +252,7 @@ FoxScheme.Looper.prototype = function() {
                      *          interpreter: interpreter }
                      */
                     var state = this.state
+                    var newenv = state.env.extend()
                     newenv.set(sym, FoxScheme.Util.listify(arguments))
 
                     /*
@@ -282,6 +282,7 @@ FoxScheme.Looper.prototype = function() {
                 state.expr = new FoxScheme.InterpretedProcedure(
                   function() {
                     var i = params.length
+                    var newenv = state.env.extend()
                     while(i--)
                       newenv.set(params[i].name(), arguments[i])
                     var state = this.state
@@ -296,6 +297,7 @@ FoxScheme.Looper.prototype = function() {
                 params = FoxScheme.Util.arrayify(params)
                 state.expr = new FoxScheme.InterpretedProcedure(
                   function () {
+                    var newenv = state.env.extend()
                     var args = FoxScheme.Util.arrayify(arguments)
                     var state = this.state
                     var i = params.length - 1
@@ -315,6 +317,7 @@ FoxScheme.Looper.prototype = function() {
             } else if(params === FoxScheme.nil) {
               state.expr = new FoxScheme.InterpretedProcedure(
                 function() {
+                  var newenv = state.env.extend()
                   var state = this.state
                   state.env = newenv
                   state.ready = false

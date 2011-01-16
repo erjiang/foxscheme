@@ -80,7 +80,7 @@ FoxScheme.Interpreter.prototype = function() {
     if(expr instanceof FoxScheme.Symbol) {
         var sym = expr.name()
         var val
-        if((val = env.get(sym)) === undefined)
+        if((val = env.chainGet(sym)) === undefined)
           if((val = this._globals.get(sym)) === undefined)
             if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
               if(contains(syntax, sym))
@@ -115,7 +115,7 @@ FoxScheme.Interpreter.prototype = function() {
       if(expr.car() instanceof FoxScheme.Symbol &&
          contains(syntax, expr.car().name()) &&
          // make sure the syntax keyword hasn't been shadowed
-         env.get(expr.car().name()) === undefined &&
+         env.chainGet(expr.car().name()) === undefined &&
          this._globals.get(expr.car().name()) === undefined) {
         var sym = expr.first().name();
         switch (sym) {
@@ -136,12 +136,12 @@ FoxScheme.Interpreter.prototype = function() {
             var that = this; // grab reference to this
             if(params instanceof FoxScheme.Symbol) {
               var sym = expr.second().name()
-              var newenv = env.extend()
               /* 
                * Catches the special case of (lambda x body)
                */
               return new FoxScheme.InterpretedProcedure(
                 function() {
+                  var newenv = env.extend()
                   newenv.set(sym, FoxScheme.Util.listify(arguments))
                   return that.eval(body, newenv)
                 },
@@ -152,9 +152,9 @@ FoxScheme.Interpreter.prototype = function() {
               // (lambda (a b c) body)
               if(params.isProper()) {
                 params = FoxScheme.Util.arrayify(params)
-                var newenv = env.extend()
                 return new FoxScheme.InterpretedProcedure(
                   function() {
+                    var newenv = env.extend()
                     var i = params.length
                     while(i--) {
                       newenv.set(params[i].name(), arguments[i])
@@ -167,9 +167,9 @@ FoxScheme.Interpreter.prototype = function() {
               // (lambda (a b . c) body)
               else {
                 params = FoxScheme.Util.arrayify(params)
-                var newenv = env.extend()
                 return new FoxScheme.InterpretedProcedure(
                   function () {
+                    var newenv = env.extend()
                     // (a b . c) => [a, b, c]
                     var args = FoxScheme.Util.arrayify(arguments)
                     // process everything but last item
@@ -336,6 +336,28 @@ FoxScheme.Interpreter.prototype = function() {
            * allows you to (define + *) but not (set! + *)
            */
           case "define":
+            if(expr.length() !== 3)
+              throw new FoxScheme.Error("Invalid syntax in define: "+expr)
+            if(!(expr.second() instanceof FoxScheme.Symbol))
+              throw new FoxScheme.Error("Cannot define the non-symbol "+expr.second())
+
+            var sym = expr.second().name()
+            // eval the right-hand side
+            // set! the appropriately-scoped symbol
+            if(env.chainGet(sym) !== undefined) {
+              // don't eval unless we can actually set!
+              var val = this.eval(expr.third(), env)
+              env.chainSet(sym, val)
+            }
+            else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
+              throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
+            }
+            else {
+              var val = this.eval(expr.third(), env)
+              this._globals.set(sym, val)
+            }
+            return FoxScheme.nothing;
+            break;
           case "set!":
             if(expr.length() !== 3)
               throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
@@ -346,10 +368,10 @@ FoxScheme.Interpreter.prototype = function() {
             var sym = expr.second().name()
             // eval the right-hand side
             // set! the appropriately-scoped symbol
-            if(env.get(sym) !== undefined) {
+            if(env.chainGet(sym) !== undefined) {
               // don't eval unless we can actually set!
               var val = this.eval(expr.third(), env)
-              env.set(sym, val)
+              env.chainSet(sym, val)
             }
             else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
               throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
