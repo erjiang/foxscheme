@@ -238,13 +238,14 @@ FoxScheme.Looper.prototype = function() {
                                         body])
              */
 
+            var newenv = state.env.extend()
+
             if(params instanceof FoxScheme.Symbol) {
                 var sym = expr.second().name()
                 // TODO: does this need to be moved to inside the function??
                 /*
                  * Catches the special case of (lambda x body)
                  */
-                var newenv = state.env.extend()
                 state.expr = new FoxScheme.InterpretedProcedure(
                   function() {
                     /*
@@ -270,13 +271,78 @@ FoxScheme.Looper.prototype = function() {
                   },
                   0,    // minimum zero args
                   true) // true = no upper bound on no. of args
+            } else if (params instanceof FoxScheme.Pair) {
+              /*
+               * Proper parameters list:
+               *   (lambda (x y z) (list x y z))
+               * see interpreter.js for comments
+               */
+              if(params.isProper()) {
+                params = FoxScheme.Util.arrayify(params)
+                state.expr = new FoxScheme.InterpretedProcedure(
+                  function() {
+                    var i = params.length
+                    while(i--)
+                      newenv.set(params[i].name(), arguments[i])
+                    var state = this.state
+                    
+                    state.env = newenv
+                    state.ready = false
+                    return body
+                  },
+                  params.length,
+                  false)
+              } else {
+                params = FoxScheme.Util.arrayify(params)
+                state.expr = new FoxScheme.InterpretedProcedure(
+                  function () {
+                    var args = FoxScheme.Util.arrayify(arguments)
+                    var state = this.state
+                    var i = params.length - 1
+                    while(i--)
+                      newenv.set(params[i].name(), args[i])
+                    // process last improper arg
+                    newenv.set(params[params.length - 1].name(),
+                               FoxScheme.Util.listify(args.slice(params.length - 1)))
+
+                    state.env = newenv
+                    state.ready = false
+                    return body
+                  },
+                  params.length - 1,
+                  true)
+              }
+            } else if(params === FoxScheme.nil) {
+              state.expr = new FoxScheme.InterpretedProcedure(
+                function() {
+                  var state = this.state
+                  state.env = newenv
+                  state.ready = false
+                  return body
+                }, 0, false)
             } else {
-              throw new FoxScheme.Bug("Don't know how to zip those arguments")
+              throw new FoxScheme.Error("Invalid parameter list in "+expr)
             }
 
+            // done, return, go out, etc.
             state.ready = true
 
             break;
+            /*
+          case "let":
+            if(expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+expr)
+            var body = expr.third()
+            var bindings = expr.second()
+            /*
+             * This'll probably be optimized by the macro expander anyways
+             * /
+            if(bindings = FoxScheme.nil)
+              // TODO: ????
+            
+            else if(bindings instanceof FoxScheme.Pair) {
+              var newenv = state.env.extend()
+              */
           // TODO: other primitive syntax
           default:
             throw new FoxScheme.Bug(sym+" syntax keyword not yet implemented")
@@ -399,6 +465,14 @@ FoxScheme.Looper.prototype = function() {
       state.ready = false
     }
   }
+
+/*
+  var continueLet = function(state) {
+    // abuse objects as arrays!
+    this[this.i++] = state.expr
+    /*
+     * Start processing bindings
+     */
 
   return {
     initialize: initialize,
