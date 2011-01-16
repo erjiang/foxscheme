@@ -42,13 +42,28 @@ FoxScheme.Hash.prototype = function () {
             this._store = {}
             this._next = next
         },
-        get: function (key) {
+        chainGet: function (key) {
             var r
             if((r = this._store[key]) !== undefined &&
                r !== Object.prototype[key])
                 return r
             else if(this._next !== undefined)
-                return this._next.get(key)
+                return this._next.chainGet(key)
+        },
+        get: function (key) {
+            var r
+            if((r = this._store[key]) !== undefined &&
+               r !== Object.prototype[key])
+                return r
+        },
+        chainSet: function(key, value) {
+            if(this.get(key) !== undefined)
+                this.set(key, value)
+            else
+                if(this._next !== undefined)
+                    return this._next.chainSet(key, value)
+                else
+                    return undefined
         },
         set: function (key, value) {
             return this._store[key] = value
