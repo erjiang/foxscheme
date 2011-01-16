@@ -251,8 +251,9 @@ FoxScheme.Looper.prototype = function() {
                      * this = { state: state,
                      *          interpreter: interpreter }
                      */
-                    var state = this.state
                     var newenv = state.env.extend()
+                    // currState = state at lambda runtime
+                    var currState = this.state
                     newenv.set(sym, FoxScheme.Util.listify(arguments))
 
                     /*
@@ -265,8 +266,8 @@ FoxScheme.Looper.prototype = function() {
                      * the Looper will continue to evaluate the body (with
                      * the right env of course)
                      */
-                    state.env = newenv
-                    state.ready = false
+                    currState.env = newenv
+                    currState.ready = false
                     return body
                   },
                   0,    // minimum zero args
@@ -285,10 +286,11 @@ FoxScheme.Looper.prototype = function() {
                     var newenv = state.env.extend()
                     while(i--)
                       newenv.set(params[i].name(), arguments[i])
-                    var state = this.state
+
+                    var currState = this.state
                     
-                    state.env = newenv
-                    state.ready = false
+                    currState.env = newenv
+                    currState.ready = false
                     return body
                   },
                   params.length,
@@ -299,7 +301,7 @@ FoxScheme.Looper.prototype = function() {
                   function () {
                     var newenv = state.env.extend()
                     var args = FoxScheme.Util.arrayify(arguments)
-                    var state = this.state
+                    var currState = this.state
                     var i = params.length - 1
                     while(i--)
                       newenv.set(params[i].name(), args[i])
@@ -307,8 +309,8 @@ FoxScheme.Looper.prototype = function() {
                     newenv.set(params[params.length - 1].name(),
                                FoxScheme.Util.listify(args.slice(params.length - 1)))
 
-                    state.env = newenv
-                    state.ready = false
+                    currState.env = newenv
+                    currState.ready = false
                     return body
                   },
                   params.length - 1,
@@ -318,9 +320,9 @@ FoxScheme.Looper.prototype = function() {
               state.expr = new FoxScheme.InterpretedProcedure(
                 function() {
                   var newenv = state.env.extend()
-                  var state = this.state
-                  state.env = newenv
-                  state.ready = false
+                  var currState = this.state
+                  currState.env = newenv
+                  currState.ready = false
                   return body
                 }, 0, false)
             } else {
