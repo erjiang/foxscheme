@@ -657,7 +657,7 @@ describe("Scope", {
                "(begin (let ((x 1) (y 2))"+
                  "(begin"+
                    "(set! ret (lambda z (+ x y)))"+
-                   "(set! thunky (lambda () (set! x (add1 x))))"+
+                   "(set! thunky (lambda () (set! x (+ 1 x))))"+
                    "(set! x 3)))"+
                  "(set! v1 (ret 'a 'b 'c))"+
                  "(thunky)"+
@@ -817,6 +817,15 @@ describe('Miscellaneous', {
              true)
     }
     ,
+    fibonacci: function() {
+        evto("(begin"+
+               "(set! fib (lambda (n)"+
+                 "(if (< n 1) 1"+
+                   "(+ (fib (- n 1)) (fib (- n 2))))))"+
+               "(fib 6))",
+             21)
+    }
+    ,
     /*
      * Length by Y Combinator, copied from BiwaScheme
      */
@@ -845,4 +854,5 @@ describe('Miscellaneous', {
              5)
     }
 })
+
 
