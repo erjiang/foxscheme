@@ -372,6 +372,12 @@ FoxScheme.Looper.prototype = function() {
       }
     }
     /*
+     * Vectors are not literals
+     */
+    else if(expr instanceof FoxScheme.Vector) {
+        throw new FoxScheme.Error("Invalid syntax: "+expr.toString())
+    }
+    /*
      * If we encounter something that we don't need to parse, and can
      * simply return, then set the ready flag to true
      */
