@@ -192,13 +192,22 @@ FoxScheme.Looper.prototype = function() {
             state.ready = true
             break;
           case "begin":
-            state.expr = expr.second()
-            if(expr.length() > 2) {
-              state.cc = new Continuation(
-                              expr.cdr().cdr(),
-                              state.env,
-                              state.cc,
-                              continueBegin)
+            /*
+             * Catch case of:  (begin)
+             */
+            if(expr.cdr() === FoxScheme.nil) {
+              state.expr = FoxScheme.nothing
+              state.ready = true
+            }
+            else {
+              state.expr = expr.second()
+              if(expr.length() > 2) {
+                state.cc = new Continuation(
+                                expr.cdr().cdr(),
+                                state.env,
+                                state.cc,
+                                continueBegin)
+              }
             }
             state.ready = false
             break;
@@ -414,13 +423,22 @@ FoxScheme.Looper.prototype = function() {
    */
   var continueIf = function(state) {
     // everything but #f is true
-    if(state.expr !== false)
+    if(state.expr !== false) {
       state.expr = this.expr.car()
-    else
-      state.expr = this.expr.cdr().car()
+      state.ready = false
+    }
+    else {// false branch
+      if(this.expr.cdr() === FoxScheme.nil) {
+        state.expr = FoxScheme.nothing
+        state.ready = true
+      }
+      else {
+        state.expr = this.expr.cdr().car()
+        state.ready = false
+      }
+    }
     state.env = this.env
     state.cc = this.cc
-    state.ready = false
   }
   
   /*
