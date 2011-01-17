@@ -21,10 +21,10 @@
                        (error 'length "circular list" ls))
                      (if (null? h)
                        (+ n 1)
-                       (die 'length "not a proper list" ls))))
+                       (error 'length "not a proper list" ls))))
                  (if (null? h)
                    n
-                   (die 'length "not a proper list" ls))))])
+                   (error 'length "not a proper list" ls))))])
     (lambda (ls)
       (race ls ls ls 0))))
 
