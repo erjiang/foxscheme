@@ -158,6 +158,13 @@ FoxScheme.Looper.prototype = function() {
    */
   // TODO: recheck file for "obj" -> "expr", "car" -> "car()", etc.
   var evalObj = function(state) {
+    /*
+     * If the state is already done, then stop executing this level (jump out)
+     * This fixes the bug: (eval '(cdr '(1 2 3))) => (eval '(2 3)) => error!
+     */
+    if(state.ready === true)
+      return;
+
     var expr = state.expr
     if(expr instanceof FoxScheme.Symbol) {
       var sym = expr.name()
@@ -456,7 +463,13 @@ FoxScheme.Looper.prototype = function() {
               state: state,
               interpreter: looper},
           args)
-      state.ready = true
+      /*
+       * The state is not necessarily ready! If it was a native procedure, then
+       * state.expr now contains the result.  However, if it was a trampolined
+       * CPS procedure, then state.expr is now the body of the procedure and we
+       * need to continue executing.
+       */
+      state.ready = !(this[0] instanceof FoxScheme.InterpretedProcedure)
     }
     /*
      * If we're in the  middle of the list, then keep
