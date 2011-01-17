@@ -30,10 +30,10 @@ FoxScheme.Looper = function() {
  */
 FoxScheme.Looper.prototype = function() {
   // grab a reference to the current Looper
-  var that
+  var looper
   var initialize = function() {
       this._globals = new FoxScheme.Hash()
-      that = this
+      looper = this
   }
 
   /*
@@ -98,14 +98,20 @@ FoxScheme.Looper.prototype = function() {
     // object and modifies the state accordingly (no return value)
     this.cont = f
   }
+  /*
+   * The top-level continuation, which escapes the eval loop
+   * by throwing its result.
+   */
+  var topCC = new Continuation(null, null, null,
+                    function(state) {
+                      throw state
+                    })
   
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
   var syntax = ["lambda", "let", "letrec", "begin", "if",
       "set!", "define", "quote"]
   
-  // grab a reference to self ... later
-  var looper
   /*
    * This is the top-level eval loop. Unlike the simple recursive
    * evaluator, this loop leaves the processing work to the continue*
@@ -113,24 +119,14 @@ FoxScheme.Looper.prototype = function() {
    * the continuations and catching and returning the final result.
    */
   var eval = function(expr) {
-    looper = this
+    /*
+     * The initial state has an empty environment and the top-level
+     * continuation. The expression to be processed next, of
+     * course, is the input expr.
+     */
+    var topEnv = this._globals.extend()
+    var state = new State(expr, topEnv, topCC)
     try {
-      /*
-       * The top-level continuation, which escapes the eval loop
-       * by throwing its result.
-       */
-      var topCC = new Continuation(null, null, null,
-                        function(state) {
-                          throw state
-                        })
-      /*
-       * The initial state has an empty environment and the top-level
-       * continuation. The expression to be processed next, of
-       * course, is the input expr.
-       */
-      var topEnv = new FoxScheme.Hash()
-      var state = new State(expr, topEnv, topCC)
-
       /*
        * Main computation loop. It is only escaped when topCC throws the final
        * state, or when an Exception occurs.
@@ -165,12 +161,11 @@ FoxScheme.Looper.prototype = function() {
     var expr = state.expr
     if(expr instanceof FoxScheme.Symbol) {
       var sym = expr.name()
-      if((state.expr = state.env.get(sym)) === undefined)
-        if((state.expr = this._globals.get(sym)) === undefined) 
-          if((state.expr = FoxScheme.nativeprocedures.get(sym))
-              === undefined)
-            throw new FoxScheme.Error("Unbound symbol "+expr,
-                "Looper.evalObj")
+      if((state.expr = state.env.chainGet(sym)) === undefined)
+        if((state.expr = FoxScheme.nativeprocedures.get(sym))
+            === undefined)
+          throw new FoxScheme.Error("Unbound symbol "+expr,
+              "Looper.evalObj")
 
       state.ready = true
     }
@@ -238,6 +233,11 @@ FoxScheme.Looper.prototype = function() {
                                         body])
              */
 
+            /*
+             * We need to grab a reference to the env now, because
+             * if we do state.env later, state's env will have changed by then
+             */
+            var capturedEnv = state.env
 
             if(params instanceof FoxScheme.Symbol) {
                 var sym = expr.second().name()
@@ -251,7 +251,7 @@ FoxScheme.Looper.prototype = function() {
                      * this = { state: state,
                      *          interpreter: interpreter }
                      */
-                    var newenv = state.env.extend()
+                    var newenv = capturedEnv.extend()
                     // currState = state at lambda runtime
                     var currState = this.state
                     newenv.set(sym, FoxScheme.Util.listify(arguments))
@@ -283,7 +283,7 @@ FoxScheme.Looper.prototype = function() {
                 state.expr = new FoxScheme.InterpretedProcedure(
                   function() {
                     var i = params.length
-                    var newenv = state.env.extend()
+                    var newenv = capturedEnv.extend()
                     while(i--)
                       newenv.set(params[i].name(), arguments[i])
 
@@ -299,7 +299,7 @@ FoxScheme.Looper.prototype = function() {
                 params = FoxScheme.Util.arrayify(params)
                 state.expr = new FoxScheme.InterpretedProcedure(
                   function () {
-                    var newenv = state.env.extend()
+                    var newenv = capturedEnv.extend()
                     var args = FoxScheme.Util.arrayify(arguments)
                     var currState = this.state
                     var i = params.length - 1
@@ -319,7 +319,7 @@ FoxScheme.Looper.prototype = function() {
             } else if(params === FoxScheme.nil) {
               state.expr = new FoxScheme.InterpretedProcedure(
                 function() {
-                  var newenv = state.env.extend()
+                  var newenv = capturedEnv.extend()
                   var currState = this.state
                   currState.env = newenv
                   currState.ready = false
@@ -454,7 +454,7 @@ FoxScheme.Looper.prototype = function() {
       state.expr = this[0].fapply(
           {
               state: state,
-              interpreter: that},
+              interpreter: looper},
           args)
       state.ready = true
     }
