@@ -63,7 +63,7 @@ FoxScheme.Hash.prototype = function () {
                 if(this._next !== undefined)
                     return this._next.chainSet(key, value)
                 else
-                    return undefined
+                    return this._store[key] = value
         },
         set: function (key, value) {
             return this._store[key] = value
