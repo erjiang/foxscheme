@@ -328,55 +328,84 @@ FoxScheme.Looper.prototype = function() {
                     currState.env = newenv
                     currState.ready = false
                     return body
-                  },
-                  params.length - 1,
-                  true)
+                    },
+                    params.length - 1,
+                    true)
               }
             } else if(params === FoxScheme.nil) {
-              state.expr = new FoxScheme.InterpretedProcedure(
-                function() {
-                  var newenv = capturedEnv.extend()
-                  var currState = this.state
-                  currState.env = newenv
-                  currState.ready = false
-                  return body
-                }, 0, false)
+                state.expr = new FoxScheme.InterpretedProcedure(
+                        function() {
+                        var newenv = capturedEnv.extend()
+                        var currState = this.state
+                        currState.env = newenv
+                        currState.ready = false
+                        return body
+                        }, 0, false)
             } else {
-              throw new FoxScheme.Error("Invalid parameter list in "+expr)
+                throw new FoxScheme.Error("Invalid parameter list in "+expr)
             }
 
             // done, return, go out, etc.
             state.ready = true
 
             break;
+          /*
+             case "let":
+             if(expr.length() < 3)
+             throw new FoxScheme.Error("Invalid syntax: "+expr)
+             var body = expr.third()
+             var bindings = expr.second()
+          /*
+           * This'll probably be optimized by the macro expander anyways
+           * /
+           if(bindings = FoxScheme.nil)
+          // TODO: ????
+
+          else if(bindings instanceof FoxScheme.Pair) {
+          var newenv = state.env.extend()
+          */
+          case "letrec":
             /*
-          case "let":
-            if(expr.length() < 3)
-              throw new FoxScheme.Error("Invalid syntax: "+expr)
-            var body = expr.third()
-            var bindings = expr.second()
-            /*
-             * This'll probably be optimized by the macro expander anyways
-             * /
-            if(bindings = FoxScheme.nil)
-              // TODO: ????
-            
-            else if(bindings instanceof FoxScheme.Pair) {
+             * Check for empty bindings list
+             */
+            if(expr.second() === FoxScheme.nil) { 
+              state.expr = expr.third()
+              state.ready = false
+            }
+            else {
+              /*
+               * The first thing to process is the rhs of the first binding:
+               *   (letrec ((a first-thing) ...) body)
+               */
+              state.expr = expr.second().car().second()
+              /*
+               * newenv is the environment that these letrec bindings will
+               * be evaluated in and bound in, and consequently used to
+               * evaluate the body
+               */
               var newenv = state.env.extend()
-              */
+              state.env = newenv
+              state.cc = new Continuation(
+                              expr.third(),
+                              newenv,
+                              state.cc,
+                              continueLetrec(expr.second()))
+              state.ready = false
+            }
+            break;
           // TODO: other primitive syntax
           default:
             throw new FoxScheme.Bug(sym+" syntax keyword not yet implemented")
         }
-      }
-      // Otherwise, an ordinary procedure application
-      else {
-        state.expr = expr.car()
-        state.cc = new Continuation(
-                        expr.cdr(),
-                        state.env,
-                        state.cc,
-                        continueApply)
+        }
+        // Otherwise, an ordinary procedure application
+        else {
+            state.expr = expr.car()
+            state.cc = new Continuation(
+                    expr.cdr(),
+                    state.env,
+                    state.cc,
+                    continueApply)
         state.ready = false
       }
     }
@@ -485,7 +514,8 @@ FoxScheme.Looper.prototype = function() {
       state.expr = this[0].fapply(
           {
               state: state,
-              interpreter: looper},
+              interpreter: looper,
+              _globals: looper._globals},
           args)
       /*
        * The state is not necessarily ready! If it was a native procedure, then
@@ -505,6 +535,37 @@ FoxScheme.Looper.prototype = function() {
       state.cc = this
       this.expr = this.expr.cdr()
       state.ready = false
+    }
+  }
+
+  var continueLetrec = function(bindings) {
+    // gather a list of all symbols to be bound
+    var newbindings = []
+    return function(state) {
+      // if not, keep processing
+      newbindings.push(new FoxScheme.Pair(
+            bindings.car().car().name(),
+            state.expr))
+      bindings = bindings.cdr()
+      // reached the end of the list?
+      if(bindings === FoxScheme.nil) {
+        var args = []
+        var i = newbindings.length
+        while(i--)
+          this.env.set(newbindings[i].car(), newbindings[i].cdr())
+        /*
+         * because this is letrec, we just use the same env to evaluate the body as the one we used to evaluate the bindings.  state.env and this.env should point to the same object.
+         */
+        //state.env = this.env
+        state.cc = this.cc
+        state.expr = this.expr
+        state.ready = false
+      }
+      // keep processing
+      else {
+        state.expr = bindings.car().second()
+        state.ready = false
+      }
     }
   }
 
