@@ -1,13 +1,14 @@
 /*
  * FoxScheme.Looper
  *
+** vim: set sw=2 ts=2 sts=2 expandtab:
+ *
  * A looping interpreter based on jsScheme:
  * http://www.bluishcoder.co.nz/jsscheme/
  *
  * This interpreter uses and abuses JS's exception-throwing mechanism
  * to implement continuations.
  *
- * vim:sw=2 ts=2 sts=2 expandtab
  */
 
 FoxScheme.Looper = function() {
@@ -348,6 +349,35 @@ FoxScheme.Looper.prototype = function() {
             // done, return, go out, etc.
             state.ready = true
 
+            break;
+          case "let":
+            if(expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+expr)
+            var body = expr.third()
+            var bindings = expr.second()
+            var params = FoxScheme.nil
+            var args = FoxScheme.nil
+            /*
+             * Extract lhs and rhs from bindings:
+             *    ((x 3) (y 4))
+             *    => (x y)
+             *       (3 4)
+             */
+            while(bindings !== FoxScheme.nil) {
+              // (set! params (cons (caar bindings) params))
+              params = new FoxScheme.Pair(bindings.car().car(), params)
+              // (set! args (cons (cadar bindings) args))
+              args = new FoxScheme.Pair(bindings.car().cdr().car(), args)
+              bindings = bindings.cdr()
+            }
+            // assemble new lambda
+            state.expr =
+              new FoxScheme.Pair(
+                new FoxScheme.Pair(new FoxScheme.Symbol("lambda"),
+                  new FoxScheme.Pair(params,
+                    new FoxScheme.Pair(body, FoxScheme.nil))),
+                args)
+            state.ready = false
             break;
           /*
              case "let":
