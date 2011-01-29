@@ -169,12 +169,16 @@ FoxScheme.Looper.prototype = function() {
     var expr = state.expr
     if(expr instanceof FoxScheme.Symbol) {
       var sym = expr.name()
-      if((state.expr = state.env.chainGet(sym)) === undefined)
-        if((state.expr = FoxScheme.nativeprocedures.get(sym))
+      var val
+      if((val = state.env.chainGet(sym)) === undefined)
+        if((val = FoxScheme.nativeprocedures.get(sym))
             === undefined)
           throw new FoxScheme.Error("Unbound symbol "+expr,
               "Looper.evalObj")
-
+      if(val instanceof FoxScheme.Error)
+        throw val
+      //else
+      state.expr = val
       state.ready = true
     }
     else if(expr instanceof FoxScheme.Pair) {
@@ -381,21 +385,6 @@ FoxScheme.Looper.prototype = function() {
                 args)
             state.ready = false
             break;
-          /*
-             case "let":
-             if(expr.length() < 3)
-             throw new FoxScheme.Error("Invalid syntax: "+expr)
-             var body = expr.third()
-             var bindings = expr.second()
-          /*
-           * This'll probably be optimized by the macro expander anyways
-           * /
-           if(bindings = FoxScheme.nil)
-          // TODO: ????
-
-          else if(bindings instanceof FoxScheme.Pair) {
-          var newenv = state.env.extend()
-          */
           case "letrec":
             /*
              * Check for empty bindings list
@@ -416,6 +405,21 @@ FoxScheme.Looper.prototype = function() {
                * evaluate the body
                */
               var newenv = state.env.extend()
+              /*
+               * We need to go through every symbol in the bindings list to
+               * explicitly "unbind" them from the local environment.
+               */
+              var bindingCursor = expr.second()
+              try {
+                while(bindingCursor !== FoxScheme.nil) {
+                  var sym = bindingCursor.car().car().name()
+                  newenv.set(sym, new FoxScheme.Error(
+                      "Cannot bind "+sym+" in the same letrec."))
+                  bindingCursor = bindingCursor.cdr()
+                }
+              } catch (e) {
+                throw new FoxScheme.Error("Improper syntax for letrec bindings: "+expr.second())
+              }
               state.env = newenv
               state.cc = new Continuation(
                               expr.third(),
