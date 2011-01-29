@@ -353,6 +353,8 @@ FoxScheme.Looper.prototype = function() {
           case "let":
             if(expr.length() < 3)
               throw new FoxScheme.Error("Invalid syntax: "+expr)
+            if(expr.length() > 3)
+              throw new FoxScheme.Error("Multiple bodies in let: "+expr)
             var body = expr.third()
             var bindings = expr.second()
             var params = FoxScheme.nil
