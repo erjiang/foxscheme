@@ -138,6 +138,7 @@ FoxScheme.Interpreter.prototype = function() {
               throw new FoxScheme.Error("Invalid syntax: "+expr)
             var body = expr.third()
             var bindings = expr.second()
+            
             /*
              * Well, the macro expander should do this
              * optimization, but we can't assume the expander
@@ -145,21 +146,28 @@ FoxScheme.Interpreter.prototype = function() {
             if(bindings === FoxScheme.nil)
               return valueof(body, env)
 
-            else if(bindings instanceof FoxScheme.Pair) {
-              var newenv = env.extend()
-              var bindarr = FoxScheme.Util.arrayify(bindings)
-              var i = bindarr.length
-              while(i--) {
-                // check binding syntax
-                if(bindarr[i].length() !== 2)
-                  throw new FoxScheme.Error("Invalid syntax for let binding: "+bindings)
-                if(!(bindarr[i].car() instanceof FoxScheme.Symbol))
-                  throw new FoxScheme.Error("Cannot bind "+bindarr[i].car()+" in "+bindings)
-                newenv.set(bindarr[i].car().name(),
-                    valueof(bindarr[i].second(), env))
-              }
-              return valueof(body, newenv)
+            //
+            // Split the bindings into two lists
+            //
+            var bindleft = FoxScheme.nil
+            var bindright = FoxScheme.nil
+            var bcursor = bindings
+            while(bcursor !== FoxScheme.nil) {
+              //
+              // TODO: add back error-checking here
+              //
+              bindleft = new FoxScheme.Pair(bcursor.car().car(), bindleft)
+              bindright = new FoxScheme.Pair(bcursor.car().cdr().car(), bindright)
+              bcursor = bcursor.cdr()
             }
+
+            bindright = mapValueof(bindright, env)
+            console.log("bindleft: "+bindleft)
+            console.log("bindright: "+bindright)
+
+            return valueof(body, extendEnv(bindleft, bindright, env))
+            break;
+
           /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
            * NEWENV instead of ENV
@@ -347,7 +355,7 @@ FoxScheme.Interpreter.prototype = function() {
         if(contains(syntax, sym))
           throw new FoxScheme.Error("Invalid syntax "+sym)
         else
-          throw new FoxScheme.Error("Unbound symbol "+expr)
+          throw new FoxScheme.Error("Unbound symbol "+sym)
       }
     /*
      * This trick allows us to bind variables to errors, like in the case of 
@@ -364,6 +372,7 @@ FoxScheme.Interpreter.prototype = function() {
   // extendEnv extends an environment
   //
   var extendEnv = function(params, values, env) {
+    console.log("extending "+params+" with "+values)
     var newenv = env.extend()
     //
     // Singleton special case
