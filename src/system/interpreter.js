@@ -46,7 +46,7 @@ FoxScheme.Interpreter.prototype = function() {
       "set!", "define", "quote"]
 
   /*
-   * eval makes up most of the interpreter.  It is a simple cased
+   * valueof makes up most of the interpreter.  It is a simple cased
    * recursive interpreter like the 311 interpreter.
    *
    * Currently, it doesn't support lambdas or macros or continuations
@@ -54,9 +54,12 @@ FoxScheme.Interpreter.prototype = function() {
    * This section is especially indented 2 spaces or else it gets
    * kind of wide
    */
-  var eval = function(expr, env) {
-    if(!(this instanceof FoxScheme.Interpreter))
-      throw new FoxScheme.Bug("this is not an Interpreter, it is a "+this)
+  var valueof = function(expr, env) {
+      //console.log("valueof exp: "+expr)
+      //console.log("valueof env: "+env)
+
+//    if(!(this instanceof FoxScheme.Interpreter))
+//      throw new FoxScheme.Bug("this is not an Interpreter, it is a "+this)
 
     /*
      * Anything besides symbols and pairs:
@@ -64,15 +67,15 @@ FoxScheme.Interpreter.prototype = function() {
      */
     if(!(expr instanceof FoxScheme.Symbol) &&
        !(expr instanceof FoxScheme.Pair)) {
-        // can't eval unquoted vector literal
+        // can't valueof unquoted vector literal
         if(expr instanceof FoxScheme.Vector)
-            throw new FoxScheme.Error("Don't know how to eval Vector "+expr+". "+
+            throw new FoxScheme.Error("Don't know how to valueof Vector "+expr+". "+
                                       "Did you forget to quote it?")
       return expr;
     }
 
     if(env === undefined)
-      var env = new FoxScheme.Hash();
+      var env = this._globals;
 
     /*
      * Symbol:
@@ -80,7 +83,7 @@ FoxScheme.Interpreter.prototype = function() {
      * globals, and finally the system globals
      */
     if(expr instanceof FoxScheme.Symbol) {
-      return applyEnv.call(this, expr, env)
+      return applyEnv(expr, env)
     }
 
     /*
@@ -98,8 +101,7 @@ FoxScheme.Interpreter.prototype = function() {
       if(expr.car() instanceof FoxScheme.Symbol &&
          contains(syntax, expr.car().name()) &&
          // make sure the syntax keyword hasn't been shadowed
-         env.chainGet(expr.car().name()) === undefined &&
-         this._globals.get(expr.car().name()) === undefined) {
+         env.chainGet(expr.car().name()) === undefined) {
         var sym = expr.first().name();
         switch (sym) {
           case "quote":
@@ -116,70 +118,9 @@ FoxScheme.Interpreter.prototype = function() {
 
             var body = expr.third()
             var params = expr.second()
-            var that = this; // grab reference to this
-            if(params instanceof FoxScheme.Symbol) {
-              var sym = expr.second().name()
-              /* 
-               * Catches the special case of (lambda x body)
-               */
-              return new FoxScheme.InterpretedProcedure(
-                function() {
-                  var newenv = env.extend()
-                  newenv.set(sym, FoxScheme.Util.listify(arguments))
-                  return that.eval(body, newenv)
-                },
-                0,     // minimum number of args
-                true); // yes, improper parameters list
-            }
-            else if(params instanceof FoxScheme.Pair) {
-              // (lambda (a b c) body)
-              if(params.isProper()) {
-                params = FoxScheme.Util.arrayify(params)
-                return new FoxScheme.InterpretedProcedure(
-                  function() {
-                    var newenv = env.extend()
-                    var i = params.length
-                    while(i--) {
-                      newenv.set(params[i].name(), arguments[i])
-                    }
-                    return that.eval(body, newenv)
-                  },
-                  params.length,
-                  false);
-              }
-              // (lambda (a b . c) body)
-              else {
-                params = FoxScheme.Util.arrayify(params)
-                return new FoxScheme.InterpretedProcedure(
-                  function () {
-                    var newenv = env.extend()
-                    // (a b . c) => [a, b, c]
-                    var args = FoxScheme.Util.arrayify(arguments)
-                    // process everything but last item
-                    var i = params.length - 1
-                    while(i--) {
-                      newenv.set(params[i].name(), args[i])
-                    }
-                    // now process the last item to be a new list of 
-                    // everything else
-                    newenv.set(params[params.length - 1].name(), FoxScheme.Util.listify(args.slice(params.length - 1)))
 
-                    // now that environment is all set up
-                    return that.eval(body, newenv)
-                  },
-                  params.length - 1,
-                  true); // yes, improper args
-              }
-            }
-            else if(params === FoxScheme.nil) {
-              return new FoxScheme.InterpretedProcedure(
-                function() {
-                  return that.eval(body, env)
-                }, 0, false);
-            }
-            else {
-              throw new FoxScheme.Error("Invalid parameter list in "+expr)
-            }
+            return new Closure(params, body, env)
+
             break;
           /*
            * Yes, "let" can be converted to immediately-applied lambdas,
@@ -202,7 +143,7 @@ FoxScheme.Interpreter.prototype = function() {
              * optimization, but we can't assume the expander
              */
             if(bindings === FoxScheme.nil)
-              return this.eval(body, env)
+              return valueof(body, env)
 
             else if(bindings instanceof FoxScheme.Pair) {
               var newenv = env.extend()
@@ -215,9 +156,9 @@ FoxScheme.Interpreter.prototype = function() {
                 if(!(bindarr[i].car() instanceof FoxScheme.Symbol))
                   throw new FoxScheme.Error("Cannot bind "+bindarr[i].car()+" in "+bindings)
                 newenv.set(bindarr[i].car().name(),
-                    this.eval(bindarr[i].second(), env))
+                    valueof(bindarr[i].second(), env))
               }
-              return this.eval(body, newenv)
+              return valueof(body, newenv)
             }
           /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
@@ -239,7 +180,7 @@ FoxScheme.Interpreter.prototype = function() {
             var bindings = expr.second()
             // see note above at: [case "let":]
             if(bindings === FoxScheme.nil)
-              return this.eval(body, env)
+              return valueof(body, env)
 
             else if(bindings instanceof FoxScheme.Pair) {
               var newenv = env.extend()
@@ -270,34 +211,34 @@ FoxScheme.Interpreter.prototype = function() {
                 newenv.set(bindarr[i].car().name(),
                     /*
                      * The only difference between letrec and let is that we
-                     * eval each rhs with NEWENV instead of ENV. Since NEWENV
+                     * valueof each rhs with NEWENV instead of ENV. Since NEWENV
                      * is an object, modifying NEWENV here will also affect any
                      * captured references to NEWENV in lambdas in the rhs,
                      * allowing recursion to work
                      */
-                    this.eval(bindarr[i].second(), newenv))
+                    valueof(bindarr[i].second(), newenv))
               }
             }
-            return this.eval(body, newenv);
+            return valueof(body, newenv);
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
               return FoxScheme.nothing
             var cursor = expr.cdr()
             while(cursor.cdr() !== FoxScheme.nil) {
-              this.eval(cursor.car(), env)
+              valueof(cursor.car(), env)
               cursor = cursor.cdr()
             }
 
             // return whatever is in Tail position
-            return this.eval(cursor.car(), env)
+            return valueof(cursor.car(), env)
             break;
           case "if":
             var l = expr.length()
             if(l < 3 || l > 4)
               throw new FoxScheme.Error("Invalid syntax for if: "+expr)
 
-            if(this.eval(expr.second(), env) !== false)
-              return this.eval(expr.third(), env)
+            if(valueof(expr.second(), env) !== false)
+              return valueof(expr.third(), env)
             /*
              * One-armed ifs are supposed to be merely syntax, as
              *     (expand '(if #t #t))
@@ -307,7 +248,7 @@ FoxScheme.Interpreter.prototype = function() {
             else if(l === 3)
               return FoxScheme.nothing;
             else
-              return this.eval(expr.fourth(), env)
+              return valueof(expr.fourth(), env)
             break;
           /*
            * We define define to be set! because psyntax.pp depends on define
@@ -325,18 +266,18 @@ FoxScheme.Interpreter.prototype = function() {
               throw new FoxScheme.Error("Cannot define the non-symbol "+expr.second())
 
             var sym = expr.second().name()
-            // eval the right-hand side
+            // valueof the right-hand side
             // set! the appropriately-scoped symbol
             if(env.chainGet(sym) !== undefined) {
-              // don't eval unless we can actually set!
-              var val = this.eval(expr.third(), env)
+              // don't valueof unless we can actually set!
+              var val = valueof(expr.third(), env)
               env.chainSet(sym, val)
             }
             else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
               throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
             }
             else {
-              var val = this.eval(expr.third(), env)
+              var val = valueof(expr.third(), env)
               this._globals.set(sym, val)
             }
             return FoxScheme.nothing;
@@ -349,18 +290,18 @@ FoxScheme.Interpreter.prototype = function() {
               throw new FoxScheme.Error("Cannot set! the non-symbol "+expr.second())
 
             var sym = expr.second().name()
-            // eval the right-hand side
+            // valueof the right-hand side
             // set! the appropriately-scoped symbol
             if(env.chainGet(sym) !== undefined) {
-              // don't eval unless we can actually set!
-              var val = this.eval(expr.third(), env)
+              // don't valueof unless we can actually set!
+              var val = valueof(expr.third(), env)
               env.chainSet(sym, val)
             }
             else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
               throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
             }
             else {
-              var val = this.eval(expr.third(), env)
+              var val = valueof(expr.third(), env)
               this._globals.set(sym, val)
             }
             return FoxScheme.nothing;
@@ -376,22 +317,22 @@ FoxScheme.Interpreter.prototype = function() {
       }
       // means that first item is not syntax
       else {
-        var proc = this.eval(expr.car(), env)
-        if(!(proc instanceof FoxScheme.Procedure))
+        var proc = valueof(expr.car(), env)
+        if(!(proc instanceof FoxScheme.Procedure) && !(proc instanceof Closure))
           throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
 
-        // something like (map eval (cdr expr))
-        var args = FoxScheme.Util.arrayify(expr.cdr())
-        for(var i in args) {
-          args[i] = this.eval(args[i], env)
-        }
-
-        // actually do (apply (car expr) (cdr expr))
-        return proc.fapply(this, args)
+        return applyProc(proc, mapValueof(expr.cdr(), env))
       }
     }
     throw new FoxScheme.Bug("Don't know what to do with "+expr+
                     " (reached past switch/case)", "Interpreter")
+  }
+
+  var mapValueof = function(ls, env) {
+    if(ls === FoxScheme.nil)
+      return FoxScheme.nil
+    else
+      return new FoxScheme.Pair(valueof(ls.car(), env), mapValueof(ls.cdr(), env))
   }
 
   var Env = FoxScheme.Hash
@@ -399,19 +340,15 @@ FoxScheme.Interpreter.prototype = function() {
   // applyEnv takes a symbol and looks it up in the given environment
   //
   var applyEnv = function(symbol, env) {
-    console.log("applyenv:")
-    console.log(this)
     var sym = symbol.name()
     var val
     if((val = env.chainGet(sym)) === undefined)
-      if((val = this._globals.get(sym)) === undefined)
-        if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
-          if(contains(syntax, sym))
-            throw new FoxScheme.Error("Invalid syntax "+sym)
-          else {
-            throw new FoxScheme.Error("Unbound symbol "+expr)
-          }
-        }
+      if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
+        if(contains(syntax, sym))
+          throw new FoxScheme.Error("Invalid syntax "+sym)
+        else
+          throw new FoxScheme.Error("Unbound symbol "+expr)
+      }
     /*
      * This trick allows us to bind variables to errors, like in the case of 
      * (letrec ((x (+ x 5))) x)
@@ -427,7 +364,7 @@ FoxScheme.Interpreter.prototype = function() {
   // extendEnv extends an environment
   //
   var extendEnv = function(params, values, env) {
-    var newenv = rator.env.extend()
+    var newenv = env.extend()
     //
     // Singleton special case
     //
@@ -437,17 +374,18 @@ FoxScheme.Interpreter.prototype = function() {
     }
 
     var pcursor = params // param cursor
-    var rcursor = rands  // rands cursor
+    var vcursor = values // value cursor
     while(pcursor !== FoxScheme.nil) {
-      newenv.set(pcursor.car().name(), rcursor.car())
-      pcursor = pcursor.cdr()
-      rcursor = rcursor.cdr()
       // check for improper param list: (x y . z)
-      if(pcursor !== FoxScheme.Pair) { 
-        newenv.set(pcursor.name(), rcursor)
+      if(!(pcursor instanceof FoxScheme.Pair)) { 
+        newenv.set(pcursor.name(), vcursor)
         break;
       }
+      newenv.set(pcursor.car().name(), vcursor.car())
+      pcursor = pcursor.cdr()
+      vcursor = vcursor.cdr()
     }
+    return newenv;
   }
 
   //
@@ -463,13 +401,20 @@ FoxScheme.Interpreter.prototype = function() {
     this.expr = expr;
     this.env = env;
   }
+  Closure.prototype.toString = function() {
+    return "#<FoxScheme Closure>"
+  }
 
-  var applyClosure = function(rator, rands) {
-    if(!(rator instanceof Closure)) {
-      throw new FoxScheme.Error("Attempt to apply non-Closure: "+rator, "applyClosure")
+  var applyProc = function(rator, rands) {
+    if(rator instanceof Closure) {
+      return valueof(rator.expr, extendEnv(rator.params, rands, rator.env))
     }
-
-    return eval(rator.expr, extendEnv(rator.params, rands, rator.env))
+    if(rator instanceof FoxScheme.Procedure) {
+      // actually do (apply (car expr) (cdr expr))
+      return rator.fapply(this, FoxScheme.Util.arrayify(rands))
+    }
+    else
+      throw new FoxScheme.Error("Attempt to apply non-Closure: "+rator, "applyClosure")
   }
 
   /*
@@ -477,7 +422,7 @@ FoxScheme.Interpreter.prototype = function() {
    */
   return {
     initialize: initialize,
-    eval: eval,
+    eval: valueof,
     toString: function () { return "#<Interpreter>" },
   }
 }();
