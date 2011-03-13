@@ -1,6 +1,8 @@
 /*
  * FoxScheme.Interpreter
  *
+** vim: set sw=2 ts=2:
+ *
  * A simple interpreter of Scheme objects, passed in as FoxScheme objects.
  * This interpreter optionally needs the native functions as provided
  * by the src/native/*.js files.
@@ -11,8 +13,6 @@
  *     var i = new FoxScheme.Interpreter();
  *     while((var expr = p.nextObject()) != null)
  *         print(i.this.eval(expr))
- *
- * vim:sw=2 ts=2
  */
 FoxScheme.Interpreter = function() {
     if(!(this instanceof FoxScheme.Interpreter)) {
@@ -24,6 +24,7 @@ FoxScheme.Interpreter = function() {
 }
 
 FoxScheme.Interpreter.prototype = function() {
+
   var initialize = function () {
     this._globals = new FoxScheme.Hash();
   }
@@ -56,6 +57,7 @@ FoxScheme.Interpreter.prototype = function() {
   var eval = function(expr, env) {
     if(!(this instanceof FoxScheme.Interpreter))
       throw new FoxScheme.Bug("this is not an Interpreter, it is a "+this)
+
     /*
      * Anything besides symbols and pairs:
      * Can be returned immediately, regardless of the env
@@ -78,26 +80,7 @@ FoxScheme.Interpreter.prototype = function() {
      * globals, and finally the system globals
      */
     if(expr instanceof FoxScheme.Symbol) {
-        var sym = expr.name()
-        var val
-        if((val = env.chainGet(sym)) === undefined)
-          if((val = this._globals.get(sym)) === undefined)
-            if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
-              if(contains(syntax, sym))
-                throw new FoxScheme.Error("Invalid syntax "+sym)
-              else {
-                throw new FoxScheme.Error("Unbound symbol "+expr)
-              }
-            }
-        /*
-         * This trick allows us to bind variables to errors, like in the case of 
-         * (letrec ((x (+ x 5))) x)
-         * so that x => Error: cannot refer to x from inside letrec
-         */
-        if(val instanceof FoxScheme.Error)
-            throw val;
-
-        return val;
+      return applyEnv.call(this, expr, env)
     }
 
     /*
@@ -409,6 +392,84 @@ FoxScheme.Interpreter.prototype = function() {
     }
     throw new FoxScheme.Bug("Don't know what to do with "+expr+
                     " (reached past switch/case)", "Interpreter")
+  }
+
+  var Env = FoxScheme.Hash
+  //
+  // applyEnv takes a symbol and looks it up in the given environment
+  //
+  var applyEnv = function(symbol, env) {
+    console.log("applyenv:")
+    console.log(this)
+    var sym = symbol.name()
+    var val
+    if((val = env.chainGet(sym)) === undefined)
+      if((val = this._globals.get(sym)) === undefined)
+        if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
+          if(contains(syntax, sym))
+            throw new FoxScheme.Error("Invalid syntax "+sym)
+          else {
+            throw new FoxScheme.Error("Unbound symbol "+expr)
+          }
+        }
+    /*
+     * This trick allows us to bind variables to errors, like in the case of 
+     * (letrec ((x (+ x 5))) x)
+     * so that x => Error: cannot refer to x from inside letrec
+     */
+    if(val instanceof FoxScheme.Error)
+        throw val;
+
+    return val;
+  }
+
+  //
+  // extendEnv extends an environment
+  //
+  var extendEnv = function(params, values, env) {
+    var newenv = rator.env.extend()
+    //
+    // Singleton special case
+    //
+    if(params instanceof FoxScheme.Symbol) {
+      newenv.set(params.name(), values)
+      return newenv
+    }
+
+    var pcursor = params // param cursor
+    var rcursor = rands  // rands cursor
+    while(pcursor !== FoxScheme.nil) {
+      newenv.set(pcursor.car().name(), rcursor.car())
+      pcursor = pcursor.cdr()
+      rcursor = rcursor.cdr()
+      // check for improper param list: (x y . z)
+      if(pcursor !== FoxScheme.Pair) { 
+        newenv.set(pcursor.name(), rcursor)
+        break;
+      }
+    }
+  }
+
+  //
+  // Closure:
+  // {
+  //   params: (x y . z),
+  //   expr: (+ x y),
+  //   env: FoxScheme.Hash
+  // }
+  //
+  var Closure = function(params, expr, env) {
+    this.params = params;
+    this.expr = expr;
+    this.env = env;
+  }
+
+  var applyClosure = function(rator, rands) {
+    if(!(rator instanceof Closure)) {
+      throw new FoxScheme.Error("Attempt to apply non-Closure: "+rator, "applyClosure")
+    }
+
+    return eval(rator.expr, extendEnv(rator.params, rands, rator.env))
   }
 
   /*
