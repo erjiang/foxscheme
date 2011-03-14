@@ -190,43 +190,34 @@ FoxScheme.Interpreter.prototype = function() {
             if(bindings === FoxScheme.nil)
               return valueof(body, env)
 
-            else if(bindings instanceof FoxScheme.Pair) {
-              var newenv = env.extend()
-              var bindarr = FoxScheme.Util.arrayify(bindings)
-              /*
-               * We run two loops here.
-               * The first time, we go through all of the bindings. We do
-               * syntax checks and then rebind each var with a FoxScheme.Error.
-               * This way, if a letrec tries referring to itself immediately,
-               * the error is thrown and acts as a guard.
-               */
-              var i = bindarr.length
-              while(i--) {
-                // check binding syntax
-                if(bindarr[i].length() !== 2)
-                  throw new FoxScheme.Error("Invalid syntax for letrec binding: "+bindings)
-                if(!(bindarr[i].car() instanceof FoxScheme.Symbol))
-                  throw new FoxScheme.Error("Cannot bind "+bindarr[i].car()+" in "+bindings)
-
-                newenv.set(bindarr[i].car().name(), new FoxScheme.Error("Cannot refer to own letrec variable "+bindarr[i].car()))
-              }
-              /*
-               * This next loop actually evals the RHS of each binding and
-               * rebinds the var with the result.
-               */
-              i = bindarr.length
-              while(i--) {
-                newenv.set(bindarr[i].car().name(),
-                    /*
-                     * The only difference between letrec and let is that we
-                     * valueof each rhs with NEWENV instead of ENV. Since NEWENV
-                     * is an object, modifying NEWENV here will also affect any
-                     * captured references to NEWENV in lambdas in the rhs,
-                     * allowing recursion to work
-                     */
-                    valueof(bindarr[i].second(), newenv))
-              }
+            //
+            // Split the bindings into two lists.
+            //
+            // `binderr` acts as guards against attempts to use the lhs of a
+            // letrec binding in the right hand side
+            //
+            var bindleft  = FoxScheme.nil
+            var binderr   = FoxScheme.nil
+            var bindright = FoxScheme.nil
+            var bcursor = bindings
+            while(bcursor !== FoxScheme.nil) {
+              //
+              // TODO: add back error-checking here
+              //
+              bindleft = new FoxScheme.Pair(bcursor.car().car(), bindleft)
+              binderr  = new FoxScheme.Pair(
+                  new FoxScheme.Error("Cannot refer to own letrec variable "+
+                      bcursor.car().car()), binderr)
+              bindright = new FoxScheme.Pair(bcursor.car().cdr().car(), bindright)
+              bcursor = bcursor.cdr()
             }
+
+            var newenv = extendEnv(bindleft, binderr, env)
+
+            bindright = mapValueof(bindright, newenv)
+  
+            /*newenv = */overwriteEnv(bindleft, bindright, newenv)
+
             return valueof(body, newenv);
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
@@ -310,7 +301,7 @@ FoxScheme.Interpreter.prototype = function() {
             }
             else {
               var val = valueof(expr.third(), env)
-              this._globals.set(sym, val)
+              env.chainSet(sym, val)
             }
             return FoxScheme.nothing;
             break;
@@ -371,18 +362,17 @@ FoxScheme.Interpreter.prototype = function() {
   //
   // extendEnv extends an environment
   //
-  var extendEnv = function(params, values, env) {
-    console.log("extending "+params+" with "+values)
+  var extendEnv = function(symbols, values, env) {
     var newenv = env.extend()
     //
     // Singleton special case
     //
-    if(params instanceof FoxScheme.Symbol) {
-      newenv.set(params.name(), values)
+    if(symbols instanceof FoxScheme.Symbol) {
+      newenv.set(symbols.name(), values)
       return newenv
     }
 
-    var pcursor = params // param cursor
+    var pcursor = symbols // param cursor
     var vcursor = values // value cursor
     while(pcursor !== FoxScheme.nil) {
       // check for improper param list: (x y . z)
@@ -396,6 +386,22 @@ FoxScheme.Interpreter.prototype = function() {
     }
     return newenv;
   }
+  //
+  // **overwriteEnv** is like `extendEnv` except that it does not
+  // extend the environment first
+  //
+  var overwriteEnv = function(symbols, values, env) {
+    var pcursor = symbols // param cursor
+    var vcursor = values // value cursor
+    while(pcursor !== FoxScheme.nil) {
+      /* I don't think we need to check for improper lists like above */
+      env.set(pcursor.car().name(), vcursor.car())
+      pcursor = pcursor.cdr()
+      vcursor = vcursor.cdr()
+    }
+    return env
+  }
+    
 
   //
   // Closure:
