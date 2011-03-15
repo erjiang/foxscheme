@@ -69,6 +69,15 @@ FoxScheme.Pair.prototype = {
     fourth: function() {
         return this.cdr().cdr().cdr().car()
     },
+    last: function() {
+        if(this._cdr === FoxScheme.nil)
+            return this._car
+        else
+            if(this._cdr instanceof FoxScheme.Pair)
+                return this._cdr.last()
+            else
+                throw new FoxScheme.Bug("Can't get last of improper list", "Pair.last")
+    },
     length: function() {
         var acc = 0
         var cursor = this

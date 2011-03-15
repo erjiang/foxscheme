@@ -27,6 +27,7 @@ FoxScheme.Interpreter.prototype = function() {
 
   var initialize = function () {
     this._globals = new FoxScheme.Hash();
+    console.log(testMapValueof());
   }
   /*
    * Checks if an array contains an item by doing
@@ -54,9 +55,12 @@ FoxScheme.Interpreter.prototype = function() {
    * This section is especially indented 2 spaces or else it gets
    * kind of wide
    */
-  var valueof = function(expr, env) {
+  var valueof = function(expr, env, k) {
       //console.log("valueof exp: "+expr)
       //console.log("valueof env: "+env)
+
+    if(k === undefined)
+      k = function(v) { return v };
 
 //    if(!(this instanceof FoxScheme.Interpreter))
 //      throw new FoxScheme.Bug("this is not an Interpreter, it is a "+this)
@@ -71,11 +75,11 @@ FoxScheme.Interpreter.prototype = function() {
         if(expr instanceof FoxScheme.Vector)
             throw new FoxScheme.Error("Don't know how to valueof Vector "+expr+". "+
                                       "Did you forget to quote it?")
-      return expr;
+      return k(expr);
     }
 
     if(env === undefined)
-      var env = this._globals;
+      env = this._globals;
 
     /*
      * Symbol:
@@ -92,7 +96,7 @@ FoxScheme.Interpreter.prototype = function() {
             throw new FoxScheme.Error("Unbound symbol "+sym)
         }
       }
-      return val
+      return k(val)
     }
 
     /*
@@ -119,7 +123,7 @@ FoxScheme.Interpreter.prototype = function() {
             if(expr.length() === 1)
               throw new FoxScheme.Error("Can't quote nothing")
 
-            return expr.second()
+            return k(expr.second())
             break;
           case "lambda":
             if(expr.length() < 3)
@@ -128,9 +132,8 @@ FoxScheme.Interpreter.prototype = function() {
             var body = expr.third()
             var params = expr.second()
 
-            return new Closure(params, body, env)
+            return k(new Closure(params, body, env))
 
-            break;
           /*
            * Yes, "let" can be converted to immediately-applied lambdas,
            * but implementing it natively is quite a bit simpler and doesn't
@@ -170,12 +173,9 @@ FoxScheme.Interpreter.prototype = function() {
               bcursor = bcursor.cdr()
             }
 
-            bindright = mapValueof(bindright, env)
-            console.log("bindleft: "+bindleft)
-            console.log("bindright: "+bindright)
-
-            return valueof(body, extendEnv(bindleft, bindright, env))
-            break;
+            return mapValueof(bindright, env, function(rands) {
+              return valueof(body, extendEnv(bindleft, rands, env), k)
+            })
 
           /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
@@ -220,44 +220,42 @@ FoxScheme.Interpreter.prototype = function() {
               bindright = new FoxScheme.Pair(bcursor.car().cdr().car(), bindright)
               bcursor = bcursor.cdr()
             }
-
             var newenv = extendEnv(bindleft, binderr, env)
 
-            bindright = mapValueof(bindright, newenv)
-  
-            /*newenv = */overwriteEnv(bindleft, bindright, newenv)
+            return mapValueof(bindright, newenv, function(rands) {
+              return valueof(body, overwriteEnv(bindleft, rands, newenv), k)
+            })
 
-            return valueof(body, newenv);
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
-              return FoxScheme.nothing
-            var cursor = expr.cdr()
-            while(cursor.cdr() !== FoxScheme.nil) {
-              valueof(cursor.car(), env)
-              cursor = cursor.cdr()
-            }
+              return k(FoxScheme.nothing)
 
             // return whatever is in Tail position
-            return valueof(cursor.car(), env)
-            break;
+            return mapValueof(expr.cdr(), env, function(results) {
+                return k(results.last())
+            })
+
           case "if":
             var l = expr.length()
             if(l < 3 || l > 4)
               throw new FoxScheme.Error("Invalid syntax for if: "+expr)
 
-            if(valueof(expr.second(), env) !== false)
-              return valueof(expr.third(), env)
             /*
              * One-armed ifs are supposed to be merely syntax, as
              *     (expand '(if #t #t))
              *     => (if #t #t (#2%void))
              * in Chez Scheme, but here it's easier to support natively
              */
-            else if(l === 3)
-              return FoxScheme.nothing;
-            else
-              return valueof(expr.fourth(), env)
-            break;
+            return valueof(expr.second(), env, function(test) {
+              if(test !== false)
+                return valueof(expr.third(), env, k)
+              else
+                if(l === 3)
+                  return k(FoxScheme.nothing)
+                else
+                  return valueof(expr.fourth(), env, k)
+            })
+
           /*
            * We define define to be set! because psyntax.pp depends on define
            * being available, but we cannot (set! define set!) because set! is
@@ -272,26 +270,23 @@ FoxScheme.Interpreter.prototype = function() {
             if(expr.length() !== 3)
               throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
 
-            if(!(expr.second() instanceof FoxScheme.Symbol))
+            var symbol = expr.second()
+
+            if(!(symbol instanceof FoxScheme.Symbol))
               throw new FoxScheme.Error("Cannot set! the non-symbol "+expr.second())
 
-            var symbol = expr.second()
-            // valueof the right-hand side
-            // set! the appropriately-scoped symbol
-            if(applyEnv(symbol, env) !== undefined) {
-              // don't valueof unless we can actually set!
-              var val = valueof(expr.third(), env)
-              setEnv(symbol, val, env)
-            }
-            else if(applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
+            if(applyEnv(symbol, env) === undefined && applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
               throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
             }
-            else {
-              var val = valueof(expr.third(), env)
+
+            // valueof the right-hand side
+            // set! the appropriately-scoped symbol
+            
+            return valueof(expr.third(), env, function(val) {
               setEnv(symbol, val, env)
-            }
-            return FoxScheme.nothing;
-            break;
+              return k(FoxScheme.nothing)
+            })
+
           /*
            * this will only happen if a keyword is in the syntax list
            * but there is no case for it
@@ -303,24 +298,41 @@ FoxScheme.Interpreter.prototype = function() {
       }
       // means that first item is not syntax
       else {
-        var proc = valueof(expr.car(), env)
-        if(!(proc instanceof FoxScheme.Procedure) && !(proc instanceof Closure))
-          throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
-
-        return applyProc(proc, mapValueof(expr.cdr(), env))
+        // return applyProc(valueof(expr.car(), env), mapValueof(expr.cdr(), env))
+        return valueof(expr.car(), env, function(rator) {
+          if(!(rator instanceof FoxScheme.Procedure) && !(rator instanceof Closure))
+            throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
+          return mapValueof(expr.cdr(), env, function(rands) {
+            return applyProc(rator, rands, k)
+          })
+        })
       }
     }
     throw new FoxScheme.Bug("Don't know what to do with "+expr+
                     " (reached past switch/case)", "Interpreter")
   }
 
-  var mapValueof = function(ls, env) {
+  var mapValueof = function(ls, env, k) {
     if(ls === FoxScheme.nil)
-      return FoxScheme.nil
+      return k(FoxScheme.nil)
     else
-      return new FoxScheme.Pair(valueof(ls.car(), env), mapValueof(ls.cdr(), env))
+      return valueof(ls.car(), env, function(a) {
+        return mapValueof(ls.cdr(), env, function(d) {
+          return k(new FoxScheme.Pair(a, d))
+        })
+      })
+  };
+
+  var testMapValueof = function() {
+    var ls = FoxScheme.Util.listify([1, 2, 3, 4])
+    return mapValueof(ls, new FoxScheme.Hash(), function(l) { return l; })
   }
 
+/*
+  console.log("mapValueof test");
+  console.log(mapValueof(lslsls, new FoxScheme.Hash(), function(l) { return l; }));
+
+  */
   var Env = FoxScheme.Hash
   //
   // applyEnv takes a symbol and looks it up in the given environment
@@ -342,7 +354,6 @@ FoxScheme.Interpreter.prototype = function() {
   }
 
   var setEnv = function(symbol, value, env) {
-    console.log("Setting "+symbol.name()+" to "+value)
     env.chainSet(symbol.name(), value)
   }
 
@@ -407,13 +418,13 @@ FoxScheme.Interpreter.prototype = function() {
     return "#<FoxScheme Closure>"
   }
 
-  var applyProc = function(rator, rands) {
+  var applyProc = function(rator, rands, k) {
     if(rator instanceof Closure) {
-      return valueof(rator.expr, extendEnv(rator.params, rands, rator.env))
+      return valueof(rator.expr, extendEnv(rator.params, rands, rator.env), k)
     }
     if(rator instanceof FoxScheme.Procedure) {
       // actually do (apply (car expr) (cdr expr))
-      return rator.fapply(this, FoxScheme.Util.arrayify(rands))
+      return k(rator.fapply(this, FoxScheme.Util.arrayify(rands)))
     }
     else
       throw new FoxScheme.Error("Attempt to apply non-Closure: "+rator, "applyClosure")
