@@ -27,7 +27,6 @@ FoxScheme.Interpreter.prototype = function() {
 
   var initialize = function () {
     this._globals = new FoxScheme.Hash();
-    console.log(testMapValueof());
   }
   /*
    * Checks if an array contains an item by doing
@@ -75,7 +74,7 @@ FoxScheme.Interpreter.prototype = function() {
         if(expr instanceof FoxScheme.Vector)
             throw new FoxScheme.Error("Don't know how to valueof Vector "+expr+". "+
                                       "Did you forget to quote it?")
-      return k(expr);
+      return applyK(k, expr);
     }
 
     if(env === undefined)
@@ -96,7 +95,7 @@ FoxScheme.Interpreter.prototype = function() {
             throw new FoxScheme.Error("Unbound symbol "+sym)
         }
       }
-      return k(val)
+      return applyK(k, val)
     }
 
     /*
@@ -123,7 +122,7 @@ FoxScheme.Interpreter.prototype = function() {
             if(expr.length() === 1)
               throw new FoxScheme.Error("Can't quote nothing")
 
-            return k(expr.second())
+            return applyK(k, expr.second())
             break;
           case "lambda":
             if(expr.length() < 3)
@@ -132,7 +131,7 @@ FoxScheme.Interpreter.prototype = function() {
             var body = expr.third()
             var params = expr.second()
 
-            return k(new Closure(params, body, env))
+            return applyK(k, new Closure(params, body, env))
 
           /*
            * Yes, "let" can be converted to immediately-applied lambdas,
@@ -228,11 +227,11 @@ FoxScheme.Interpreter.prototype = function() {
 
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
-              return k(FoxScheme.nothing)
+              return applyK(k, FoxScheme.nothing)
 
             // return whatever is in Tail position
             return mapValueof(expr.cdr(), env, function(results) {
-                return k(results.last())
+                return applyK(k, results.last())
             })
 
           case "if":
@@ -251,7 +250,7 @@ FoxScheme.Interpreter.prototype = function() {
                 return valueof(expr.third(), env, k)
               else
                 if(l === 3)
-                  return k(FoxScheme.nothing)
+                  return applyK(k, FoxScheme.nothing)
                 else
                   return valueof(expr.fourth(), env, k)
             })
@@ -284,7 +283,7 @@ FoxScheme.Interpreter.prototype = function() {
             
             return valueof(expr.third(), env, function(val) {
               setEnv(symbol, val, env)
-              return k(FoxScheme.nothing)
+              return applyK(k, FoxScheme.nothing)
             })
 
           /*
@@ -301,7 +300,7 @@ FoxScheme.Interpreter.prototype = function() {
         // return applyProc(valueof(expr.car(), env), mapValueof(expr.cdr(), env))
         return valueof(expr.car(), env, function(rator) {
           if(!(rator instanceof FoxScheme.Procedure) && !(rator instanceof Closure))
-            throw new FoxScheme.Error("Attempt to apply non-procedure "+proc)
+            throw new FoxScheme.Error("Attempt to apply non-procedure "+rator)
           return mapValueof(expr.cdr(), env, function(rands) {
             return applyProc(rator, rands, k)
           })
@@ -312,21 +311,20 @@ FoxScheme.Interpreter.prototype = function() {
                     " (reached past switch/case)", "Interpreter")
   }
 
+  var applyK = function(k, v) {
+    return k(v)
+  }
+
   var mapValueof = function(ls, env, k) {
     if(ls === FoxScheme.nil)
-      return k(FoxScheme.nil)
+      return applyK(k, FoxScheme.nil)
     else
       return valueof(ls.car(), env, function(a) {
         return mapValueof(ls.cdr(), env, function(d) {
-          return k(new FoxScheme.Pair(a, d))
+          return applyK(k, new FoxScheme.Pair(a, d))
         })
       })
   };
-
-  var testMapValueof = function() {
-    var ls = FoxScheme.Util.listify([1, 2, 3, 4])
-    return mapValueof(ls, new FoxScheme.Hash(), function(l) { return l; })
-  }
 
 /*
   console.log("mapValueof test");
@@ -424,7 +422,7 @@ FoxScheme.Interpreter.prototype = function() {
     }
     if(rator instanceof FoxScheme.Procedure) {
       // actually do (apply (car expr) (cdr expr))
-      return k(rator.fapply(this, FoxScheme.Util.arrayify(rands)))
+      return applyK(k, rator.fapply(this, FoxScheme.Util.arrayify(rands)))
     }
     else
       throw new FoxScheme.Error("Attempt to apply non-Closure: "+rator, "applyClosure")
