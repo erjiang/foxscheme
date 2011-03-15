@@ -83,7 +83,16 @@ FoxScheme.Interpreter.prototype = function() {
      * globals, and finally the system globals
      */
     if(expr instanceof FoxScheme.Symbol) {
-      return applyEnv(expr, env)
+      var val
+      if((val = applyEnv(expr, env)) === undefined) {
+        if((val = applyEnv(expr, FoxScheme.nativeprocedures)) === undefined) {
+          if(contains(syntax, sym))
+            throw new FoxScheme.Error("Invalid syntax "+sym)
+          else
+            throw new FoxScheme.Error("Unbound symbol "+sym)
+        }
+      }
+      return val
     }
 
     /*
@@ -99,9 +108,9 @@ FoxScheme.Interpreter.prototype = function() {
        * Go to the switch only if the first item is syntax
        */
       if(expr.car() instanceof FoxScheme.Symbol &&
-         contains(syntax, expr.car().name()) &&
-         // make sure the syntax keyword hasn't been shadowed
-         env.chainGet(expr.car().name()) === undefined) {
+        contains(syntax, expr.car().name()) &&
+        // make sure the syntax keyword hasn't been shadowed
+        applyEnv(expr.car(), env) === undefined) {
         var sym = expr.first().name();
         switch (sym) {
           case "quote":
@@ -255,32 +264,10 @@ FoxScheme.Interpreter.prototype = function() {
            * syntax and we do not have first-class syntax, and we cannot write
            * a macro to do so without psyntax.pp!
            * 
-           * In FoxScheme, define is exactly set!, unlike Chez Scheme, which
-           * allows you to (define + *) but not (set! + *)
+           * In FoxScheme, top-level define is exactly set!, unlike R6RS
+           * semantics.
            */
           case "define":
-            if(expr.length() !== 3)
-              throw new FoxScheme.Error("Invalid syntax in define: "+expr)
-            if(!(expr.second() instanceof FoxScheme.Symbol))
-              throw new FoxScheme.Error("Cannot define the non-symbol "+expr.second())
-
-            var sym = expr.second().name()
-            // valueof the right-hand side
-            // set! the appropriately-scoped symbol
-            if(env.chainGet(sym) !== undefined) {
-              // don't valueof unless we can actually set!
-              var val = valueof(expr.third(), env)
-              env.chainSet(sym, val)
-            }
-            else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
-              throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
-            }
-            else {
-              var val = valueof(expr.third(), env)
-              this._globals.set(sym, val)
-            }
-            return FoxScheme.nothing;
-            break;
           case "set!":
             if(expr.length() !== 3)
               throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
@@ -288,20 +275,20 @@ FoxScheme.Interpreter.prototype = function() {
             if(!(expr.second() instanceof FoxScheme.Symbol))
               throw new FoxScheme.Error("Cannot set! the non-symbol "+expr.second())
 
-            var sym = expr.second().name()
+            var symbol = expr.second()
             // valueof the right-hand side
             // set! the appropriately-scoped symbol
-            if(env.chainGet(sym) !== undefined) {
+            if(applyEnv(symbol, env) !== undefined) {
               // don't valueof unless we can actually set!
               var val = valueof(expr.third(), env)
-              env.chainSet(sym, val)
+              setEnv(symbol, val, env)
             }
-            else if(FoxScheme.nativeprocedures.get(sym) !== undefined) {
+            else if(applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
               throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
             }
             else {
               var val = valueof(expr.third(), env)
-              env.chainSet(sym, val)
+              setEnv(symbol, val, env)
             }
             return FoxScheme.nothing;
             break;
@@ -342,12 +329,7 @@ FoxScheme.Interpreter.prototype = function() {
     var sym = symbol.name()
     var val
     if((val = env.chainGet(sym)) === undefined)
-      if((val = FoxScheme.nativeprocedures.get(sym)) === undefined) {
-        if(contains(syntax, sym))
-          throw new FoxScheme.Error("Invalid syntax "+sym)
-        else
-          throw new FoxScheme.Error("Unbound symbol "+sym)
-      }
+        return undefined;
     /*
      * This trick allows us to bind variables to errors, like in the case of 
      * (letrec ((x (+ x 5))) x)
@@ -357,6 +339,11 @@ FoxScheme.Interpreter.prototype = function() {
         throw val;
 
     return val;
+  }
+
+  var setEnv = function(symbol, value, env) {
+    console.log("Setting "+symbol.name()+" to "+value)
+    env.chainSet(symbol.name(), value)
   }
 
   //
