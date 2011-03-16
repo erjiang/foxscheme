@@ -45,13 +45,13 @@ $(OUTPUT): $(FILES)
 uncompressed: $(files)
 	cat $(FILES) > $(OUTPUT)
 
-rhino: $(OUTPUT) shim/rhino.js
+rhino: $(OUTPUT) src/shim/rhino.js
 	cp $(OUTPUT) $(OUTPUT_PATH)/foxrhino.js
-	cat shim/rhino.js >> $(OUTPUT_PATH)/foxrhino.js
+	cat src/shim/rhino.js >> $(OUTPUT_PATH)/foxrhino.js
 
-browser: $(OUTPUT) shim/browser.js
+browser: $(OUTPUT) src/shim/browser.js
 	cp $(OUTPUT) $(OUTPUT_PATH)/foxbrowser.js
-	cat shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
+	cat src/shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
 
 clean:
 	rm __merged.js
