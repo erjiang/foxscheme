@@ -43,7 +43,7 @@ FoxScheme.Interpreter.prototype = function() {
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
   var syntax = ["lambda", "let", "letrec", "begin", "if",
-      "set!", "define", "quote"]
+      "set!", "define", "quote", "call/cc", "letcc"]
 
   /*
    * valueof makes up most of the interpreter.  It is a simple cased
@@ -276,6 +276,21 @@ FoxScheme.Interpreter.prototype = function() {
             return valueof(expr.third(), env,
                 new Continuation(kSet, symbol, env, k))
 
+          case "call/cc":
+            if(expr.length() !== 2)
+              throw new FoxScheme.Error("Invalid syntax in call/cc: "+expr)
+
+            return valueof(expr.second(), env,
+                new Continuation(kCallCC, k))
+            /*
+            return valueof(expr.second(), env, function(p) {
+                return applyProc(p, new FoxScheme.Pair(k, FoxScheme.nil), k)
+                })
+            return applyProc(valueof(expr.second(), env, k), k)
+              */
+          case "letcc":
+            return valueof(expr.third(),
+                extendEnv(expr.second(), k, env), k)
           /*
            * this will only happen if a keyword is in the syntax list
            * but there is no case for it
@@ -323,7 +338,7 @@ FoxScheme.Interpreter.prototype = function() {
   //
   var kEmpty = 0, kLet = 1, kLetrec = 2, kBegin = 3, kIf = 4,
       kSet = 5, kProcRator = 6, kProcRands = 7,
-      kMapValueofStep = 8, kMapValueofCons = 9
+      kMapValueofStep = 8, kMapValueofCons = 9, kCallCC = 10
 
 //  kEmpty([value])
 //  kLet([rands], body, bindleft, env, k)
@@ -335,6 +350,7 @@ FoxScheme.Interpreter.prototype = function() {
 //    kProcRands([rands], rator, k)
 //  kMapValueofStep([car], cdr, env, k)
 //    kMapValueofCons([cdr], car, k)
+//  kCallCC(
   var applyK = function(k, v) {
     // note that the k passed in is overwritten with the k
     // extracted from the Continuation
@@ -384,7 +400,9 @@ FoxScheme.Interpreter.prototype = function() {
             rands = k[0],
             env = k[1],
             k = k[2]
-        if(!(rator instanceof FoxScheme.Procedure) && !(rator instanceof Closure))
+        if(!(rator instanceof FoxScheme.Procedure) &&
+            !(rator instanceof Closure) &&
+            !(rator instanceof Continuation))
             throw new FoxScheme.Error("Attempt to apply non-procedure "+rator)
 
         return mapValueof(rands, env,
@@ -393,7 +411,16 @@ FoxScheme.Interpreter.prototype = function() {
         var rands = v,
             rator = k[0],
             k = k[1]
+        // TODO: extend this for multiple return values
+        if(rator instanceof Continuation)
+          return applyK(rator, rands.first())
         return applyProc(rator, rands, k)
+      case kCallCC:
+        var proc = v,
+            k = k[0]
+        if(!(v instanceof Closure))
+          throw new FoxScheme.Error("Tried to call/cc a non-Closure: "+v)
+        return applyProc(proc, new FoxScheme.Pair(k, FoxScheme.nil), k)
       case kMapValueofStep:
         var car = v,
             cdr = k[0],
