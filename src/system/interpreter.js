@@ -8,7 +8,7 @@
  * by the src/native/*.js files.
  *
  * Example usage:
- * 
+ *
  *     var p = new FoxScheme.Parser("(+ 2 2)")
  *     var i = new FoxScheme.Interpreter();
  *     while((var expr = p.nextObject()) != null)
@@ -29,6 +29,32 @@ FoxScheme.Interpreter.prototype = function() {
     this._globals = new FoxScheme.Hash();
   }
 
+  //
+  // The interpreter's registers:
+  //
+  var $expr, $env, $k, //   valueof(expr, env, k)
+      $val, // $k,          applyK(k, v)
+      $rator, $rands, //$k,  applyProc(rator, rands, k)
+      $ls, // $env, $k,     mapValueof(ls, env, k)
+      $pc              //   program counter!
+
+  var evalDriver = function(expr) {
+    $expr = expr
+    $env = this._globals
+    $k = new Continuation(kEmpty)
+    $pc = valueof
+    try {
+      for(;;)
+        $pc()
+    }
+    catch (e) {
+      if (e instanceof ValueContainer)
+        return e.value
+      else
+        throw e
+    }
+  }
+
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
   var syntax = ["lambda", "let", "letrec", "begin", "if",
@@ -39,16 +65,13 @@ FoxScheme.Interpreter.prototype = function() {
    * recursive interpreter like the 311 interpreter.
    *
    * Currently, it doesn't support lambdas or macros or continuations
-   * 
+   *
    * This section is especially indented 2 spaces or else it gets
    * kind of wide
    */
-  var valueof = function(expr, env, k) {
-      //console.log("valueof exp: "+expr)
-      //console.log("valueof env: "+env)
-
-    if(k === undefined)
-      k = new Continuation(kEmpty)
+  var valueof = function(/*expr, env, k*/) {
+      //console.log("valueof exp: "+$expr)
+      //console.log("valueof env: "+$env)
 
 //    if(!(this instanceof FoxScheme.Interpreter))
 //      throw new FoxScheme.Bug("this is not an Interpreter, it is a "+this)
@@ -57,34 +80,37 @@ FoxScheme.Interpreter.prototype = function() {
      * Anything besides symbols and pairs:
      * Can be returned immediately, regardless of the env
      */
-    if(!(expr instanceof FoxScheme.Symbol) &&
-       !(expr instanceof FoxScheme.Pair)) {
+    if(!($expr instanceof FoxScheme.Symbol) &&
+       !($expr instanceof FoxScheme.Pair)) {
         // can't valueof unquoted vector literal
-        if(expr instanceof FoxScheme.Vector)
-            throw new FoxScheme.Error("Don't know how to valueof Vector "+expr+". "+
+        if($expr instanceof FoxScheme.Vector)
+            throw new FoxScheme.Error("Don't know how to valueof Vector "+$expr+". "+
                                       "Did you forget to quote it?")
-      return applyK(k, expr);
+      $k = $k
+      $v = $expr
+      $pc = applyK
+      return;
     }
-
-    if(env === undefined)
-      env = this._globals;
 
     /*
      * Symbol:
      * Look up the symbol first in the env, then in this instance's
      * globals, and finally the system globals
      */
-    if(expr instanceof FoxScheme.Symbol) {
+    if($expr instanceof FoxScheme.Symbol) {
       var val
-      if((val = applyEnv(expr, env)) === undefined) {
-        if((val = applyEnv(expr, FoxScheme.nativeprocedures)) === undefined) {
+      if((val = applyEnv($expr, $env)) === undefined) {
+        if((val = applyEnv($expr, FoxScheme.nativeprocedures)) === undefined) {
           if(FoxScheme.Util.contains(syntax, sym))
             throw new FoxScheme.Error("Invalid syntax "+sym)
           else
             throw new FoxScheme.Error("Unbound symbol "+sym)
         }
       }
-      return applyK(k, val)
+      $k = $k
+      $v = val
+      $pc = applyK
+      return;
     }
 
     /*
@@ -92,35 +118,40 @@ FoxScheme.Interpreter.prototype = function() {
      * Eval the first item and make sure it's a procedure.  Then,
      * apply it to the rest of the list.
      */
-    if(expr instanceof FoxScheme.Pair) {
-      if(!expr.isProper())
-        throw new FoxScheme.Error("Invalid syntax--improper list: "+expr);
+    if($expr instanceof FoxScheme.Pair) {
+      if(!$expr.isProper())
+        throw new FoxScheme.Error("Invalid syntax--improper list: "+$expr);
 
       /*
        * Go to the switch only if the first item is syntax
        */
-      if(expr.car() instanceof FoxScheme.Symbol &&
-        FoxScheme.Util.contains(syntax, expr.car().name()) &&
+      if($expr.car() instanceof FoxScheme.Symbol &&
+        FoxScheme.Util.contains(syntax, $expr.car().name()) &&
         // make sure the syntax keyword hasn't been shadowed
-        applyEnv(expr.car(), env) === undefined) {
-        var sym = expr.first().name();
+        applyEnv($expr.car(), $env) === undefined) {
+        var sym = $expr.first().name();
         switch (sym) {
           case "quote":
-            if(expr.length() > 2)
-              throw new FoxScheme.Error("Can't quote more than 1 thing: "+expr)
-            if(expr.length() === 1)
+            if($expr.length() > 2)
+              throw new FoxScheme.Error("Can't quote more than 1 thing: "+$expr)
+            if($expr.length() === 1)
               throw new FoxScheme.Error("Can't quote nothing")
 
-            return applyK(k, expr.second())
-            break;
+            $k = $k
+            $v = $expr.second()
+            $pc = applyK
+            return;
           case "lambda":
-            if(expr.length() < 3)
-              throw new FoxScheme.Error("Invalid syntax: "+expr)
+            if($expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+$expr)
 
-            var body = expr.third()
-            var params = expr.second()
+            var body = $expr.third()
+            var params = $expr.second()
 
-            return applyK(k, new Closure(params, body, env))
+            $k = $k
+            $v = new Closure(params, body, $env)
+            $pc = applyK
+            return;
 
           /*
            * Yes, "let" can be converted to immediately-applied lambdas,
@@ -134,17 +165,22 @@ FoxScheme.Interpreter.prototype = function() {
            * far as syntax checks go.
            */
           case "let":
-            if(expr.length() < 3)
-              throw new FoxScheme.Error("Invalid syntax: "+expr)
-            var body = expr.third()
-            var bindings = expr.second()
-            
+            if($expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+$expr)
+            var body = $expr.third()
+            var bindings = $expr.second()
+
             /*
              * Well, the macro expander should do this
              * optimization, but we can't assume the expander
              */
-            if(bindings === FoxScheme.nil)
-              return valueof(body, env)
+            if(bindings === FoxScheme.nil) {
+              $expr = body
+              $env = $env
+              $k = $k
+              $pc = valueof
+              return;
+            }
 
             //
             // Split the bindings into two lists
@@ -161,15 +197,18 @@ FoxScheme.Interpreter.prototype = function() {
               bcursor = bcursor.cdr()
             }
 
-            return mapValueof(bindright, env,
-                new Continuation(kLet, body, bindleft, env, k))
+            $ls = bindright
+            $env = $env
+            $k = new Continuation(kLet, body, bindleft, $env, $k)
+            $pc = mapValueof
+            return;
 
           /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
            * NEWENV instead of ENV
            * This code is basically sound if used correctly, but doesn't catch
            * the case where
-           * 
+           *
            *   (let ([x 5])
            *     (letrec ([x (+ 5 x)])
            *       x))
@@ -178,13 +217,18 @@ FoxScheme.Interpreter.prototype = function() {
            * TODO: Fix this by adding explicitly unbound vars
            */
           case "letrec":
-            if(expr.length() < 3)
-              throw new FoxScheme.Error("Invalid syntax: "+expr)
-            var body = expr.third()
-            var bindings = expr.second()
+            if($expr.length() < 3)
+              throw new FoxScheme.Error("Invalid syntax: "+$expr)
+            var body = $expr.third()
+            var bindings = $expr.second()
             // see note above at: [case "let":]
-            if(bindings === FoxScheme.nil)
-              return valueof(body, env)
+            if(bindings === FoxScheme.nil) {
+              $expr = body
+              $env = $env
+              $k = $k
+              $pc = valueof
+              return;
+            }
 
             //
             // Split the bindings into two lists.
@@ -207,23 +251,32 @@ FoxScheme.Interpreter.prototype = function() {
               bindright = new FoxScheme.Pair(bcursor.car().cdr().car(), bindright)
               bcursor = bcursor.cdr()
             }
-            var newenv = extendEnv(bindleft, binderr, env)
 
-            return mapValueof(bindright, newenv,
-                new Continuation(kLetrec, body, bindleft, newenv, k))
+            $ls = bindright
+            $env = extendEnv(bindleft, binderr, $env)
+            $k = new Continuation(kLetrec, body, bindleft, $env, $k)
+            $pc = mapValueof
+            return;
 
           case "begin":
-            if(expr.cdr() === FoxScheme.nil)
-              return applyK(k, FoxScheme.nothing)
+            if($expr.cdr() === FoxScheme.nil) {
+              $k = $k
+              $v = FoxScheme.nothing
+              $pc = applyK
+              return;
+            }
 
             // return whatever is in Tail position
-            return mapValueof(expr.cdr(), env,
-              new Continuation(kBegin, k))
+            $ls = $expr.cdr()
+            $env = $env
+            $k = new Continuation(kBegin, $k)
+            $pc = mapValueof
+            return;
 
           case "if":
-            var l = expr.length()
+            var l = $expr.length()
             if(l < 3 || l > 4)
-              throw new FoxScheme.Error("Invalid syntax for if: "+expr)
+              throw new FoxScheme.Error("Invalid syntax for if: "+$expr)
 
             /*
              * One-armed ifs are supposed to be merely syntax, as
@@ -231,46 +284,55 @@ FoxScheme.Interpreter.prototype = function() {
              *     => (if #t #t (#2%void))
              * in Chez Scheme, but here it's easier to support natively
              */
-            return valueof(expr.second(), env,
-                new Continuation(kIf, expr.third(),
-                  (l === 3 ? FoxScheme.nothing : expr.fourth()),
-                  env, k))
+            $env = $env
+            $k = new Continuation(kIf, $expr.third(),
+                  (l === 3 ? FoxScheme.nothing : $expr.fourth()),
+                  $env, $k)
+            $expr = $expr.second()
+            $pc = valueof
+            return;
 
           /*
            * We define define to be set! because psyntax.pp depends on define
            * being available, but we cannot (set! define set!) because set! is
            * syntax and we do not have first-class syntax, and we cannot write
            * a macro to do so without psyntax.pp!
-           * 
+           *
            * In FoxScheme, top-level define is exactly set!, unlike R6RS
            * semantics.
            */
           case "define":
           case "set!":
-            if(expr.length() !== 3)
-              throw new FoxScheme.Error("Invalid syntax in set!: "+expr)
+            if($expr.length() !== 3)
+              throw new FoxScheme.Error("Invalid syntax in set!: "+$expr)
 
-            var symbol = expr.second()
+            var symbol = $expr.second()
 
             if(!(symbol instanceof FoxScheme.Symbol))
-              throw new FoxScheme.Error("Cannot set! the non-symbol "+expr.second())
+              throw new FoxScheme.Error("Cannot set! the non-symbol "+$expr.second())
 
-            if(applyEnv(symbol, env) === undefined && applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
+            if(applyEnv(symbol, $env) === undefined && applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
               throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
             }
 
             // valueof the right-hand side
             // set! the appropriately-scoped symbol
-            
-            return valueof(expr.third(), env,
-                new Continuation(kSet, symbol, env, k))
+
+            $expr = $expr.third()
+            $env = $env
+            $k = new Continuation(kSet, symbol, $env, $k)
+            $pc = valueof
+            return;
 
           case "call/cc":
-            if(expr.length() !== 2)
-              throw new FoxScheme.Error("Invalid syntax in call/cc: "+expr)
+            if($expr.length() !== 2)
+              throw new FoxScheme.Error("Invalid syntax in call/cc: "+$expr)
 
-            return valueof(expr.second(), env,
-                new Continuation(kCallCC, k))
+            $expr = $expr.second()
+            $env = $env
+            $k = new Continuation(kCallCC, k)
+            $pc = valueof
+            return;
             /*
             return valueof(expr.second(), env, function(p) {
                 return applyProc(p, new FoxScheme.Pair(k, FoxScheme.nil), k)
@@ -278,8 +340,11 @@ FoxScheme.Interpreter.prototype = function() {
             return applyProc(valueof(expr.second(), env, k), k)
               */
           case "letcc":
-            return valueof(expr.third(),
-                extendEnv(expr.second(), k, env), k)
+            $env = extendEnv($expr.second(), $k, $env)
+            $expr = $expr.third()
+            $k = $k
+            $pc = valueof
+            return;
           /*
            * this will only happen if a keyword is in the syntax list
            * but there is no case for it
@@ -292,11 +357,13 @@ FoxScheme.Interpreter.prototype = function() {
       // means that first item is not syntax
       else {
         // return applyProc(valueof(expr.car(), env), mapValueof(expr.cdr(), env))
-        return valueof(expr.car(), env,
-            new Continuation(kProcRator, expr.cdr(), env, k))
+        $env = $env
+        $k = new Continuation(kProcRator, $expr.cdr(), $env, $k)
+        $expr = $expr.car()
+        return;
       }
     }
-    throw new FoxScheme.Bug("Don't know what to do with "+expr+
+    throw new FoxScheme.Bug("Don't know what to do with "+$expr+
                     " (reached past switch/case)", "Interpreter")
   }
 
@@ -312,7 +379,7 @@ FoxScheme.Interpreter.prototype = function() {
     // Continuation(kLet, 1, 2, 3)
     // => [1, 2, 3]
     var i = arguments.length
-    while(i-- > 0) {
+    while(i-- > 1) {
       this[i-1] = arguments[i]
     }
 
@@ -322,7 +389,14 @@ FoxScheme.Interpreter.prototype = function() {
     return "cont"+this.type
   }
 
-  // 
+  var ValueContainer = function(v) {
+    this.value = v
+  }
+  ValueContainer.prototype.toString = function() {
+    return "You got back: "+this.value
+  }
+
+  //
   // Enums for continuation types
   //
   var kEmpty = 0, kLet = 1, kLetrec = 2, kBegin = 3, kIf = 4,
@@ -340,99 +414,162 @@ FoxScheme.Interpreter.prototype = function() {
 //  kMapValueofStep([car], cdr, env, k)
 //    kMapValueofCons([cdr], car, k)
 //  kCallCC(
-  var applyK = function(k, v) {
+  var applyK = function(/*k, v*/) {
+    //console.log("applyK $k: "+$k)
+    //console.log("applyK $v: "+$v)
     // note that the k passed in is overwritten with the k
     // extracted from the Continuation
-    switch(k.type) {
+    switch($k.type) {
       case kEmpty:
-        return v
+        throw new ValueContainer($v)
       case kLet:
-        var rands = v,
-            body = k[0],
-            bindleft = k[1],
-            env = k[2],
-            k = k[3]
-        return valueof(body, extendEnv(bindleft, rands, env), k)
+        var rands = $v,
+            body = $k[0],
+            bindleft = $k[1],
+            env = $k[2],
+            k = $k[3]
+        $expr = body
+        $env = extendEnv(bindleft, rands, env)
+        $k = k
+        $pc = valueof
+        return;
       case kLetrec:
-        var rands = v,
-            body = k[0],
-            bindleft = k[1],
-            env = k[2],
-            k = k[3]
-        return valueof(body, overwriteEnv(bindleft, rands, env), k)
+        var rands = $v,
+            body = $k[0],
+            bindleft = $k[1],
+            env = $k[2],
+            k = $k[3]
+        $expr = body
+        $env = overwriteEnv(bindleft, rands, env)
+        $k = k
+        $pc = valueof
+        return;
       case kBegin:
-        var results = v,
-            k = k[0]
-        return applyK(k, results.last())
+        var results = $v,
+            k = $k[0]
+        $k = k
+        $v = results.last()
+        $pc = applyK
+        return;
       case kIf:
-        var test = v,
-            conseq = k[0],
-            alt = k[1],
-            env = k[2],
-            k = k[3]
-        if(test !== false)
-          return valueof(conseq, env, k)
+        var test = $v,
+            conseq = $k[0],
+            alt = $k[1],
+            env = $k[2],
+            k = $k[3]
+        if(test !== false) {
+          $expr = conseq
+          $env = env
+          $k = k
+          $pc = valueof
+          return;
+        }
         else
-          if(alt === FoxScheme.nothing) // one-armed if
-            return alt
-          else
-            return valueof(alt, env, k)
+          if(alt === FoxScheme.nothing) { // one-armed if
+            $k = k
+            $v = alt
+            $pc = applyK
+            return;
+          }
+          else {
+            $expr = alt
+            $env = env
+            $k = k
+            $pc = valueof
+            return;
+          }
       case kSet:
-        var value = v,
-            symbol = k[0],
-            env = k[1],
-            k = k[2]
+        var value = $v,
+            symbol = $k[0],
+            env = $k[1],
+            k = $k[2]
         setEnv(symbol, value, env)
-        return applyK(k, FoxScheme.nothing)
+        $k = k
+        $v = FoxScheme.nothing
+        $pc = applyK
+        return;
       case kProcRator:
-        var rator = v,
-            rands = k[0],
-            env = k[1],
-            k = k[2]
+        var rator = $v,
+            rands = $k[0],
+            env = $k[1],
+            k = $k[2]
         if(!(rator instanceof FoxScheme.Procedure) &&
             !(rator instanceof Closure) &&
             !(rator instanceof Continuation))
             throw new FoxScheme.Error("Attempt to apply non-procedure "+rator)
 
-        return mapValueof(rands, env,
-            new Continuation(kProcRands, rator, k))
+        $ls = rands
+        $env = env
+        $k = new Continuation(kProcRands, rator, k)
+        $pc = mapValueof
+        return;
       case kProcRands:
-        var rands = v,
-            rator = k[0],
-            k = k[1]
+        var rands = $v,
+            rator = $k[0],
+            k = $k[1]
         // TODO: extend this for multiple return values
-        if(rator instanceof Continuation)
-          return applyK(rator, rands.first())
-        return applyProc(rator, rands, k)
+        if(rator instanceof Continuation) {
+          $k = rator
+          $v = rands.first()
+          $pc = applyK
+          return;
+        }
+        $rator = rator
+        $rands = rands
+        $k = k
+        $pc = applyProc
+        return;
       case kCallCC:
-        var proc = v,
-            k = k[0]
+        var proc = $v,
+            k = $k[0]
         if(!(v instanceof Closure))
           throw new FoxScheme.Error("Tried to call/cc a non-Closure: "+v)
-        return applyProc(proc, new FoxScheme.Pair(k, FoxScheme.nil), k)
+
+        $rator = proc
+        $rands = new FoxScheme.Pair(k, FoxScheme.nil)
+        $k = k
+        $pc = applyProc
+        return;
       case kMapValueofStep:
-        var car = v,
-            cdr = k[0],
-            env = k[1],
-            k = k[2]
-        return mapValueof(cdr, env,
-          new Continuation(kMapValueofCons, car, k))
+        var car = $v,
+            cdr = $k[0],
+            env = $k[1],
+            k = $k[2]
+        $ls = cdr
+        $env = env
+        $k = new Continuation(kMapValueofCons, car, k)
+        $pc = mapValueof
+        return;
       case kMapValueofCons:
-        var cdr = v,
-            car = k[0],
-            k = k[1]
-        return applyK(k, new FoxScheme.Pair(car, cdr))
+        var cdr = $v,
+            car = $k[0],
+            k = $k[1]
+        $k = k
+        $v = new FoxScheme.Pair(car, cdr)
+        $pc = applyK
+        return;
       default:
-        throw new FoxScheme.Bug("Unknown continuation type "+k.type)
+        throw new FoxScheme.Bug("Unknown continuation type "+$k.type)
     }
   }
 
-  var mapValueof = function(ls, env, k) {
-    if(ls === FoxScheme.nil)
-      return applyK(k, FoxScheme.nil)
-    else
-      return valueof(ls.car(), env,
-          new Continuation(kMapValueofStep, ls.cdr(), env, k))
+  //
+  // CPS'd procedure to find valueof of everything in a list
+  //
+  var mapValueof = function(/*ls, env, k*/) {
+    if($ls === FoxScheme.nil) {
+      $k = $k
+      $v = $ls
+      $pc = applyK
+      return;
+    }
+    else {
+      $expr = $ls.car()
+      $env = $env
+      $k = new Continuation(kMapValueofStep, $ls.cdr(), $env, $k)
+      $pc = valueof
+      return;
+    }
   }
 
 /*
@@ -450,7 +587,7 @@ FoxScheme.Interpreter.prototype = function() {
     if((val = env.chainGet(sym)) === undefined)
         return undefined;
     /*
-     * This trick allows us to bind variables to errors, like in the case of 
+     * This trick allows us to bind variables to errors, like in the case of
      * (letrec ((x (+ x 5))) x)
      * so that x => Error: cannot refer to x from inside letrec
      */
@@ -481,7 +618,7 @@ FoxScheme.Interpreter.prototype = function() {
     var vcursor = values // value cursor
     while(pcursor !== FoxScheme.nil) {
       // check for improper param list: (x y . z)
-      if(!(pcursor instanceof FoxScheme.Pair)) { 
+      if(!(pcursor instanceof FoxScheme.Pair)) {
         newenv.set(pcursor.name(), vcursor)
         break;
       }
@@ -506,7 +643,7 @@ FoxScheme.Interpreter.prototype = function() {
     }
     return env
   }
-    
+
 
   //
   // Closure:
@@ -525,16 +662,55 @@ FoxScheme.Interpreter.prototype = function() {
     return "#<FoxScheme Closure>"
   }
 
-  var applyProc = function(rator, rands, k) {
-    if(rator instanceof Closure) {
-      return valueof(rator.expr, extendEnv(rator.params, rands, rator.env), k)
+  //
+  // CPS'd procedure to apply a Closure or FoxScheme.Procedure on a
+  // list of operands
+  //
+  var applyProc = function(/*rator, rands, k*/) {
+    if($rator instanceof Closure) {
+      $expr = $rator.expr
+      $env = extendEnv($rator.params, $rands, $rator.env)
+      $k = $k
+      $pc = valueof
+      return;
     }
-    if(rator instanceof FoxScheme.Procedure) {
+    if($rator instanceof FoxScheme.Procedure) {
       // actually do (apply (car expr) (cdr expr))
-      return applyK(k, rator.fapply(this, FoxScheme.Util.arrayify(rands)))
+      $k = $k
+      $v = $rator.fapply(this, FoxScheme.Util.arrayify($rands))
+      $pc = applyK
+      return;
     }
     else
-      throw new FoxScheme.Error("Attempt to apply non-Closure: "+rator, "applyClosure")
+      throw new FoxScheme.Error("Attempt to apply non-Closure: "+$rator, "applyClosure")
+  }
+
+  var inspectRegisters = function() {
+    console.log("$expr")
+    console.log($expr)
+    console.log("$env")
+    console.log($env)
+    console.log("$k")
+    console.log($k)
+    console.log("$v")
+    console.log($v)
+    console.log("$pc")
+    switch($pc) {
+      case valueof:
+        console.log("valueof")
+        break;
+      case mapValueof:
+        console.log("mapValueof")
+        break;
+      case applyProc:
+        console.log("applyProc")
+        break;
+      case applyK:
+        console.log("applyK")
+        break;
+      default:
+        console.log($pc)
+    }
   }
 
   /*
@@ -542,7 +718,8 @@ FoxScheme.Interpreter.prototype = function() {
    */
   return {
     initialize: initialize,
-    eval: valueof,
+    eval: evalDriver,
+    inspectRegisters: inspectRegisters,
     toString: function () { return "#<Interpreter>" },
   }
 }();
