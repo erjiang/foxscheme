@@ -720,6 +720,6 @@ FoxScheme.Interpreter.prototype = function() {
     initialize: initialize,
     eval: evalDriver,
     inspectRegisters: inspectRegisters,
-    toString: function () { return "#<Interpreter>" },
+    toString: function () { return "#<Interpreter>" }
   }
 }();
