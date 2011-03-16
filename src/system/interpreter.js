@@ -100,10 +100,10 @@ FoxScheme.Interpreter.prototype = function() {
       var val
       if((val = applyEnv($expr, $env)) === undefined) {
         if((val = applyEnv($expr, FoxScheme.nativeprocedures)) === undefined) {
-          if(FoxScheme.Util.contains(syntax, sym))
-            throw new FoxScheme.Error("Invalid syntax "+sym)
+          if(FoxScheme.Util.contains(syntax, $expr.name()))
+            throw new FoxScheme.Error("Invalid syntax "+$expr.name())
           else
-            throw new FoxScheme.Error("Unbound symbol "+sym)
+            throw new FoxScheme.Error("Unbound symbol "+$expr.name())
         }
       }
       $k = $k
@@ -143,6 +143,8 @@ FoxScheme.Interpreter.prototype = function() {
           case "lambda":
             if($expr.length() < 3)
               throw new FoxScheme.Error("Invalid syntax: "+$expr)
+            if($expr.length() > 3)
+              throw new FoxScheme.Error("Invalid implicit begin: "+$expr)
 
             var body = $expr.third()
             var params = $expr.second()
@@ -329,7 +331,7 @@ FoxScheme.Interpreter.prototype = function() {
 
             $expr = $expr.second()
             $env = $env
-            $k = new Continuation(kCallCC, k)
+            $k = new Continuation(kCallCC, $k)
             $pc = valueof
             return;
             /*
@@ -521,8 +523,8 @@ FoxScheme.Interpreter.prototype = function() {
       case kCallCC:
         var proc = $v,
             k = $k[0]
-        if(!(v instanceof Closure))
-          throw new FoxScheme.Error("Tried to call/cc a non-Closure: "+v)
+        if(!($v instanceof Closure))
+          throw new FoxScheme.Error("Tried to call/cc a non-Closure: "+$v)
 
         $rator = proc
         $rands = new FoxScheme.Pair(k, FoxScheme.nil)
