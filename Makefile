@@ -4,7 +4,11 @@
 #
 # MINIFY is expected to be some program that takes JavaScript file
 # and reduces its file size: $(MINIFY) in.js -o output.js
-MINIFY=yuicomp
+#
+#MINIFY=yuicomp
+#MINIFY=-o
+MINIFY=closure-compiler --js 
+MINIFY_OUT=--js_output_file
 #
 # FILES is a list of all the FoxScheme files, in the order that
 # they should be run
@@ -33,7 +37,7 @@ OUTPUT=$(OUTPUT_PATH)/foxscheme.js
 
 $(OUTPUT): $(FILES)
 	cat $(FILES) > __merged.js
-	$(MINIFY) __merged.js -o $(OUTPUT)
+	$(MINIFY) __merged.js $(MINIFY_OUT) $(OUTPUT)
 	# This next line adds FoxScheme.version="9dfa9bb3"; to the end of the file
 	echo FoxScheme.version=\"`git log -1\
 		--pretty=format:%H | cut -c 1-8`'";' >> $(OUTPUT)
