@@ -17,7 +17,6 @@
 FoxScheme.Interpreter = function() {
     if(!(this instanceof FoxScheme.Interpreter)) {
         throw FoxScheme.Error("Improper use of FoxScheme.Interpreter()")
-        return null
     }
 
     this.initialize();

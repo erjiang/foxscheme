@@ -24,7 +24,6 @@
 FoxScheme.Hash = function () {
     if(!(this instanceof FoxScheme.Hash)) {
         throw new FoxScheme.Error("Improper use of FoxScheme.Hash()");
-        return null;
     }
     this.initialize.apply(this, arguments)
 }

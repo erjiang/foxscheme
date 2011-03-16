@@ -7,7 +7,6 @@ FoxScheme.Char = function(c) {
 	// guard against accidental non-instantiation
 	if (! (this instanceof FoxScheme.Char)) {
 		throw new FoxScheme.Bug("Improper use of FoxScheme.Char()");
-		return null;
 	}
 	this.init(c);
 }

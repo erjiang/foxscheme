@@ -2,7 +2,6 @@ FoxScheme.Symbol = function(name) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Symbol)) {
         throw new FoxScheme.Bug("Improper use of FoxScheme.Symbol()");
-        return null;
     }
 
     // allow us to subclass without going through this initialization

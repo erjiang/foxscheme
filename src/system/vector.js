@@ -2,7 +2,6 @@ FoxScheme.Vector = function(elements) {
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Vector)) {
         throw new FoxScheme.Bug("Improper use of FoxScheme.Vector()");
-        return null;
     }
 
     this._array = [];

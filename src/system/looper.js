@@ -14,7 +14,6 @@
 FoxScheme.Looper = function() {
     if(!(this instanceof FoxScheme.Looper)) {
         throw new FoxScheme.Error("Improper use of FoxScheme.Looper()")
-        return null
     }
 
     this.initialize()

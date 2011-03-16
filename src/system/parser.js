@@ -21,7 +21,6 @@ FoxScheme.Parser = function(txt){
     // guard against accidental non-instantiation
     if(!(this instanceof FoxScheme.Parser)) {
         throw new FoxScheme.Bug("Improper use of FoxScheme.Parser()");
-        return null;
     }
     this.tokens = this.tokenize(txt);
     this.i = 0;
