@@ -59,7 +59,7 @@ FoxScheme.Interpreter.prototype = function() {
       //console.log("valueof env: "+env)
 
     if(k === undefined)
-      k = function(v) { return v };
+      k = new Continuation(kEmpty)
 
 //    if(!(this instanceof FoxScheme.Interpreter))
 //      throw new FoxScheme.Bug("this is not an Interpreter, it is a "+this)
@@ -172,9 +172,8 @@ FoxScheme.Interpreter.prototype = function() {
               bcursor = bcursor.cdr()
             }
 
-            return mapValueof(bindright, env, function(rands) {
-              return valueof(body, extendEnv(bindleft, rands, env), k)
-            })
+            return mapValueof(bindright, env,
+                new Continuation(kLet, body, bindleft, env, k))
 
           /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
@@ -221,18 +220,16 @@ FoxScheme.Interpreter.prototype = function() {
             }
             var newenv = extendEnv(bindleft, binderr, env)
 
-            return mapValueof(bindright, newenv, function(rands) {
-              return valueof(body, overwriteEnv(bindleft, rands, newenv), k)
-            })
+            return mapValueof(bindright, newenv,
+                new Continuation(kLetrec, body, bindleft, newenv, k))
 
           case "begin":
             if(expr.cdr() === FoxScheme.nil)
               return applyK(k, FoxScheme.nothing)
 
             // return whatever is in Tail position
-            return mapValueof(expr.cdr(), env, function(results) {
-                return applyK(k, results.last())
-            })
+            return mapValueof(expr.cdr(), env,
+              new Continuation(kBegin, k))
 
           case "if":
             var l = expr.length()
@@ -245,15 +242,10 @@ FoxScheme.Interpreter.prototype = function() {
              *     => (if #t #t (#2%void))
              * in Chez Scheme, but here it's easier to support natively
              */
-            return valueof(expr.second(), env, function(test) {
-              if(test !== false)
-                return valueof(expr.third(), env, k)
-              else
-                if(l === 3)
-                  return applyK(k, FoxScheme.nothing)
-                else
-                  return valueof(expr.fourth(), env, k)
-            })
+            return valueof(expr.second(), env,
+                new Continuation(kIf, expr.third(),
+                  (l === 3 ? FoxScheme.nothing : expr.fourth()),
+                  env, k))
 
           /*
            * We define define to be set! because psyntax.pp depends on define
@@ -281,10 +273,8 @@ FoxScheme.Interpreter.prototype = function() {
             // valueof the right-hand side
             // set! the appropriately-scoped symbol
             
-            return valueof(expr.third(), env, function(val) {
-              setEnv(symbol, val, env)
-              return applyK(k, FoxScheme.nothing)
-            })
+            return valueof(expr.third(), env,
+                new Continuation(kSet, symbol, env, k))
 
           /*
            * this will only happen if a keyword is in the syntax list
@@ -298,33 +288,136 @@ FoxScheme.Interpreter.prototype = function() {
       // means that first item is not syntax
       else {
         // return applyProc(valueof(expr.car(), env), mapValueof(expr.cdr(), env))
-        return valueof(expr.car(), env, function(rator) {
-          if(!(rator instanceof FoxScheme.Procedure) && !(rator instanceof Closure))
-            throw new FoxScheme.Error("Attempt to apply non-procedure "+rator)
-          return mapValueof(expr.cdr(), env, function(rands) {
-            return applyProc(rator, rands, k)
-          })
-        })
+        return valueof(expr.car(), env,
+            new Continuation(kProcRator, expr.cdr(), env, k))
       }
     }
     throw new FoxScheme.Bug("Don't know what to do with "+expr+
                     " (reached past switch/case)", "Interpreter")
   }
 
+  //
+  // Continuation creates a new continuation of a certain type. Here, we abuse
+  // objects as arrays to store the continuation's arguments.
+  //
+  var Continuation = function(type) {
+    if(arguments.length < 1)
+      throw new FoxScheme.Error("Created continuation with no params?",
+          "Continuation")
+
+    // Continuation(kLet, 1, 2, 3)
+    // => [1, 2, 3]
+    var i = arguments.length
+    while(i-- > 0) {
+      this[i-1] = arguments[i]
+    }
+
+    this.type = type
+  }
+  Continuation.prototype.toString = function() {
+    return "cont"+this.type
+  }
+
+  // 
+  // Enums for continuation types
+  //
+  var kEmpty = 0, kLet = 1, kLetrec = 2, kBegin = 3, kIf = 4,
+      kSet = 5, kProcRator = 6, kProcRands = 7,
+      kMapValueofStep = 8, kMapValueofCons = 9
+
+//  kEmpty([value])
+//  kLet([rands], body, bindleft, env, k)
+//  kLetrec([rands], body, bindleft, newenv, k)
+//  kBegin([results], k)
+//  kIf([test], conseq, alt, env, k) // check for alt type
+//  kSet([val], symbol, env, k)
+//  kProcRator([rator], rands, env, k)
+//    kProcRands([rands], rator, k)
+//  kMapValueofStep([car], cdr, env, k)
+//    kMapValueofCons([cdr], car, k)
   var applyK = function(k, v) {
-    return k(v)
+    // note that the k passed in is overwritten with the k
+    // extracted from the Continuation
+    switch(k.type) {
+      case kEmpty:
+        return v
+      case kLet:
+        var rands = v,
+            body = k[0],
+            bindleft = k[1],
+            env = k[2],
+            k = k[3]
+        return valueof(body, extendEnv(bindleft, rands, env), k)
+      case kLetrec:
+        var rands = v,
+            body = k[0],
+            bindleft = k[1],
+            env = k[2],
+            k = k[3]
+        return valueof(body, overwriteEnv(bindleft, rands, env), k)
+      case kBegin:
+        var results = v,
+            k = k[0]
+        return applyK(k, results.last())
+      case kIf:
+        var test = v,
+            conseq = k[0],
+            alt = k[1],
+            env = k[2],
+            k = k[3]
+        if(test !== false)
+          return valueof(conseq, env, k)
+        else
+          if(alt === FoxScheme.nothing) // one-armed if
+            return alt
+          else
+            return valueof(alt, env, k)
+      case kSet:
+        var value = v,
+            symbol = k[0],
+            env = k[1],
+            k = k[2]
+        setEnv(symbol, value, env)
+        return applyK(k, FoxScheme.nothing)
+      case kProcRator:
+        var rator = v,
+            rands = k[0],
+            env = k[1],
+            k = k[2]
+        if(!(rator instanceof FoxScheme.Procedure) && !(rator instanceof Closure))
+            throw new FoxScheme.Error("Attempt to apply non-procedure "+rator)
+
+        return mapValueof(rands, env,
+            new Continuation(kProcRands, rator, k))
+      case kProcRands:
+        var rands = v,
+            rator = k[0],
+            k = k[1]
+        return applyProc(rator, rands, k)
+      case kMapValueofStep:
+        var car = v,
+            cdr = k[0],
+            env = k[1],
+            k = k[2]
+        return mapValueof(cdr, env,
+          new Continuation(kMapValueofCons, car, k))
+      case kMapValueofCons:
+        var cdr = v,
+            car = k[0],
+            k = k[1]
+        return applyK(k, new FoxScheme.Pair(car, cdr))
+      default:
+        throw new FoxScheme.Bug("Unknown continuation type "+k.type)
+    }
   }
 
   var mapValueof = function(ls, env, k) {
     if(ls === FoxScheme.nil)
       return applyK(k, FoxScheme.nil)
     else
-      return valueof(ls.car(), env, function(a) {
-        return mapValueof(ls.cdr(), env, function(d) {
-          return applyK(k, new FoxScheme.Pair(a, d))
-        })
-      })
-  };
+      return valueof(ls.car(), env,
+          new Continuation(kMapValueofStep, ls.cdr(), env, k))
+  }
 
 /*
   console.log("mapValueof test");
