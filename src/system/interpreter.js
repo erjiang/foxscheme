@@ -28,17 +28,6 @@ FoxScheme.Interpreter.prototype = function() {
   var initialize = function () {
     this._globals = new FoxScheme.Hash();
   }
-  /*
-   * Checks if an array contains an item by doing
-   * simple for loop through the keys
-   */
-  var contains = function(arr, item) {
-    for (var i in arr)
-      if(arr[i] === item)
-        return true
-
-    return false
-  }
 
   // some reserved keywords that would throw an "invalid syntax"
   // error rather than an "unbound variable" error
@@ -89,7 +78,7 @@ FoxScheme.Interpreter.prototype = function() {
       var val
       if((val = applyEnv(expr, env)) === undefined) {
         if((val = applyEnv(expr, FoxScheme.nativeprocedures)) === undefined) {
-          if(contains(syntax, sym))
+          if(FoxScheme.Util.contains(syntax, sym))
             throw new FoxScheme.Error("Invalid syntax "+sym)
           else
             throw new FoxScheme.Error("Unbound symbol "+sym)
@@ -111,7 +100,7 @@ FoxScheme.Interpreter.prototype = function() {
        * Go to the switch only if the first item is syntax
        */
       if(expr.car() instanceof FoxScheme.Symbol &&
-        contains(syntax, expr.car().name()) &&
+        FoxScheme.Util.contains(syntax, expr.car().name()) &&
         // make sure the syntax keyword hasn't been shadowed
         applyEnv(expr.car(), env) === undefined) {
         var sym = expr.first().name();

@@ -86,5 +86,18 @@ FoxScheme.Util = {
         }
         return FoxScheme.Util.listify(arr)
     }
+    /*
+     * Checks if an array contains an item by doing a simple for loop through
+     * the keys
+     */
+    ,
+    contains: function(arr, item) {
+        var i = arr.length
+        while(i--) {
+            if(arr[i] === item)
+                return true
+        }
+        return false
+    }
 }
 
