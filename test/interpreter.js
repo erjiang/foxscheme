@@ -853,6 +853,18 @@ describe('Miscellaneous', {
                "(add7 -2))",
              5)
     }
+    ,
+    /*
+     * factorial by CPS
+     */
+    factcps: function() {
+        evto("(letrec ((fact*"+
+               "(lambda (n k) "+
+                 "(if (< n 2) (k 1) "+
+                   "(fact* (- n 1) (lambda (r) (k (* r n)))))))) "+
+               "(fact* 5 (lambda (v) v)))",
+             120)
+    }
 })
 
 
