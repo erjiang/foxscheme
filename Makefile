@@ -54,4 +54,4 @@ browser: $(OUTPUT) shim/browser.js
 	cat shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
 
 clean:
-	rm __merged.js
+	rm __merged.js bin/foxscheme.js bin/foxbrowser.js
