@@ -3,6 +3,11 @@ FoxScheme
 FoxScheme is a Scheme interpreter written in JavaScript.
 
 Some key points include:
+
+  * Proper support for recursion
+    FoxScheme does not use the native JavaScript stack, which is often too
+    small for interesting recursive problems. Tail calls are handled properly.
+
   * Minimal native (primitive) procedures
     Only procedures that must be implemented in JS out of necessity (cons) or
     obvious performance reasons (expt) are native. The rest is expected to be
@@ -29,18 +34,12 @@ Some key points include:
   * Unit testing
     FoxScheme has a growing unit-test suite using JSSpec that is run after
     every atomic change to the codebase.
- 
+
 Known issues:
  
   * No arithmetic stack
     All numeric computation is done with JavaScript numbers, which are 64-bit
     floating-point numbers.
- 
-  * No tail-call optimization
-    The current FoxScheme.Interpreter uses native JS recursion. If the
-    underlying JS system does not optimize tail calls, then deep recursion will
-    max out the underlying system's stack. This will hopefully be solved in the
-    future with the addition of a compiler/VM.
  
   * Incomplete
     Currently, only a few native procedures are implemented for things like
