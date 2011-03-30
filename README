@@ -50,3 +50,38 @@ Contact:
 
     Eric Jiang <erjiang@indiana.edu>
 
+Acknowledgements and References:
+
+    Special thanks to Adam Foltzer and the people who frequent #scheme on
+    FreeNode. BiwaScheme, by Yutaka Hara and the other BiwaScheme contributors,
+    was an important inspiration and reference. Kent Dybvig's Petite Chez Scheme
+    system and his assorted papers have been tremendously helpful. Also notable
+    are Alex Yakovlev's jsScheme, Mark Probst's JScreme, and Jason Orendorff's
+    Try Scheme, although no code from them was ultimately used. And, of course,
+    The nice web-based REPL is Chris Done's jQuery Console.
+
+  * #scheme on FreeNode
+    irc://freenode.net/scheme
+
+  * BiwaScheme
+    http://www.biwascheme.org/
+    http://github.com/yhara/biwascheme
+
+  * Chez Scheme
+    http://scheme.com/
+
+  * R. Kent Dybvig
+    http://www.cs.indiana.edu/~dyb/
+
+  * jsScheme
+    http://web.archive.org/web/20080119020130/http://alex.ability.ru/scheme.html 
+    http://www.bluishcoder.co.nz/2006/05/scheme-implementation-in-javascript.html
+
+  * JScreme
+    http://schani.wordpress.com/2010/01/01/jscreme/
+
+  * Try Scheme
+    http://tryscheme.sourceforge.net/
+
+  * jQuery Console
+    https://github.com/chrisdone/jquery-console
