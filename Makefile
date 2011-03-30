@@ -30,7 +30,9 @@ src/system/procedure.js \
 src/system/native.js \
 src/system/expand.js \
 src/system/looper.js \
-src/system/interpreter.js
+src/system/interpreter.js \
+\
+src/lib/javascript.js
 
 OUTPUT_PATH=bin
 OUTPUT=$(OUTPUT_PATH)/foxscheme.js
