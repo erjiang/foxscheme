@@ -648,6 +648,17 @@ describe("Scope", {
     },
     "lexical set!": function() {
         /*
+         * This example increments an internal counter every time `x` is run.
+         * It should increment the counter three times.
+         */
+        evto("(let ((x #f) (y 0)) "+
+               "(begin "+
+                 "(set! x (lambda () (begin (set! y (+ 1 y)) y))) "+
+                 "(x) (x) (x)))",
+             3)
+    },
+    "lexical set! 2": function() {
+        /*
          * A slightly fat example, but this will fail in interpreters where the
          * environment is not properly extended, but is statically cloned.  In
          * that case, the set! will update the old environment while the cloned
@@ -680,6 +691,15 @@ describe("Scope", {
                 " (set! x 5)"+
                 " (y))",
                 5)
+    }
+})
+
+describe("call/cc", {
+    "simple": function() {
+        evto("(call/cc (lambda (k) 5))", 5)
+        evto("(call/cc (lambda (k) "+
+                        "(begin (k 5) 7)))",
+             5)
     }
 })
 
