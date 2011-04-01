@@ -30,7 +30,9 @@ src/system/procedure.js \
 src/system/native.js \
 src/system/expand.js \
 src/system/looper.js \
-src/system/interpreter.js
+src/system/interpreter.js \
+\
+src/lib/javascript.js
 
 OUTPUT_PATH=bin
 OUTPUT=$(OUTPUT_PATH)/foxscheme.js
@@ -54,4 +56,4 @@ browser: $(OUTPUT) src/shim/browser.js
 	cat src/shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
 
 clean:
-	rm __merged.js
+	rm __merged.js bin/foxscheme.js bin/foxbrowser.js

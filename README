@@ -3,6 +3,11 @@ FoxScheme
 FoxScheme is a Scheme interpreter written in JavaScript.
 
 Some key points include:
+
+  * Proper support for recursion
+    FoxScheme does not use the native JavaScript stack, which is often too
+    small for interesting recursive problems. Tail calls are handled properly.
+
   * Minimal native (primitive) procedures
     Only procedures that must be implemented in JS out of necessity (cons) or
     obvious performance reasons (expt) are native. The rest is expected to be
@@ -29,18 +34,12 @@ Some key points include:
   * Unit testing
     FoxScheme has a growing unit-test suite using JSSpec that is run after
     every atomic change to the codebase.
- 
+
 Known issues:
  
   * No arithmetic stack
     All numeric computation is done with JavaScript numbers, which are 64-bit
     floating-point numbers.
- 
-  * No tail-call optimization
-    The current FoxScheme.Interpreter uses native JS recursion. If the
-    underlying JS system does not optimize tail calls, then deep recursion will
-    max out the underlying system's stack. This will hopefully be solved in the
-    future with the addition of a compiler/VM.
  
   * Incomplete
     Currently, only a few native procedures are implemented for things like
@@ -51,3 +50,38 @@ Contact:
 
     Eric Jiang <erjiang@indiana.edu>
 
+Acknowledgements and References:
+
+    Special thanks to Adam Foltzer and the people who frequent #scheme on
+    FreeNode. BiwaScheme, by Yutaka Hara and the other BiwaScheme contributors,
+    was an important inspiration and reference. Kent Dybvig's Petite Chez Scheme
+    system and his assorted papers have been tremendously helpful. Also notable
+    are Alex Yakovlev's jsScheme, Mark Probst's JScreme, and Jason Orendorff's
+    Try Scheme, although no code from them was ultimately used. And, of course,
+    The nice web-based REPL is Chris Done's jQuery Console.
+
+  * #scheme on FreeNode
+    irc://freenode.net/scheme
+
+  * BiwaScheme
+    http://www.biwascheme.org/
+    http://github.com/yhara/biwascheme
+
+  * Chez Scheme
+    http://scheme.com/
+
+  * R. Kent Dybvig
+    http://www.cs.indiana.edu/~dyb/
+
+  * jsScheme
+    http://web.archive.org/web/20080119020130/http://alex.ability.ru/scheme.html 
+    http://www.bluishcoder.co.nz/2006/05/scheme-implementation-in-javascript.html
+
+  * JScreme
+    http://schani.wordpress.com/2010/01/01/jscreme/
+
+  * Try Scheme
+    http://tryscheme.sourceforge.net/
+
+  * jQuery Console
+    https://github.com/chrisdone/jquery-console

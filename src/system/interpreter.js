@@ -32,7 +32,7 @@ FoxScheme.Interpreter.prototype = function() {
   // The interpreter's registers:
   //
   var $expr, $env, $k, //   valueof(expr, env, k)
-      $val, // $k,          applyK(k, v)
+      $v, // $k,          applyK(k, v)
       $rator, $rands, //$k,  applyProc(rator, rands, k)
       $ls, // $env, $k,     mapValueof(ls, env, k)
       $pc              //   program counter!
