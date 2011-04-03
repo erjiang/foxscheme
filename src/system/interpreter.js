@@ -24,9 +24,162 @@ FoxScheme.Interpreter = function() {
 
 FoxScheme.Interpreter.prototype = function() {
 
-  var initialize = function () {
-    this._globals = new FoxScheme.Hash();
+  // some reserved keywords that would throw an "invalid syntax"
+  // error rather than an "unbound variable" error
+  var syntax = ["lambda", "let", "letrec", "begin", "if",
+      "set!", "define", "quote", "call/cc", "letcc"]
+
+///////////////////////////////////////////
+//
+// ENVIRONMENT data types
+//
+///////////////////////////////////////////
+  var Env = FoxScheme.Hash
+
+  //
+  // applyEnv takes a symbol and looks it up in the given environment
+  //
+  var applyEnv = function(symbol, env) {
+    var sym = symbol.name()
+    var val
+    if((val = env.chainGet(sym)) === undefined)
+        return undefined;
+    /*
+     * This trick allows us to bind variables to errors, like in the case of
+     * (letrec ((x (+ x 5))) x)
+     * so that x => Error: cannot refer to x from inside letrec
+     */
+    if(val instanceof FoxScheme.Error)
+        throw val;
+
+    return val;
   }
+
+  var setEnv = function(symbol, value, env) {
+    env.chainSet(symbol.name(), value)
+  }
+
+  //
+  // extendEnv extends an environment
+  //
+  var extendEnv = function(symbols, values, env) {
+    var newenv = env.extend()
+    //
+    // Singleton special case
+    //
+    if(symbols instanceof FoxScheme.Symbol) {
+      newenv.set(symbols.name(), values)
+      return newenv
+    }
+
+    var pcursor = symbols // param cursor
+    var vcursor = values // value cursor
+    while(pcursor !== FoxScheme.nil) {
+      // check for improper param list: (x y . z)
+      if(!(pcursor instanceof FoxScheme.Pair)) {
+        newenv.set(pcursor.name(), vcursor)
+        break;
+      }
+      newenv.set(pcursor.car().name(), vcursor.car())
+      pcursor = pcursor.cdr()
+      vcursor = vcursor.cdr()
+    }
+    return newenv;
+  }
+  //
+  // **overwriteEnv** is like `extendEnv` except that it does not
+  // extend the environment first
+  //
+  var overwriteEnv = function(symbols, values, env) {
+    var pcursor = symbols // param cursor
+    var vcursor = values // value cursor
+    while(pcursor !== FoxScheme.nil) {
+      /* I don't think we need to check for improper lists like above */
+      env.set(pcursor.car().name(), vcursor.car())
+      pcursor = pcursor.cdr()
+      vcursor = vcursor.cdr()
+    }
+    return env
+  }
+
+///////////////////////////////////////////
+//
+// Continuation data types
+//
+///////////////////////////////////////////
+
+  //
+  // Enums for continuation types
+  //
+  var kEmpty = 0, kLet = 1, kLetrec = 2, kBegin = 3, kIf = 4,
+      kSet = 5, kProcRator = 6, kProcRands = 7,
+      kMapValueofStep = 8, kMapValueofCons = 9, kCallCC = 10
+
+  //
+  // Continuation creates a new continuation of a certain type. Here, we abuse
+  // objects as arrays to store the continuation's arguments.
+  //
+  var Continuation = function(type) {
+    if(arguments.length < 1)
+      throw new FoxScheme.Error("Created continuation with no params?",
+          "Continuation")
+
+    // Continuation(kLet, 1, 2, 3)
+    // => [1, 2, 3]
+    var i = arguments.length
+    while(i-- > 1) {
+      this[i-1] = arguments[i]
+    }
+
+    this.type = type
+  }
+  Continuation.prototype.toString = function() {
+    return "cont"+this.type
+  }
+
+///////////////////////////////////////////
+//
+// Closure data types
+//
+///////////////////////////////////////////
+  //
+  // Closure:
+  // {
+  //   params: (x y . z),
+  //   expr: (+ x y),
+  //   env: FoxScheme.Hash
+  // }
+  //
+  var Closure = function(params, expr, env) {
+    this.params = params;
+    this.expr = expr;
+    this.env = env;
+  }
+  Closure.prototype.toString = function() {
+    return "#<FoxScheme Closure>"
+  }
+
+///////////////////////////////////////////
+//
+// ValueContainer data types
+//
+///////////////////////////////////////////
+  var ValueContainer = function(v) {
+    this.value = v
+  }
+  ValueContainer.prototype.toString = function() {
+    return "You got back: "+this.value
+  }
+
+///////////////////////////////////////////
+//
+// Everything is wrapped in this initialize function so that registers get
+// properly scoped
+//
+///////////////////////////////////////////
+var initialize = function () {
+  var interp
+  this._globals = new FoxScheme.Hash();
 
   //
   // The interpreter's registers:
@@ -44,7 +197,7 @@ FoxScheme.Interpreter.prototype = function() {
     $pc = valueof
     try {
       for(;;)
-        $pc()
+        $pc.call(this)
     }
     catch (e) {
       if (e instanceof ValueContainer)
@@ -53,11 +206,6 @@ FoxScheme.Interpreter.prototype = function() {
         throw e
     }
   }
-
-  // some reserved keywords that would throw an "invalid syntax"
-  // error rather than an "unbound variable" error
-  var syntax = ["lambda", "let", "letrec", "begin", "if",
-      "set!", "define", "quote", "call/cc", "letcc"]
 
   /*
    * valueof makes up most of the interpreter.  It is a simple cased
@@ -368,42 +516,6 @@ FoxScheme.Interpreter.prototype = function() {
                     " (reached past switch/case)", "Interpreter")
   }
 
-  //
-  // Continuation creates a new continuation of a certain type. Here, we abuse
-  // objects as arrays to store the continuation's arguments.
-  //
-  var Continuation = function(type) {
-    if(arguments.length < 1)
-      throw new FoxScheme.Error("Created continuation with no params?",
-          "Continuation")
-
-    // Continuation(kLet, 1, 2, 3)
-    // => [1, 2, 3]
-    var i = arguments.length
-    while(i-- > 1) {
-      this[i-1] = arguments[i]
-    }
-
-    this.type = type
-  }
-  Continuation.prototype.toString = function() {
-    return "cont"+this.type
-  }
-
-  var ValueContainer = function(v) {
-    this.value = v
-  }
-  ValueContainer.prototype.toString = function() {
-    return "You got back: "+this.value
-  }
-
-  //
-  // Enums for continuation types
-  //
-  var kEmpty = 0, kLet = 1, kLetrec = 2, kBegin = 3, kIf = 4,
-      kSet = 5, kProcRator = 6, kProcRands = 7,
-      kMapValueofStep = 8, kMapValueofCons = 9, kCallCC = 10
-
 //  kEmpty([value])
 //  kLet([rands], body, bindleft, env, k)
 //  kLetrec([rands], body, bindleft, newenv, k)
@@ -578,90 +690,6 @@ FoxScheme.Interpreter.prototype = function() {
   console.log(mapValueof(lslsls, new FoxScheme.Hash(), function(l) { return l; }));
 
   */
-  var Env = FoxScheme.Hash
-  //
-  // applyEnv takes a symbol and looks it up in the given environment
-  //
-  var applyEnv = function(symbol, env) {
-    var sym = symbol.name()
-    var val
-    if((val = env.chainGet(sym)) === undefined)
-        return undefined;
-    /*
-     * This trick allows us to bind variables to errors, like in the case of
-     * (letrec ((x (+ x 5))) x)
-     * so that x => Error: cannot refer to x from inside letrec
-     */
-    if(val instanceof FoxScheme.Error)
-        throw val;
-
-    return val;
-  }
-
-  var setEnv = function(symbol, value, env) {
-    env.chainSet(symbol.name(), value)
-  }
-
-  //
-  // extendEnv extends an environment
-  //
-  var extendEnv = function(symbols, values, env) {
-    var newenv = env.extend()
-    //
-    // Singleton special case
-    //
-    if(symbols instanceof FoxScheme.Symbol) {
-      newenv.set(symbols.name(), values)
-      return newenv
-    }
-
-    var pcursor = symbols // param cursor
-    var vcursor = values // value cursor
-    while(pcursor !== FoxScheme.nil) {
-      // check for improper param list: (x y . z)
-      if(!(pcursor instanceof FoxScheme.Pair)) {
-        newenv.set(pcursor.name(), vcursor)
-        break;
-      }
-      newenv.set(pcursor.car().name(), vcursor.car())
-      pcursor = pcursor.cdr()
-      vcursor = vcursor.cdr()
-    }
-    return newenv;
-  }
-  //
-  // **overwriteEnv** is like `extendEnv` except that it does not
-  // extend the environment first
-  //
-  var overwriteEnv = function(symbols, values, env) {
-    var pcursor = symbols // param cursor
-    var vcursor = values // value cursor
-    while(pcursor !== FoxScheme.nil) {
-      /* I don't think we need to check for improper lists like above */
-      env.set(pcursor.car().name(), vcursor.car())
-      pcursor = pcursor.cdr()
-      vcursor = vcursor.cdr()
-    }
-    return env
-  }
-
-
-  //
-  // Closure:
-  // {
-  //   params: (x y . z),
-  //   expr: (+ x y),
-  //   env: FoxScheme.Hash
-  // }
-  //
-  var Closure = function(params, expr, env) {
-    this.params = params;
-    this.expr = expr;
-    this.env = env;
-  }
-  Closure.prototype.toString = function() {
-    return "#<FoxScheme Closure>"
-  }
 
   //
   // CPS'd procedure to apply a Closure or FoxScheme.Procedure on a
@@ -678,8 +706,8 @@ FoxScheme.Interpreter.prototype = function() {
     if($rator instanceof FoxScheme.Procedure) {
       // actually do (apply (car expr) (cdr expr))
       $k = $k
-      $v = $rator.fapply(this, FoxScheme.Util.arrayify($rands))
       $pc = applyK
+      $v = $rator.fapply(this, FoxScheme.Util.arrayify($rands))
       return;
     }
     else
@@ -714,13 +742,73 @@ FoxScheme.Interpreter.prototype = function() {
     }
   }
 
+  var setReg = function(name, value) {
+    switch(name) {
+      case 'expr':
+        $expr = value
+        break;
+      case 'env':
+        $env = value
+        break;
+      case 'k':
+        $k = value
+        break;
+      case 'rator':
+        $rator = value
+        break;
+      case 'rands':
+        $rands = value
+        break;
+      case 'ls':
+        $ls = value
+        break;
+      case 'pc':
+        $pc = value
+        break;
+      default:
+        throw new FoxScheme.Bug("Tried to set non-existant register "+name,
+            "Interpreter.setReg")
+    }
+  }
+
+  var getReg = function(name) {
+    switch(name) {
+      case 'expr':
+        return $expr
+      case 'env':
+        return $env
+      case 'k':
+        return $k
+      case 'rator':
+        return $rator
+      case 'rands':
+        return $rands
+      case 'ls':
+        return $ls
+      case 'pc':
+        return $pc
+      default:
+        throw new FoxScheme.Bug("Tried to get non-existant register "+name,
+            "Interpreter.getReg")
+    }
+  }
+
+  //
+  // Finished initialization!
+  //
+  this.eval = evalDriver
+  this.inspectRegisters = inspectRegisters
+  //this.valueof = valueof
+  this.applyProc = applyProc
+  this.getReg = getReg
+  this.setReg = setReg
+  this.toString = function () { return "#<Interpreter>" }
+}
+
   /*
    * Finally, give an object for FoxScheme.Interpreter.prototype
    */
   return {
-    initialize: initialize,
-    eval: evalDriver,
-    inspectRegisters: inspectRegisters,
-    toString: function () { return "#<Interpreter>" }
+    initialize: initialize
   }
 }();
