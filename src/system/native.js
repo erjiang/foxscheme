@@ -500,7 +500,12 @@ defun("apply", 2, undefined,
         else {
             throw new FoxScheme.Error("Last argument to apply must be a list", "apply")
         }
-        return proc.fapply(args)
+
+        console.log("applying "+proc+" to "+args)
+        this.setReg("rator", proc)
+        this.setReg("rands", args)
+        this.setReg("pc",    this.applyProc)
+        return null
     })
 
 /*
