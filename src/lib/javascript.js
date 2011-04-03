@@ -57,6 +57,21 @@ FoxScheme.JavaScriptProcedure.prototype = (function() {
     }
 
     constructor.fapply = function(interp, ls) {
+        var i = ls.length
+        /*
+        // Do some conversions between FoxScheme and JS data types
+        while(i--) {
+            if(ls[i] instanceof FoxScheme.String) {
+                ls[i] = ls[i].getValue()
+            } else if(ls[i] === FoxScheme.nil) {
+                ls[i] = null
+            } else if(ls[i] === FoxScheme.nothing) {
+                ls[i] = undefined
+            } else if(ls[i] instanceof FoxScheme.Char) {
+                ls[i] = ls[i].getValue()
+            }
+        }
+        */
         var retval = this.proc.apply(interp, ls)
         if(retval === undefined)
             return FoxScheme.nothing
