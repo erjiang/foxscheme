@@ -729,6 +729,16 @@ describe("gensym", {
     }
 })
 
+describe("Native library methods", {
+    //
+    // Apply is a fragile library method in native.js
+    //
+    apply: function() {
+        evto("(apply + '(1 2 3 4))",
+            10)
+    }
+})
+
 /* 
  * Tests the macro expander
  */
