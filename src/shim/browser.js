@@ -44,3 +44,18 @@ FoxScheme.nativeprocedures.defun("load", 1, 2,
         }
         return FoxScheme.nothing
     })
+
+FoxScheme.nativeprocedures.defun("js:load", 1, 1,
+    function(url) {
+        if(document === undefined)
+            throw new FoxScheme.Error("'document' not defined. Are you running in a browser?", "js:load")
+
+        var head = document.getElementsByTagName("head")[0]
+
+        var newNode = document.createElement("script")
+        newNode.src = url.getValue()
+
+        head.appendChild(newNode)
+
+        return FoxScheme.nothing
+    })

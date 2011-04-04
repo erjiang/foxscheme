@@ -3,7 +3,9 @@
  * Implements the important native JS functions for FoxScheme
  * (i.e. things that cannot be written in Scheme)
  */
-
+/*
+var FoxScheme.lib.JavaScript = function() {
+*/
 (function(defun) {
 
 defun("js:eval", 1, 1,
