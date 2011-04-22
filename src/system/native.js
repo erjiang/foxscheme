@@ -350,7 +350,8 @@ defun("symbol?", 1, 1,
     })
 defun("procedure?", 1, 1,
     function(p) {
-        return p instanceof FoxScheme.Procedure
+        return (p instanceof FoxScheme.Procedure) ||
+               (p instanceof this.Closure)
     })
 defun("string?", 1, 1,
     function(s) {
@@ -487,21 +488,19 @@ defun("eq?", 2, 2,
  */
 defun("apply", 2, undefined,
     function(proc) {
-        if(!(proc instanceof FoxScheme.Procedure))
-            throw new FoxScheme.Error("Attempt to apply non-procedure", "apply")
         var args = FoxScheme.Util.arrayify(arguments).slice(1, -1)
         var lastarg = arguments[arguments.length - 1]
         if(lastarg === FoxScheme.nil) {
             // do nothing
         }
         else if(lastarg instanceof FoxScheme.Pair) {
-            args = args.concat(FoxScheme.Util.arrayify(lastarg))
+            args = FoxScheme.Util.listify(args.concat(FoxScheme.Util.arrayify(lastarg)))
         }
         else {
             throw new FoxScheme.Error("Last argument to apply must be a list", "apply")
         }
 
-        console.log("applying "+proc+" to "+args)
+        //console.log("applying "+proc+" to "+args)
         this.setReg("rator", proc)
         this.setReg("rands", args)
         this.setReg("pc",    this.applyProc)
@@ -592,6 +591,46 @@ defun("error", 2, undefined,
         } else {
             throw new FoxScheme.Error(message, whoStr)
         }
+    })
+
+defun("vector", 0, undefined,
+    function(/*elements*/) {
+        return new FoxScheme.Vector(FoxScheme.Util.arrayify(arguments))
+    })
+defun("vector?", 1, 1,
+    function(v) {
+        return v instanceof FoxScheme.Vector
+    })
+defun("vector-length", 1, 1,
+    function(v) {
+        if(!(v instanceof FoxScheme.Vector))
+            throw new FoxScheme.Error("Can't get vector-length of non-vector "+v)
+
+        return v.length()
+    })
+defun("vector-ref", 2, 2,
+    function(vector, index) {
+        if(!(vector instanceof FoxScheme.Vector))
+            throw new FoxScheme.Error("Can't vector-ref non-vector "+v)
+        if(isNaN(index))
+            throw new FoxScheme.Error("Can't get non-numeric index "+v)
+        if(index < 0 || index >= vector.length())
+            throw new FoxScheme.Error("Vector index "+index+" is out of bounds")
+
+        return vector.get(index)
+    })
+defun("vector-set!", 3, 3,
+    function(vector, index, value) {
+        if(!(vector instanceof FoxScheme.Vector))
+            throw new FoxScheme.Error("Can't vector-ref non-vector "+v)
+        if(isNaN(index))
+            throw new FoxScheme.Error("Can't get non-numeric index "+v)
+        if(index < 0 || index >= vector.length())
+            throw new FoxScheme.Error("Vector index "+index+" is out of bounds")
+        
+        vector.set(index, value)
+
+        return FoxScheme.nothing
     })
 
 return funcs;

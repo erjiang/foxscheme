@@ -75,3 +75,19 @@
 ;; (define eq?
 ;;
 (define eqv? eq?)
+
+;;
+;; Simple support for multiple-values, using 
+(define values
+  (lambda x
+    (if (null? x) '()
+      (if (eq? (cdr x) '())
+        (car x)
+        x))))
+
+(define call-with-values
+  (lambda (f g)
+    (let ((res (f)))
+      (if (list? f)
+        (apply g res)
+        (g res)))))

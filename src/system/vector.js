@@ -9,7 +9,7 @@ FoxScheme.Vector = function(elements) {
      * Allow vector to be created from an existing JS array
      */
     if(elements !== undefined) {
-        if(elements instanceof Array) {
+        if(elements instanceof Array || 'length' in elements) {
             var i = elements.length
             while(i--) {
                 this._array[i] = elements[i];

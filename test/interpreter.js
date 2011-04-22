@@ -731,11 +731,29 @@ describe("gensym", {
 
 describe("Native library methods", {
     //
-    // Apply is a fragile library method in native.js
+    // Apply is a fragile library method in native.js because it must directly
+    // deal with the interpreter's registers.
     //
     apply: function() {
         evto("(apply + '(1 2 3 4))",
             10)
+    }
+    ,
+    apply: function() {
+        evto("(apply (lambda (x y) (+ x y)) '(2 3))",
+             5)
+    }
+    ,
+    //
+    // procedure?
+    //
+    procedure: function() {
+        evto("(procedure? +)",
+            true)
+        evto("(procedure? (lambda () 'a))",
+            true)
+        evto("(procedure? '#(3 4 5))",
+            false)
     }
 })
 

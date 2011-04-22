@@ -40,6 +40,7 @@ FoxScheme.Interpreter.prototype = function() {
   // applyEnv takes a symbol and looks it up in the given environment
   //
   var applyEnv = function(symbol, env) {
+    //console.log("looking up "+symbol)
     var sym = symbol.name()
     var val
     if((val = env.chainGet(sym)) === undefined)
@@ -190,14 +191,36 @@ var initialize = function () {
       $ls, // $env, $k,     mapValueof(ls, env, k)
       $pc              //   program counter!
 
+  var pcToStr = function() {
+    switch($pc) {
+      case valueof:
+        return "valueof"
+      case mapValueof:
+        return "mapValueof"
+      case applyProc:
+        return "applyProc"
+      case applyK:
+        return "applyK"
+      default:
+        return "unknown"
+    }
+  }
+
   var evalDriver = function(expr) {
     $expr = expr
     $env = this._globals
     $k = new Continuation(kEmpty)
     $pc = valueof
     try {
-      for(;;)
+      for(;;) {
+        /*console.log("$pc: "+pcToStr())
+        if(pcToStr() == "applyProc") {
+          console.log("$rator: "+$rator)
+          console.log("$rands: "+$rands)
+        }
+        */
         $pc.call(this)
+      }
     }
     catch (e) {
       if (e instanceof ValueContainer)
@@ -370,6 +393,7 @@ var initialize = function () {
               throw new FoxScheme.Error("Invalid syntax: "+$expr)
             var body = $expr.third()
             var bindings = $expr.second()
+            console.log("letrec: "+bindings)
             // see note above at: [case "let":]
             if(bindings === FoxScheme.nil) {
               $expr = body
@@ -461,7 +485,7 @@ var initialize = function () {
               throw new FoxScheme.Error("Cannot set! the non-symbol "+$expr.second())
 
             if(applyEnv(symbol, $env) === undefined && applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
-              throw new FoxScheme.Error("Attempt to set! native procedure "+sym)
+              throw new FoxScheme.Error("Attempt to set! native procedure "+symbol)
             }
 
             // valueof the right-hand side
@@ -554,6 +578,7 @@ var initialize = function () {
             k = $k[3]
         $expr = body
         $env = overwriteEnv(bindleft, rands, env)
+        //console.log("Finished letrec of "+bindleft.length()+" items")
         $k = k
         $pc = valueof
         return;
@@ -803,6 +828,7 @@ var initialize = function () {
   this.getReg = getReg
   this.setReg = setReg
   this.toString = function () { return "#<Interpreter>" }
+  this.Closure = Closure
 }
 
   /*
