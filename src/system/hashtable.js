@@ -56,6 +56,13 @@ FoxScheme.Hashtable.prototype = function() {
         return v
     }
 
+    var remove = function (k) {
+        var ks = k.toString()
+        var v = this._store[ks]
+        delete this._store[ks]
+        return v
+    }
+
     return {
         initialize: initialize,
         clear: clear,

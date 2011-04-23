@@ -526,7 +526,7 @@ defun("gensym", 0, 1,
 /*
  * Hashtable stuff
  */
-defun("make-eq-hashtable", 0, 1, // ignore initial capacity
+defun("make-hashtable", 0, 1, // ignore initial capacity
     function() {
         return new FoxScheme.Hashtable()
     })
@@ -541,6 +541,11 @@ defun("hashtable-ref", 3, 3,
         if((r = ht.get(key)) !== null)
             return r;
         else return dfault
+    })
+defun("hashtable-delete!", 2, 2,
+    function(ht, key) {
+        ht.remove(key)
+        return FoxScheme.nothing
     })
 defun("hashtable-contains?", 2, 2,
     function(ht, key) {
@@ -566,7 +571,7 @@ defun("eval", 1, 2,
     function(expr, globals) {
         return this.eval(expr)
     })
-defun("interaction-environment", 0, 0,
+/*defun("interaction-environment", 0, 0,
     function() {
         return this._globals
     })
@@ -575,6 +580,7 @@ defun("expand", 1, 1,
         var e = new FoxScheme.Expand()
         return e.expand(expr)
     })
+*/
 defun("error", 2, undefined,
     function(who, message) {
         if(!(who instanceof FoxScheme.Symbol) &&
@@ -631,6 +637,43 @@ defun("vector-set!", 3, 3,
         vector.set(index, value)
 
         return FoxScheme.nothing
+    })
+
+defun("symbol->string", 1, 1,
+    function(symbol) {
+        if(!(symbol instanceof FoxScheme.Symbol))
+            throw new FoxScheme.Error("Non-symbol given: "+symbol, "symbol->string")
+
+        return new FoxScheme.String(symbol.name())
+    })
+
+defun("string->symbol", 1, 1,
+    function(str) {
+        if(!(str instanceof FoxScheme.String))
+            throw new FoxScheme.Error("Non-FoxScheme-String given: "+str, "string->symbol")
+        
+        return new FoxScheme.Symbol(str.getValue())
+    })
+
+//
+// Convert the arguments to an array of JS strings and then use .join("") to append them
+//
+defun("string-append", 1, undefined,
+    function(/* strs */) {
+        var strs = []
+        var f = arguments.length
+        for(var i = 0; i < f; i++) {
+            if(!(arguments[i] instanceof FoxScheme.String))
+                throw new FoxScheme.Error("Tried to append non-string "+arguments[i])
+
+            strs.push(arguments[i].getValue())
+        }
+        return new FoxScheme.String(strs.join(""))
+    })
+
+defun("char?", 1, 1,
+    function(c) {
+        return c instanceof FoxScheme.Char;
     })
 
 return funcs;
