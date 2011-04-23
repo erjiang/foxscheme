@@ -55,5 +55,8 @@ browser: $(OUTPUT) src/shim/browser.js
 	cp $(OUTPUT) $(OUTPUT_PATH)/foxbrowser.js
 	cat src/shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
 
+psyntax1: preparse.ss lib/psyntax1.ss
+	scheme --script preparse.ss < lib/psyntax1.ss > lib/psyntax1.pp
+
 clean:
 	rm __merged.js bin/foxscheme.js bin/foxbrowser.js
