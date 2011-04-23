@@ -42,13 +42,13 @@
 
 (define not
   (lambda (v)
-    (= v #F)))
+    (eq? v #F)))
 
 (define boolean?
   (lambda (v)
-    (if (= v #t)
+    (if (eq? v #t)
       #t
-      (= v #f))))
+      (eq? v #f))))
 
 ;;(define null?
 ;;  (lambda (v)
@@ -91,3 +91,45 @@
       (if (list? f)
         (apply g res)
         (g res)))))
+
+;; copied from Ikarus
+(define assq
+  (letrec ([race
+             (lambda (x h t ls)
+               (if (pair? h)
+                 (let ([a (car h)] [h (cdr h)])
+                   (if (pair? a)
+                     (if (eq? ($car a) x)
+                       a
+                       (if (pair? h)
+                         (if (not (eq? h t))
+                           (let ([a ($car h)])
+                             (if (pair? a)
+                               (if (eq? ($car a) x)
+                                 a
+                                 (race x ($cdr h) ($cdr t) ls))
+                               (error 'assq "malformed alist"
+                                    ls)))
+                           (error 'assq "circular list" ls))
+                         (if (null? h)
+                           #f
+                           (error 'assq "not a proper list" ls))))
+                     (error 'assq "malformed alist" ls)))
+                 (if (null? h)
+                   #f
+                   (error 'assq "not a proper list" ls))))])
+    (lambda (x ls) 
+      (race x ls ls ls))))
+
+(define append
+  (lambda (lsa lsb)
+    (if (null? lsa)
+      lsb
+      (cons (car lsa) (append (cdr lsa) lsb)))))
+
+(define reverse
+  (lambda (ls)
+    (if (null? ls)
+      '()
+      (append (reverse (cdr ls))
+              (list (car ls))))))
