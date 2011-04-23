@@ -207,6 +207,18 @@ var initialize = function () {
   }
 
   var evalDriver = function(expr) {
+    /*
+     * Save registers
+     */
+    var t_expr = $expr,
+        t_env = $env,
+        t_k = $k,
+        t_v = $v,
+        t_rator = $rator,
+        t_rands = $rands,
+        t_ls = $ls,
+        t_pc = $pc
+
     $expr = expr
     $env = this._globals
     $k = new Continuation(kEmpty)
@@ -223,8 +235,22 @@ var initialize = function () {
       }
     }
     catch (e) {
+      /*
+       * Restore registers
+       */
+      $expr = t_expr
+      $env = t_env
+      $k = t_k
+      $v = t_v
+      $rator = t_rator
+      $rands = t_rands
+      $ls = t_ls
+      $pc = t_pc
+    
+      // Check if we stopped because we're done
       if (e instanceof ValueContainer)
         return e.value
+      // or we encountered an error
       else
         throw e
     }
