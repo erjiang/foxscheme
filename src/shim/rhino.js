@@ -42,3 +42,5 @@ $fs.eval = function(str) {
     }
     return r;
 }
+
+console = { log: function(m) { print(m) }}
