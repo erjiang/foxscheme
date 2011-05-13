@@ -154,10 +154,13 @@ FoxScheme.Parser.prototype = {
                  */
                 if(t.length > 1 &&
                     t[0] == '"' &&
-                    t[t.length - 1] == '"')
+                    t[t.length - 1] == '"') {
+
+                    t = t.replace(/\\(.)/, "$1")
                     // can't substring the empty string
                     return t === '""' ? new FoxScheme.String("") : 
                             new FoxScheme.String(t.substring(1, t.length - 1));
+                }
 
                 /*
                  * Must be a symbol, then.
