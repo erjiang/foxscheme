@@ -1,5 +1,13 @@
-(define (outparse expr)
-  (display (preparse expr)))
+;;
+;; This script takes Scheme expressions and preparses it into a form that is
+;; ready to be directly loaded into FoxScheme. This script automatically adds
+;; JavaScript code to load the expressions into FoxScheme at runtime, so all
+;; that is needed is to execute the JavaScript file.
+;;
+
+;;
+;; Sends the result of preparse to the current-output-port (STDOUT)
+;;
 (define (preparse expr)
   (cond
     ((list? expr)
@@ -46,11 +54,18 @@
     ((= i (vector-length expr)) 
      (string-append str "])"))))
 
-(display "var psyntax1 = (function (ls, p, v, s, t, c, nil) {
-  return ")
-(outparse (read))
+(display "(function (default_load_function, ls, p, v, s, t, c, nil) {\n")
+(let loop ((dat (read)))
+  (if (eof-object? dat)
+    #t
+    (begin
+      (display "default_load_function(")
+      (display (preparse dat))
+      (display ");\n")
+      (loop (read)))))
 (display "
 })(
+  $interpreter.eval,
   // ls
   FoxScheme.Util.listify,
   // p
