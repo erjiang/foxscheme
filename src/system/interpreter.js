@@ -189,7 +189,23 @@ var initialize = function () {
       $v, // $k,          applyK(k, v)
       $rator, $rands, //$k,  applyProc(rator, rands, k)
       $ls, // $env, $k,     mapValueof(ls, env, k)
-      $pc              //   program counter!
+      $pc,              //   program counter!
+      $callback  // callback for async eval
+
+  var saveRegs = function() {
+    return [$expr, $env, $k, $v, $rator, $rands, $ls, $pc, $callback]
+  }
+  var restoreRegs = function(regs) {
+    $expr = regs[0]
+    $env = regs[1]
+    $k = regs[2]
+    $v = regs[3]
+    $rator = regs[4]
+    $rands = regs[5]
+    $ls = regs[6]
+    $pc = regs[7]
+    $callback = regs[8]
+  }
 
   var pcToStr = function() {
     switch($pc) {
@@ -210,14 +226,7 @@ var initialize = function () {
     /*
      * Save registers
      */
-    var t_expr = $expr,
-        t_env = $env,
-        t_k = $k,
-        t_v = $v,
-        t_rator = $rator,
-        t_rands = $rands,
-        t_ls = $ls,
-        t_pc = $pc
+    var regs = saveRegs()
 
     $expr = expr
     $env = this._globals
@@ -238,14 +247,7 @@ var initialize = function () {
       /*
        * Restore registers
        */
-      $expr = t_expr
-      $env = t_env
-      $k = t_k
-      $v = t_v
-      $rator = t_rator
-      $rands = t_rands
-      $ls = t_ls
-      $pc = t_pc
+      restoreRegs(regs)
     
       // Check if we stopped because we're done
       if (e instanceof ValueContainer)
@@ -256,11 +258,88 @@ var initialize = function () {
     }
   }
 
+  // Asynchronous evaluation. Using evalAsync won't tie up the browser's thread
+  // 100%, allowing the UI and other scripts to continue working, albeit
+  // fitfully. The engine executes code for at least 200 ms, then rests for 50
+  // ms. Once the code finishes executing, the parameter callback is called
+  // with the result of the evaluation.
+  var evalAsync = function(expr, callback) {
+
+    var t_expr = expr
+    var t_env = this._globals
+    var t_k = new Continuation(kEmpty)
+    var t_pc = valueof
+    var t_callback = callback
+
+    // Rather than dirtying any current registers, we're just
+    // going to build a new register object manually and launch
+    // the trampoline with it.
+    setTimeout(
+      evalTrampoline([
+        t_expr,
+        t_env,
+        t_k,
+        null, //$v
+        null, //$rator
+        null, //$rands
+        null, //$ls
+        t_pc,
+        t_callback]),
+      0)
+
+    return true
+  }
+
+  // This is curried so that we can do:
+  //     setTime(evalTrampoline(regs), 100)
+  // evalTrampoline needs to get a register object so that it can
+  // temporarily save the current registers, launch its own computation,
+  // and then restore things to what they were (multitasking)
+  var evalTrampoline = function(regs) {
+    return function() {
+      /*
+       * Save registers
+       */
+      var old_regs = saveRegs()
+      restoreRegs(regs)
+
+      var start = (new Date()).getTime()
+      var i
+
+      try {
+        for(;;) {
+          i = 20 // work our timeslice no finer than 20 cycles
+            while(i--) {
+              $pc.call(this)
+            }
+          // work for at least 200 ms, then sleep for 50 ms
+          // these values can be adjusted for aggressiveness
+          if((new Date()).getTime() - start > 200) {
+            // restore registers and leave
+            setTimeout(evalTrampoline(saveRegs()), 50)
+            restoreRegs(old_regs)
+            return true
+          }
+        }
+      }
+      catch (e) {
+        // Check if we stopped because we're done
+        if (e instanceof ValueContainer) {
+          $callback(e.value)
+        }
+        // or we encountered an error
+        else {
+          $callback(e)
+        }
+      }
+      restoreRegs(old_regs)
+      return false
+    }
+  }
+
   /*
    * valueof makes up most of the interpreter.  It is a simple cased
-   * recursive interpreter like the 311 interpreter.
-   *
-   * Currently, it doesn't support lambdas or macros or continuations
+   * recursive registerized trampolined interpreter like the 311 interpreter.
    *
    * This section is especially indented 2 spaces or else it gets
    * kind of wide
@@ -848,6 +927,7 @@ var initialize = function () {
   // Finished initialization!
   //
   this.eval = evalDriver
+  this.evalAsync = evalAsync
   this.inspectRegisters = inspectRegisters
   //this.valueof = valueof
   this.applyProc = applyProc

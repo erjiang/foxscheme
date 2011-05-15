@@ -69,7 +69,7 @@ FoxScheme.Parser.prototype = {
         if(typeof(this.i) === "undefined")
             this.i = 0;
         if(this.i >= this.tokens.length)
-            return null;
+            return FoxScheme.Parser.EOS;
 
         var t = this.tokens[this.i];
         this.i++;
@@ -169,6 +169,7 @@ FoxScheme.Parser.prototype = {
 
                 break;
         }
+        throw new FoxScheme.Bug("Reached end of switch in nextObject()", "FoxScheme.Parser")
     },
 
     nextList: function() {
