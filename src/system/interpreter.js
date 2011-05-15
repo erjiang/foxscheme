@@ -592,9 +592,11 @@ var initialize = function () {
             if(!(symbol instanceof FoxScheme.Symbol))
               throw new FoxScheme.Error("Cannot set! the non-symbol "+$expr.second())
 
-            if(applyEnv(symbol, $env) === undefined && applyEnv(symbol, FoxScheme.nativeprocedures) !== undefined) {
-              throw new FoxScheme.Error("Attempt to set! native procedure "+symbol)
-            }
+            // Actually, set!ing native procedures is fine, and psyntax has to
+            // do it anyways
+            //if(applyEnv(symbol, $env) === undefined && applyEnv(symbol, FoxScheme.nativeprocedures
+            //  throw new FoxScheme.Error("Attempt to set! native procedure "+symbol)
+            //}
 
             // valueof the right-hand side
             // set! the appropriately-scoped symbol
