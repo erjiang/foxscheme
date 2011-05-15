@@ -585,6 +585,13 @@ describe("Vectors", {
     "vector-ref": function() {
         evto("(vector-ref '#(1 2 3) 0)", 1)
         evto("(vector-ref '#(1 2 3 5) 3)", 5)
+    },
+    "vector-set!": function() {
+        evto("(let ((v (make-vector 5)))"+
+                "(begin "+
+                  "(vector-set! v 3 5) "+
+                  "(vector-ref v 3)))",
+             5)
     }
 })
 
@@ -760,6 +767,7 @@ describe("Native library methods", {
 /* 
  * Tests the macro expander
  */
+/* Deprecated for psyntax
 describe("Simple Expand", {
     gensyms: function() {
         // (lambda (x) (+ x y))
@@ -777,7 +785,7 @@ describe("Simple Expand", {
     /*
      * (lambda (x y) x y)
      * => (lambda (<gensym-x> <gensym-y>) (begin <gensym-x> <gensym-y>))
-     */
+     *
     "lambda implicit begin": function() {
         var e = new $fs.Expand()
         var p = new $fs.Parser("(lambda (x y) x y)")
@@ -791,7 +799,7 @@ describe("Simple Expand", {
     /*
      * (let ((x 5)) x)
      * => (let ((<gen-x> 5)) <gen-x>)
-     */
+     *
     "let gensym": function() {
         var e = new $fs.Expand()
         var p = new $fs.Parser("(let ((x 5)) x)")
@@ -806,7 +814,7 @@ describe("Simple Expand", {
     ,
     /*
      * (let () x y z) => (begin x y z)
-     */
+     *
     "empty let": function() {
         var e = new $fs.Expand()
         var p = new $fs.Parser("(let () (set! x 2) (set! y 3) (+ x y))")
@@ -818,7 +826,7 @@ describe("Simple Expand", {
     },
     /*
      * Provide an (expand <expr>) function to Scheme
-     */
+     *
     "(expand)": function() {
         evto("(expand '(let () x))", function(sym) {
             assert_instanceof(sym, FoxScheme.Symbol)
@@ -827,6 +835,7 @@ describe("Simple Expand", {
         })
     }
 })
+*/
 
 describe("Bugs", {
     /*
