@@ -74,9 +74,7 @@ defun("js:procedure", 1, 1,
             throw new FoxScheme.Error("Tried to evaluate non-string: "+expr,
                 "js:procedure")
 
-        console.log("about to eval: "+"("+expr.getValue()+")")
         var proc = eval("("+expr.getValue()+")")
-        console.log("came back as "+proc)
 
         if(!(proc instanceof Function))
             throw new FoxScheme.Error("JavaScript code block did not evaluate to a Function", "js:procedure")

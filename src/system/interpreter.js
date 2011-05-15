@@ -498,7 +498,6 @@ var initialize = function () {
               throw new FoxScheme.Error("Invalid syntax: "+$expr)
             var body = $expr.third()
             var bindings = $expr.second()
-            console.log("letrec: "+bindings)
             // see note above at: [case "let":]
             if(bindings === FoxScheme.nil) {
               $expr = body
