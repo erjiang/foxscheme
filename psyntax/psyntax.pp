@@ -1,3 +1,52 @@
+;;; Needed non-standard procs
+(define andmap
+  (lambda (f first . rest)
+    (or (null? first)
+        (if (null? rest)
+            (let andmap ((first first))
+              (let ((x (car first)) (first (cdr first)))
+                (if (null? first)
+                    (f x)
+                    (and (f x) (andmap first)))))
+            (let andmap ((first first) (rest rest))
+              (let ((x (car first))
+                    (xr (map car rest))
+                    (first (cdr first))
+                    (rest (map cdr rest)))
+                (if (null? first)
+                    (apply f (cons x xr))
+                    (and (apply f (cons x xr)) (andmap first rest)))))))))
+(define ormap
+  (lambda (proc list1)
+    (and (not (null? list1))
+         (or (proc (car list1)) (ormap proc (cdr list1))))))
+
+(define $raweval eval)
+(define eval (lambda (expr) ($raweval (cadr expr))))
+;;
+;; Stuff for psyntax
+;;
+(define $global-prop-list (make-hashtable))
+(define propkey
+  (lambda (symbol key)
+    (string-append (symbol->string symbol)
+                   (symbol->string key))))
+(define putprop
+  (lambda (symbol key value)
+    (hashtable-set! $global-prop-list
+                    (propkey symbol key)
+                    value)))
+
+(define getprop
+  (lambda (symbol key)
+    (hashtable-ref $global-prop-list
+                   (propkey symbol key)
+                   #f)))
+
+(define remprop
+  (lambda (symbol key)
+    (hashtable-delete! $global-prop-list
+                       (propkey symbol key))))
 ;;; psyntax.pp
 ;;; automatically generated from psyntax.ss
 ;;; Mon Feb 26 23:22:05 EST 2007
