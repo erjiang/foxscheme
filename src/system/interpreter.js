@@ -179,7 +179,9 @@ FoxScheme.Interpreter.prototype = function() {
 //
 ///////////////////////////////////////////
 var initialize = function () {
-  var interp
+  // We capture a reference to this interpreter because the setTimeout
+  // trampoline for async eval loses the "this" reference.
+  var thisInterp = this
   this._globals = new FoxScheme.Hash();
 
   //
@@ -310,7 +312,9 @@ var initialize = function () {
         for(;;) {
           i = 20 // work our timeslice no finer than 20 cycles
             while(i--) {
-              $pc.call(this)
+              // Here, we use thisInterp instead of this because the setTimeout trampoline
+              // loses the reference to "this".
+              $pc.call(thisInterp)
             }
           // work for at least 200 ms, then sleep for 50 ms
           // these values can be adjusted for aggressiveness
@@ -928,7 +932,7 @@ var initialize = function () {
   this.eval = evalDriver
   this.evalAsync = evalAsync
   this.inspectRegisters = inspectRegisters
-  //this.valueof = valueof
+  this.valueof = valueof
   this.applyProc = applyProc
   this.getReg = getReg
   this.setReg = setReg

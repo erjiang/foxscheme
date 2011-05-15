@@ -507,6 +507,14 @@ defun("apply", 2, undefined,
         return null
     })
 
+defun("eval", 1, 2,
+    function(expr, env) {
+        this.setReg("expr", expr)
+        this.setReg("env", new FoxScheme.Hash())
+        this.setReg("pc", this.valueof)
+        return null
+    })
+
 /*
  * Symbols
  */
@@ -521,6 +529,10 @@ defun("gensym", 0, 1,
             throw new FoxScheme.Error(nameString+" is not a string")
 
         return new FoxScheme.Gensym(name)
+    })
+defun("gensym?", 1, 1,
+    function(sym) {
+        return sym instanceof FoxScheme.Gensym
     })
 
 /*
@@ -557,30 +569,6 @@ defun("hashtable-contains?", 2, 2,
 /*
  * System stuff
  */
-/*
- * This is for compatibility with psyntax.pp, which needs eval-core. 
- *
- * (define (eval-core expr)
- *   (eval expr (interaction-environment)))
- *
- * i.e. evaluate expr in the TOP-LEVEL environment. To accomplish
- * this, eval is defined in src/system/native.js and eval-core
- * defined in fox.r6rs.ss.
- */
-defun("eval", 1, 2,
-    function(expr, globals) {
-        return this.eval(expr)
-    })
-/*defun("interaction-environment", 0, 0,
-    function() {
-        return this._globals
-    })
-defun("expand", 1, 1,
-    function(expr) {
-        var e = new FoxScheme.Expand()
-        return e.expand(expr)
-    })
-*/
 defun("error", 2, undefined,
     function(who, message) {
         if(!(who instanceof FoxScheme.Symbol) &&
