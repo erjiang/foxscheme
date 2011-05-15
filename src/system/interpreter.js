@@ -242,7 +242,7 @@ var initialize = function () {
           console.log("$rands: "+$rands)
         }
         */
-        $pc.call(this)
+        $pc.call(thisInterp)
       }
     }
     catch (e) {
