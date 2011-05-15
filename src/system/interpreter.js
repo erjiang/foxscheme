@@ -231,7 +231,7 @@ var initialize = function () {
     var regs = saveRegs()
 
     $expr = expr
-    $env = this._globals
+    $env = thisInterp._globals
     $k = new Continuation(kEmpty)
     $pc = valueof
     try {
