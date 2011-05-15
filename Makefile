@@ -9,6 +9,7 @@
 #MINIFY=-o
 MINIFY=closure-compiler --js 
 MINIFY_OUT=--js_output_file
+SCHEME=petite
 #
 # FILES is a list of all the FoxScheme files, in the order that
 # they should be run
@@ -55,8 +56,8 @@ browser: $(OUTPUT) src/shim/browser.js
 	cp $(OUTPUT) $(OUTPUT_PATH)/foxbrowser.js
 	cat src/shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
 
-psyntax1: preparse.ss lib/psyntax1.ss
-	scheme --script preparse.ss < lib/psyntax1.ss > lib/psyntax1.pp
+psyntax/psyntax.js: preparse.ss lib/core.ss psyntax/psyntax.pp
+	cat lib/core.ss psyntax/psyntax.pp | $(SCHEME) --script preparse.ss > psyntax/psyntax.js
 
 clean:
 	rm __merged.js bin/foxscheme.js bin/foxbrowser.js
