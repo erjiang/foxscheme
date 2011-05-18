@@ -169,7 +169,6 @@ FoxScheme.Parser.prototype = {
 
                 break;
         }
-        throw new FoxScheme.Bug("Reached end of switch in nextObject()", "FoxScheme.Parser")
     },
 
     nextList: function() {
