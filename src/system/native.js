@@ -664,5 +664,20 @@ defun("char?", 1, 1,
         return c instanceof FoxScheme.Char;
     })
 
+//
+// Stuff for multiple return values
+//
+defun("values", undefined, undefined,
+    function(/*args*/) {
+        if(arguments.length === 1)
+            return arguments[0]
+        
+        return new FoxScheme.Interpreter.Values(
+            FoxScheme.Util.arrayify(arguments))
+    })
+defun("call-with-values", 2, 2,
+    function(producer, consumer) {
+        var oldCallback = 
+
 return funcs;
 }();
