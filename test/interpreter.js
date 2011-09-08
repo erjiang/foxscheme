@@ -755,6 +755,33 @@ describe("Native library methods", {
         evto("(procedure? '#(3 4 5))",
             false)
     }
+    ,
+    //
+    // string stuff
+    //
+    stringappend: function() {
+        evto('(string-append "hello " "world")', function(x) {
+            assert_instanceof(x, FoxScheme.String)
+            assert_equals(x.getValue(), "hello world")
+            return true;
+        })
+    }
+    ,
+    string2symbol: function() {
+        evto('(string->symbol "hello")', function(x) {
+            assert_instanceof(x, FoxScheme.Symbol)
+            assert_equals(x.name(), "hello")
+            return true;
+        })
+    }
+    ,
+    symbol2string: function() {
+        evto("(symbol->string 'hello)", function(x) {
+            assert_instanceof(x, FoxScheme.String)
+            assert_equals(x.getValue(), "hello")
+            return true;
+        })
+    }
 })
 
 /* 
