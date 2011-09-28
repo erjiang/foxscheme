@@ -44,7 +44,7 @@ Known issues:
   * Incomplete
     Currently, only a few native procedures are implemented for things like
     pairs, strings, vectors, and other basic values. There is currently no
-    support for continuations, I/O, modules, macros, and so on. Stay tuned.
+    support for modules, macros, and so on. Stay tuned.
 
 Contact:
 
