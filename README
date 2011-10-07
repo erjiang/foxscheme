@@ -11,7 +11,7 @@ Some key points include:
   * Minimal native (primitive) procedures
     Only procedures that must be implemented in JS out of necessity (cons) or
     obvious performance reasons (expt) are native. The rest is expected to be
-    implemented in pure Scheme, which means less errors in native code.
+    implemented in pure Scheme, which means fewer errors in native code.
  
   * Cleanliness and clarity
     FoxScheme is split into many discrete files, each being reasonably
