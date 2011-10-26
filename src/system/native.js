@@ -677,7 +677,21 @@ defun("values", undefined, undefined,
     })
 defun("call-with-values", 2, 2,
     function(producer, consumer) {
-        var oldCallback = 
+        var oldCallback = FoxScheme.Interpreter.getReg("callback");
+        FoxScheme.Interpreter.setReg("callback",
+            (function() {
+                return function(newvals) {
+                    FoxScheme.Interpreter.setReg("callback", oldCallback)
+                    FoxScheme.Interpreter.setReg("rator", consumer)
+                    FoxScheme.Interpreter.setReg("rands", newvals.values)
+                    FoxScheme.Interpreter.setReg("pc",
+                        FoxScheme.Interpreter.applyProc)
+                }})()
+            );
+        FoxScheme.Interpreter.setReg("rator", producer)
+        FoxScheme.Interpreter.setReg("rands", FoxScheme.nil)
+        FoxScheme.Interpreter.setReg("pc", FoxScheme.Interpreter.applyProc)
+    })
 
 return funcs;
 }();

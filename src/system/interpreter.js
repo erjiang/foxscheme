@@ -707,8 +707,8 @@ var initialize = function () {
             conseq = $k[0],
             alt = $k[1],
             env = $k[2],
-            k = $k[3]
-        if(test instanceof Values)
+            k = $k[3];
+        if(test instanceof FoxScheme.Interpreter.Values)
           throw new FoxScheme.Error(
             "Returned multiple values to if condition.")
 
@@ -977,6 +977,6 @@ FoxScheme.Interpreter.Values = function(vals) {
   }
   this.values = vals
 }
-FoxScheme.Interpreter.Values.toString() {
+FoxScheme.Interpreter.Values.toString = function() {
   return this.values.join("\n")
 }
