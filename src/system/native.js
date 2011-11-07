@@ -677,20 +677,23 @@ defun("values", undefined, undefined,
     })
 defun("call-with-values", 2, 2,
     function(producer, consumer) {
-        var oldCallback = FoxScheme.Interpreter.getReg("callback");
-        FoxScheme.Interpreter.setReg("callback",
+        console.log("call-with-values")
+        var oldCallback = this.getReg("callback");
+        var that = this
+        this.setReg("callback",
             (function() {
                 return function(newvals) {
-                    FoxScheme.Interpreter.setReg("callback", oldCallback)
-                    FoxScheme.Interpreter.setReg("rator", consumer)
-                    FoxScheme.Interpreter.setReg("rands", newvals.values)
-                    FoxScheme.Interpreter.setReg("pc",
-                        FoxScheme.Interpreter.applyProc)
+                console.log("call-with-values callback")
+                    that.setReg("callback", oldCallback)
+                    that.setReg("rator", consumer)
+                    that.setReg("rands", FoxScheme.Util.listify(newvals.values))
+                    that.setReg("pc",
+                        that.applyProc)
                 }})()
-            );
-        FoxScheme.Interpreter.setReg("rator", producer)
-        FoxScheme.Interpreter.setReg("rands", FoxScheme.nil)
-        FoxScheme.Interpreter.setReg("pc", FoxScheme.Interpreter.applyProc)
+            )
+        this.setReg("rator", producer)
+        this.setReg("rands", FoxScheme.nil)
+        this.setReg("pc", this.applyProc)
     })
 
 return funcs;

@@ -710,6 +710,13 @@ describe("call/cc", {
     }
 })
 
+describe("Multiple Values", {
+    "call-with-values 1": function() {
+        evto("(call-with-values (lambda () (values 3 4 5)) (lambda (x y z) (+ x y z)))",
+             12)
+    }
+})
+
 /*
  * Tests the native gensym functionality
  */

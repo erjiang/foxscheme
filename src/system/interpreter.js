@@ -977,6 +977,8 @@ FoxScheme.Interpreter.Values = function(vals) {
   }
   this.values = vals
 }
-FoxScheme.Interpreter.Values.toString = function() {
-  return this.values.join("\n")
-}
+FoxScheme.Interpreter.Values.prototype = {
+  toString: function() {
+    return this.values.join("\n")
+  }
+};
