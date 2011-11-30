@@ -675,6 +675,17 @@ defun("values", undefined, undefined,
         return new FoxScheme.Interpreter.Values(
             FoxScheme.Util.arrayify(arguments))
     })
+defun("apply-values", 2, undefined,
+    function(proc, vals) {
+        var args = vals.values
+
+        //console.log("applying "+proc+" to "+args)
+        this.setReg("rator", proc)
+        this.setReg("rands", args)
+        this.setReg("pc",    this.applyProc)
+        return null
+    })
+/*
 defun("call-with-values", 2, 2,
     function(producer, consumer) {
         console.log("call-with-values")
@@ -695,6 +706,7 @@ defun("call-with-values", 2, 2,
         this.setReg("rands", FoxScheme.nil)
         this.setReg("pc", this.applyProc)
     })
+*/
 
 return funcs;
 }();

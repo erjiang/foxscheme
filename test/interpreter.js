@@ -711,9 +711,23 @@ describe("call/cc", {
 })
 
 describe("Multiple Values", {
+    /*
     "call-with-values 1": function() {
         evto("(call-with-values (lambda () (values 3 4 5)) (lambda (x y z) (+ x y z)))",
              12)
+    }
+    */
+    "apply-values": function() {
+        evto("(apply-values + (values 110 10))", 120)
+    },
+    "values to if conditional": function() {
+        should_error("(if (values 1 2) #t #f)")
+    },
+    "values to regular function": function() {
+        should_error("((lambda x x) (values 1 2 3))");
+    },
+    "single value to function": function() {
+        evto("((lambda (x) x) (values 120))", 120)
     }
 })
 

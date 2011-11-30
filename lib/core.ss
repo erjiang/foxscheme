@@ -152,3 +152,10 @@
       '()
       (append (reverse (cdr ls))
               (list (car ls))))))
+
+;;
+;; Multiple values stuff
+;;
+(define call-with-values
+  (lambda (producer consumer)
+    (apply-values consumer (producer))))
