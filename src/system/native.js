@@ -677,7 +677,7 @@ defun("values", undefined, undefined,
     })
 defun("apply-values", 2, undefined,
     function(proc, vals) {
-        var args = vals.values
+        var args = FoxScheme.Util.listify(vals.values)
 
         //console.log("applying "+proc+" to "+args)
         this.setReg("rator", proc)
