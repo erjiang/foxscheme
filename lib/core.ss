@@ -72,7 +72,7 @@
 (define memv memq)
 
 ;; eq? is a native procedure
-;; (define eq?
+;; (define eq?)
 ;;
 (define eqv? eq?)
 
