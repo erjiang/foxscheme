@@ -72,44 +72,13 @@
 (define memv memq)
 
 ;; eq? is a native procedure
-;; (define eq?
+;; (define eq?)
 ;;
 (define eqv? eq?)
 
-;; simple, hackish multiple-value support from TSPL3
 (define call-with-current-continuation
   (lambda (thunk)
     (call/cc thunk)))
-(define values #f)
-(define call-with-values #f)
-(let ((magic (cons 'multiple 'values)))
-  (letrec ((magic?
-             (lambda (x)
-               (if (pair? x) (eq? (car x) magic) #f))))
-    (begin
-
-      (set! call-with-current-continuation
-        (let ((primitive-call-with-current-continuation call-with-current-continuation))
-          (lambda (p)
-            (primitive-call-with-current-continuation
-              (lambda (k)
-                (p (lambda args
-                     (k (apply values args))))))))) 
-
-      (set! values
-        (lambda args
-          (if (if (not (null? args))
-                (null? (cdr args))
-                #f)
-            (car args)
-            (cons magic args)))) 
-
-      (set! call-with-values
-        (lambda (producer consumer)
-          (let ((x (producer)))
-            (if (magic? x)
-              (apply consumer (cdr x))
-              (consumer x))))))))
 
 ;; copied from Ikarus
 (define assq
@@ -152,3 +121,10 @@
       '()
       (append (reverse (cdr ls))
               (list (car ls))))))
+
+;;
+;; Multiple values stuff
+;;
+(define call-with-values
+  (lambda (producer consumer)
+    (apply-values consumer (producer))))

@@ -138,6 +138,8 @@ FoxScheme.Interpreter.prototype = function() {
     return "cont"+this.type
   }
 
+  var Values = FoxScheme.Interpreter.Values;
+
 ///////////////////////////////////////////
 //
 // Closure data types
@@ -151,6 +153,7 @@ FoxScheme.Interpreter.prototype = function() {
   //   env: FoxScheme.Hash
   // }
   //
+  // TODO: these should be factored out and made global
   var Closure = function(params, expr, env) {
     this.params = params;
     this.expr = expr;
@@ -704,7 +707,11 @@ var initialize = function () {
             conseq = $k[0],
             alt = $k[1],
             env = $k[2],
-            k = $k[3]
+            k = $k[3];
+        if(test instanceof FoxScheme.Interpreter.Values)
+          throw new FoxScheme.Error(
+            "Returned multiple values to if condition.")
+
         if(test !== false) {
           $expr = conseq
           $env = env
@@ -900,6 +907,9 @@ var initialize = function () {
       case 'pc':
         $pc = value
         break;
+      case 'callback':
+        $callback = value
+        break;
       default:
         throw new FoxScheme.Bug("Tried to set non-existant register "+name,
             "Interpreter.setReg")
@@ -922,6 +932,8 @@ var initialize = function () {
         return $ls
       case 'pc':
         return $pc
+      case 'callback':
+        return $callback
       default:
         throw new FoxScheme.Bug("Tried to get non-existant register "+name,
             "Interpreter.getReg")
@@ -949,3 +961,24 @@ var initialize = function () {
     initialize: initialize
   }
 }();
+
+///////////////////////////////////////////
+//
+// Values (multiple values) containers
+//
+///////////////////////////////////////////
+
+FoxScheme.Interpreter.Values = function(vals) {
+  if(vals.length === 1) {
+    throw new FoxScheme.Bug("Multiple values created with only one value.");
+  }
+  if(vals.length === 0) {
+    throw new FoxScheme.Bug("Multiple values created with no values.");
+  }
+  this.values = vals
+}
+FoxScheme.Interpreter.Values.prototype = {
+  toString: function() {
+    return this.values.join("\n")
+  }
+};

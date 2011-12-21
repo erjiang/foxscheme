@@ -664,5 +664,53 @@ defun("char?", 1, 1,
         return c instanceof FoxScheme.Char;
     })
 
+//
+// Stuff for multiple return values
+//
+defun("values", undefined, undefined,
+    function(/*args*/) {
+        if(arguments.length === 1)
+            return arguments[0]
+        
+        return new FoxScheme.Interpreter.Values(
+            FoxScheme.Util.arrayify(arguments))
+    })
+defun("apply-values", 2, undefined,
+    function(proc, vals) {
+        var args
+        if(vals instanceof FoxScheme.Interpreter.Values)
+            args = FoxScheme.Util.listify(vals.values)
+        else
+            args = new FoxScheme.Pair(vals, FoxScheme.nil)
+
+        //console.log("applying "+proc+" to "+args)
+        this.setReg("rator", proc)
+        this.setReg("rands", args)
+        this.setReg("pc",    this.applyProc)
+        return null
+    })
+/*
+defun("call-with-values", 2, 2,
+    function(producer, consumer) {
+        console.log("call-with-values")
+        var oldCallback = this.getReg("callback");
+        var that = this
+        this.setReg("callback",
+            (function() {
+                return function(newvals) {
+                console.log("call-with-values callback")
+                    that.setReg("callback", oldCallback)
+                    that.setReg("rator", consumer)
+                    that.setReg("rands", FoxScheme.Util.listify(newvals.values))
+                    that.setReg("pc",
+                        that.applyProc)
+                }})()
+            )
+        this.setReg("rator", producer)
+        this.setReg("rands", FoxScheme.nil)
+        this.setReg("pc", this.applyProc)
+    })
+*/
+
 return funcs;
 }();
