@@ -49,12 +49,10 @@ uncompressed: $(files)
 	cat $(FILES) > $(OUTPUT)
 
 rhino: $(OUTPUT) src/shim/rhino.js
-	cp $(OUTPUT) $(OUTPUT_PATH)/foxrhino.js
-	cat src/shim/rhino.js >> $(OUTPUT_PATH)/foxrhino.js
+	cat $(OUTPUT) src/shim/rhino.js > $(OUTPUT_PATH)/foxrhino.js
 
 browser: $(OUTPUT) src/shim/browser.js
-	cp $(OUTPUT) $(OUTPUT_PATH)/foxbrowser.js
-	cat src/shim/browser.js >> $(OUTPUT_PATH)/foxbrowser.js
+	cat $(OUTPUT) src/shim/browser.js > $(OUTPUT_PATH)/foxbrowser.js
 
 psyntax/psyntax.js: preparse.ss lib/core.ss psyntax/psyntax.pp
 	cat lib/core.ss psyntax/psyntax.pp | $(SCHEME) --script preparse.ss > psyntax/psyntax.js
