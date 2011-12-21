@@ -24,7 +24,7 @@ FoxScheme.load = function(filename, i) {
     if(i === undefined)
         i = $fs.i
     var expr
-    while((expr = p.nextObject()) !== null) {
+    while((expr = p.nextObject()) !== FoxScheme.Parser.EOS) {
         i.eval(expr)
     }
     return i
@@ -37,7 +37,7 @@ $fs.eval = function(str) {
     var p = new $fs.Parser(str)
     var expr
     var r
-    while((expr = p.nextObject()) !== null) {
+    while((expr = p.nextObject()) !== FoxScheme.Parser.EOS) {
         r = $fs.i.eval(expr)
     }
     return r;

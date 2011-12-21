@@ -11,7 +11,7 @@
  *
  *     var p = new FoxScheme.Parser("(+ 2 2)")
  *     var i = new FoxScheme.Interpreter();
- *     while((var expr = p.nextObject()) != null)
+ *     while((var expr = p.nextObject()) !== FoxScheme.Parser.EOS)
  *         print(i.this.eval(expr))
  */
 FoxScheme.Interpreter = function() {

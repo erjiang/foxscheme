@@ -39,7 +39,7 @@ FoxScheme.nativeprocedures.defun("load", 1, 2,
         }
         var p = new FoxScheme.Parser(xhr.responseText)
         var o
-        while((o = p.nextObject()) !== null) {
+        while((o = p.nextObject()) !== FoxScheme.Parser.EOS) {
             evalproc.apply(this, [o])
         }
         return FoxScheme.nothing

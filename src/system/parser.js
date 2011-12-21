@@ -66,7 +66,7 @@ FoxScheme.Parser.prototype = {
     sexpCommentMarker: new Object,
 
     nextObject: function() {
-        if(typeof(this.i) === "undefined")
+        if(this.i === undefined)
             this.i = 0;
         if(this.i >= this.tokens.length)
             return FoxScheme.Parser.EOS;
@@ -218,3 +218,5 @@ FoxScheme.Parser.prototype = {
     }
 
 }; // end of = { ...
+
+FoxScheme.Parser.EOS = {};
