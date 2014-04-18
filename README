@@ -6,7 +6,7 @@ Some key points include:
 
   * Proper support for recursion
     FoxScheme does not use the native JavaScript stack, which is often too
-    small for interesting recursive problems. Tail calls are handled properly.
+    small for interesting recursive problems.
 
   * Minimal native (primitive) procedures
     Only procedures that must be implemented in JS out of necessity (cons) or
@@ -18,8 +18,8 @@ Some key points include:
     self-contained. The code attempts to be easily-readable where possible, and
     commented where not, allowing for easy modification and extension.
  
-  * Self-containment
-    FoxScheme attempts to be software in its own right, and does not rely on
+  * Self-containod
+    FoxScheme tries to minimize its external dependencies, and does not rely on
     external libraries such as jQuery or Prototype.js. FoxScheme does its best
     not to pollute the global namespace or otherwise interfere with other JS
     software. There is no dependence on a browser; for example, early
@@ -38,8 +38,8 @@ Some key points include:
 Known issues:
  
   * No arithmetic stack
-    All numeric computation is done with JavaScript numbers, which are 64-bit
-    floating-point numbers.
+    All numeric computation is done with JavaScript numbers, although bignum
+    suppert could be added later.
  
   * Incomplete
     Currently, only a few native procedures are implemented for things like
