@@ -18,7 +18,7 @@ Some key points include:
     self-contained. The code attempts to be easily-readable where possible, and
     commented where not, allowing for easy modification and extension.
  
-  * Self-containod
+  * Self-contained
     FoxScheme tries to minimize its external dependencies, and does not rely on
     external libraries such as jQuery or Prototype.js. FoxScheme does its best
     not to pollute the global namespace or otherwise interfere with other JS
