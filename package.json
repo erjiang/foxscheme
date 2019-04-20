@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/erjiang/foxscheme#readme",
   "devDependencies": {
-    "@babel/preset-typescript": "^7.3.3"
+    "@babel/preset-typescript": "^7.3.3",
+    "typescript": "^3.4.4"
   }
 }
