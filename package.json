@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/erjiang/foxscheme/issues"
   },
-  "homepage": "https://github.com/erjiang/foxscheme#readme"
+  "homepage": "https://github.com/erjiang/foxscheme#readme",
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.3.3"
+  }
 }
