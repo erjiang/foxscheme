@@ -20,7 +20,7 @@ import Hash from "./hash";
 import Symbol from "./symbol";
 import Vector from "./vector";
 import nil from "./nil";
-import * as Util from "./Util";
+import * as Util from "./util";
 import { Error, Bug } from "./error";
 import nativeprocedures from "./native";
 import nothing from "./nothing";

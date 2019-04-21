@@ -1,0 +1,13 @@
+{
+    "presets": [
+        "@babel/preset-env",
+        "@babel/typescript"
+    ],
+    "ignore": [
+        "./src/lib",
+        "./src/system/looper.ts",
+    ],
+    "plugins": [
+        "transform-class-properties"
+    ]
+}

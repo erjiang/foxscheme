@@ -73,7 +73,7 @@ export function arrayify(list: Pair | nil | Iterable<any>) {
   /*
     * Map a function to a list
     */
-function map(func: (arg0: any) => any, ls: Pair | nil) {
+export function map(func: (arg0: any) => any, ls: Pair | nil) {
   if (!(ls instanceof Pair))
     throw new Bug("Attempt to map on non-list " + ls, "Util.map");
   if (!ls.isProper())

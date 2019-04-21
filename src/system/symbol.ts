@@ -1,4 +1,4 @@
-import { Bug } from "./Error";
+import { Bug } from "./error";
 
 export default class Symbol {
     _name: string;

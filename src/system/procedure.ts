@@ -95,7 +95,6 @@ export class NativeProcedure implements Procedure {
  */
 export class InterpretedProcedure extends Procedure {
    
-  env = [];
   //interpreter // XXX: Where is this used?
   /*
    * To create a function, pass a function in as a_proc,

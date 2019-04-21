@@ -2,3 +2,5 @@ bin/*.js
 __merged.js
 *~
 *.swp
+node_modules
+dist/

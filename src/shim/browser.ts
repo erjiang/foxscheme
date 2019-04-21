@@ -3,6 +3,7 @@ import String from "../system/string";
 import {Error} from "../system/error";
 import nothing from "../system/nothing";
 import Parser from "../system/parser";
+import * as FoxScheme from "../foxscheme";
 /*
  * This is neither asynchronous nor XML, so we can't really call it AJAX, can
  * we? More like... J
@@ -42,8 +43,8 @@ defun("load", 1, 2,
         ].join(""),
         "load")
     }
-    var p = new Parser(xhr.responseText)
-    var o
+    var p = new Parser(xhr.responseText);
+    let o;
     while((o = p.nextObject()) !== Parser.EOS) {
       evalproc.apply(this, [o])
     }
