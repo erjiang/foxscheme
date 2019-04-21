@@ -21,17 +21,16 @@ import Vector from "./vector";
 import { Error } from "./error";
 import { Expr } from "./types";
 
-type EOS = object;
+class EOS { }
 
 //
 // Parser 
 // copied from jsScheme - should be rewrriten (support #0=, etc)
 //
-let EOSObj: EOS = {};
 export default class Parser {
     i: number;
     tokens: string[];
-    EOS = EOSObj;
+    static EOS = new EOS();
     constructor(txt: string) {
         this.tokens = this.tokenize(txt);
         this.i = 0;
@@ -75,7 +74,7 @@ export default class Parser {
         if (this.i === undefined)
             this.i = 0;
         if (this.i >= this.tokens.length)
-            return this.EOS;
+            return Parser.EOS;
 
         var t = this.tokens[this.i];
         this.i++;

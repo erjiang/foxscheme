@@ -308,7 +308,7 @@ export default class Interpreter {
     }
   }
 
-  evalDriver(expr: Expr) {
+  eval(expr: Expr) {
     /*
      * Save registers
      */
