@@ -1,42 +1,41 @@
-FoxScheme.Vector = function(elements) {
-    // guard against accidental non-instantiation
-    if(!(this instanceof FoxScheme.Vector)) {
-        throw new FoxScheme.Bug("Improper use of FoxScheme.Vector()");
-    }
+import { Error } from "./error";
+import { Expr } from "./types";
 
+export default class Vector {
+  _array: Expr[];
+  constructor(elements?: Expr[]) {
     this._array = [];
     /*
      * Allow vector to be created from an existing JS array
      */
-    if(elements !== undefined) {
-        if(elements instanceof Array || 'length' in elements) {
-            var i = elements.length
-            while(i--) {
-                this._array[i] = elements[i];
-            }
+    if (elements !== undefined) {
+      if (elements instanceof Array || 'length' in elements) {
+        var i = elements.length
+        while (i--) {
+          this._array[i] = elements[i];
         }
-        else {
-            throw new FoxScheme.Error("Vector constructor given non-array");
-        }
+      }
+      else {
+        throw new Error("Vector constructor given non-array");
+      }
     }
-};
-FoxScheme.Vector.prototype = {
-    toString: function() { 
-        return "#("+this._array.join(" ")+")";
-    },
-    length: function() {
-        return this._array.length;
-    },
-    set: function(i, el) {
-        if(i < 0 || i >= this._array.length)
-            throw new FoxScheme.Error("Invalid vector index "+i, "Vector")
+  }
+  toString() {
+    return "#(" + this._array.join(" ") + ")";
+  }
+  length() {
+    return this._array.length;
+  }
+  set(i: number, el: Expr) {
+    if (i < 0 || i >= this._array.length)
+      throw new Error("Invalid vector index " + i)
 
-        return this._array[i] = el;
-    },
-    get: function(i) {
-        if(i < 0 || i >= this._array.length)
-            throw new FoxScheme.Error("Invalid vector index "+i, "Vector")
+    return this._array[i] = el;
+  }
+  get(i: number) {
+    if (i < 0 || i >= this._array.length)
+      throw new Error("Invalid vector index " + i)
 
-        return this._array[i];
-    }
+    return this._array[i];
+  }
 };

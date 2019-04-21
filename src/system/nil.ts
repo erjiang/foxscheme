@@ -6,21 +6,8 @@
  * confusion with Javascript's own null.
  */
 
-FoxScheme.nil = {
-    toString: function() {
+export default class nil {
+    toString() {
         return "()";
     }
-};
-
-/*
- * FoxScheme.nothing
- * 
- * A special object representing the output of (void).
- * Rhino does not like properties being called "void", so
- * it's called nothing here.
- */
-FoxScheme.nothing = {
-    toString: function() {
-        return "#<void>";
-    }
-};
+}

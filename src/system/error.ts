@@ -8,8 +8,12 @@
 
 export class Error {
     message: string;
-    constructor(message: string) {
-        this.message = message;
+    constructor(message: string, proc?: string) {
+        if (proc) {
+            this.message = `In ${proc}: ${message}`;
+        } else {
+            this.message = message;
+        }
     }
     toString() { return "[ERROR] "+this.message; }
 };
@@ -24,8 +28,12 @@ export class Error {
 
 export class Bug {
     message: string;
-    constructor(message: string) {
-        this.message = message;
+    constructor(message: string, proc?: string) {
+        if (proc) {
+            this.message = `In ${proc}: ${message}`;
+        } else {
+            this.message = message;
+        }
     }
     toString() { return "[BUG] " + this.message; }
 };

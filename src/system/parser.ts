@@ -1,5 +1,5 @@
 /*
- * FoxScheme.Parser
+ * Parser
  *
  * Copied from BiwaScheme/src/parser.js.
  * This takes a string representing an Sexp and converts it
@@ -12,27 +12,36 @@
  *
  * TODO: Rescope this to allow better minification.
  */
+import * as Util from "./util";
+import Char from "./char";
+import Gensym from "./gensym";
+import Pair from "./pair";
+import Symbol from "./symbol";
+import Vector from "./vector";
+import { Error } from "./error";
+import { Expr } from "./types";
+
+type EOS = object;
 
 //
 // Parser 
 // copied from jsScheme - should be rewrriten (support #0=, etc)
 //
-FoxScheme.Parser = function(txt){
-    // guard against accidental non-instantiation
-    if(!(this instanceof FoxScheme.Parser)) {
-        throw new FoxScheme.Bug("Improper use of FoxScheme.Parser()");
+let EOSObj: EOS = {};
+export default class Parser {
+    i: number;
+    tokens: string[];
+    EOS = EOSObj;
+    constructor(txt: string) {
+        this.tokens = this.tokenize(txt);
+        this.i = 0;
     }
-    this.tokens = this.tokenize(txt);
-    this.i = 0;
-};
-FoxScheme.Parser.prototype = {
-    inspect: function () {
-        return ["#<Parser:", this.i, "/", this.tokens.length, " ", Object.inspect(this.tokens), ">"].join("");
-    },
-
-    tokenize: function (txt) {
-        var tokens = new Array(),
-            oldTxt = null;
+    inspect() {
+        return `#<Parser:${this.i}/${this.tokens.length} ${this.tokens.toString()}>`;
+    }
+    tokenize(txt: string) {
+        let tokens: string[] = [];
+        let oldTxt: string | null = null;
         var in_srfi_30_comment = 0;
 
         while (txt != "" && oldTxt != txt) {
@@ -47,7 +56,7 @@ FoxScheme.Parser.prototype = {
                     if (/(.*\|#)/.test(t)) {
                         in_srfi_30_comment--;
                         if (in_srfi_30_comment < 0) {
-                            throw new FoxScheme.Error("Found an extra comment terminator: `|#'")
+                            throw new Error("Found an extra comment terminator: `|#'")
                         }
                         // Push back the rest substring to input stream.
                         return t.substring(RegExp.$1.length, t.length);
@@ -61,19 +70,16 @@ FoxScheme.Parser.prototype = {
             });
         }
         return tokens;
-    },
-
-    sexpCommentMarker: new Object,
-
-    nextObject: function() {
-        if(this.i === undefined)
+    }
+    nextObject(): Expr | EOS {
+        if (this.i === undefined)
             this.i = 0;
-        if(this.i >= this.tokens.length)
-            return FoxScheme.Parser.EOS;
+        if (this.i >= this.tokens.length)
+            return this.EOS;
 
         var t = this.tokens[this.i];
         this.i++;
-        switch(t) {
+        switch (t) {
             case "(":
             case "[":
                 return this.nextList();
@@ -81,23 +87,24 @@ FoxScheme.Parser.prototype = {
             case "#[":
                 return this.nextVector();
             case "#{":
-                if(this.tokens[this.i + 2] !== "}")
-                    throw new FoxScheme.Error("Invalid gensym literal: #{"+
-                            this.tokens[this.i]+" "+this.tokens[this.i + 1]+
-                            this.tokens[this.i + 2])
-                var r = new FoxScheme.Gensym(this.tokens[this.i],
-                                             this.tokens[this.i + 1])
+                if (this.tokens[this.i + 2] !== "}") {
+                    throw new Error("Invalid gensym literal: #{" +
+                        this.tokens[this.i] + " " + this.tokens[this.i + 1] +
+                        this.tokens[this.i + 2])
+                }
+                var r = new Gensym(this.tokens[this.i],
+                    this.tokens[this.i + 1])
                 this.i += 3
                 return r;
             case "'": // convert '... into (quote ...)
-                return new FoxScheme.Pair(new FoxScheme.Symbol("quote"),
-                                            FoxScheme.Util.listify(this.nextObject()));
+                return new Pair(new Symbol("quote"),
+                    Util.listify(this.nextObject()));
             case "`":
-                return new FoxScheme.Pair(new FoxScheme.Symbol("quasiquote"),
-                                            FoxScheme.Util.listify(this.nextObject()));
+                return new Pair(new Symbol("quasiquote"),
+                    Util.listify(this.nextObject()));
             case ",":
-                return new FoxScheme.Pair(new FoxScheme.Symbol("unquote"),
-                                            FoxScheme.Util.listify(this.nextObject()));
+                return new Pair(new Symbol("unquote"),
+                    Util.listify(this.nextObject()));
             case "#t":
             case "#T":
                 return true;
@@ -107,22 +114,24 @@ FoxScheme.Parser.prototype = {
             case ".":
             case ")":
             case "]":
-                throw new FoxScheme.Error(t+" should not appear outside a list")
+                throw new Error(t + " should not appear outside a list")
                 break
             default:
                 /*
                  * Could be a number
                  */
                 // JavaScript's parseInt("9x") => 9
-                if(t.match(/[^0-9.+-e]/) === null) {
+                if (t.match(/[^0-9.+-e]/) === null) {
                     /*
                      * Could be a rational, which we'll convert to a float
                      * anyways
+                     * TODO: treat as rational numbers
                      */
-                    var rational
-                    if((rational = t.match(/^([0-9-]+)\/([0-9]+)$/)) !== null)
+                    let rational: RegExpMatchArray | null;
+                    if ((rational = t.match(/^([0-9-]+)\/([0-9]+)$/)) !== null) {
                         // type coerce those strings!
-                        return rational[1] / rational[2];
+                        return parseInt(rational[1]) / parseInt(rational[2]);
+                    }
                     /*
                      * Not a rational, just parse it like normal
                      * Note that this differs from Chez Scheme in that
@@ -137,64 +146,62 @@ FoxScheme.Parser.prototype = {
                      * TODO: Better sanitize numbers
                      */
                     var n = parseFloat(t);
-                    if(!isNaN(n))
+                    if (!isNaN(n))
                         return n;
                 }
                 /*
                  * Could be a character
                  */
-                if(t.substring(0,2) == "#\\")
-                    return new FoxScheme.Char(t); // Char will handle parsing the character
+                if (t.substring(0, 2) == "#\\")
+                    return new Char(t); // Char will handle parsing the character
 
                 /*
                  * Strings start and end with "
-                 * We use our own FoxScheme.String so that
+                 * We use our own String so that
                      (eq? (make-string 3) (make-string 3)) => #f
                  *   and so we can override toString()
                  */
-                if(t.length > 1 &&
+                if (t.length > 1 &&
                     t[0] == '"' &&
                     t[t.length - 1] == '"') {
 
                     t = t.replace(/\\(.)/, "$1")
                     // can't substring the empty string
-                    return t === '""' ? new FoxScheme.String("") : 
-                            new FoxScheme.String(t.substring(1, t.length - 1));
+                    return t === '""' ? new String("") :
+                        new String(t.substring(1, t.length - 1));
                 }
 
                 /*
                  * Must be a symbol, then.
                  */
-                return new FoxScheme.Symbol(t);
-
-                break;
+                return new Symbol(t);
         }
-    },
+    }
 
-    nextList: function() {
+    nextList() {
         var list = [];
         /*
          * this.nextObject() increments the token index, so we
          * don't necessarily have to do this.i++
          */
-        while(this.i < this.tokens.length) {
+        while (this.i < this.tokens.length) {
             var t = this.tokens[this.i];
             /*
              * Check for the end of the list
              */
-            if(t === ")" || t === "]") {
+            if (t === ")" || t === "]") {
                 this.i++;
-                return FoxScheme.Util.listify(list);
+                return Util.listify(list);
             }
             /*
              * Check for improper list
              */
-            if(t === ".") {
+            if (t === ".") {
                 this.i++
-                var ls = FoxScheme.Util.listify(list, this.nextObject())
-                if(this.tokens[this.i] !== ")" &&
-                   this.tokens[this.i] !== "]")
-                    throw new FoxScheme.Error("Only one item should follow dot (.)",  "FoxScheme.Parser")
+                var ls = Util.listify(list, this.nextObject())
+                if (this.tokens[this.i] !== ")" &&
+                    this.tokens[this.i] !== "]")
+                    throw new Error("Only one item should follow dot (.)");
 
                 this.i++
                 return ls
@@ -202,21 +209,19 @@ FoxScheme.Parser.prototype = {
 
             list.push(this.nextObject());
         }
-        throw new FoxScheme.Error("Unexpected end of list encountered", "Parser")
-    },
-    
-    nextVector: function() {
+        throw new Error("Unexpected end of list encountered");
+    }
+
+    nextVector() {
         var list = [];
-        while(this.i < this.tokens.length) {
+        while (this.i < this.tokens.length) {
             var t = this.tokens[this.i];
-            if(t === ")" || t === "]") {
+            if (t === ")" || t === "]") {
                 this.i++;
-                return new FoxScheme.Vector(list);
+                return new Vector(list);
             }
             list.push(this.nextObject());
         }
+        throw new Error("Expected end of vector but got EOF instead");
     }
-
-}; // end of = { ...
-
-FoxScheme.Parser.EOS = {};
+}

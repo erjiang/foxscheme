@@ -1,89 +1,97 @@
 /*
- * FoxScheme.Pair
+ * Pair
  *
  */
+import { Expr } from "./types";
+import { Bug } from "./error";
+import nil from "./nil";
 
-FoxScheme.Pair = function(car, cdr) {
-    // guard against accidental non-instantiation
-    if(!(this instanceof FoxScheme.Pair)) {
-        throw new FoxScheme.Bug("Improper use of FoxScheme.Pair()");
+// TODO: can we genericize Pair? Pair<Tu, Tv>?
+export default class Pair {
+    _car: Expr;
+    _cdr: Expr;
+    constructor(car: Expr, cdr: Expr) {
+        this._car = car;
+        this._cdr = cdr;
     }
-    
-    this._car = car;
-    this._cdr = cdr;
-};
-FoxScheme.Pair.prototype = {
-    car: function() {
+    car() {
         return this._car;
-    },
-    setCar: function(v) {
+    }
+    setCar(v: Expr) {
         var r = this._car
         this._car = v
         return r
-    },
-    setCdr: function(v) {
+    }
+    setCdr(v: Expr) {
         var r = this._cdr
         this._cdr = v
         return r
-    },
-    cdr: function() {
+    }
+    cdr() {
         return this._cdr;
-    },
-    toString: function() {
+    }
+    toString(): string {
         /*
          * Recursively print out the list, if (pair? (cdr this))
          */
-        if(this._cdr instanceof FoxScheme.Pair) {
+        if(this._cdr instanceof Pair) {
             return "("+this._car.toString()
                 +" "+this._cdr.toString().substring(1);
         }
-        else if(this._cdr === FoxScheme.nil) {
+        // @ts-ignore: _cdr COULD BE nil if Expr = Pair | nil
+        else if(this._cdr === nil) {
             return "("+this._car.toString()+")";
         }
         else {
             return "("+this._car.toString()
                 +" . "+this._cdr.toString()+")";
         }
-    },
+    }
     /*
      * Some utility functions for use internally by FoxScheme
      */
-    isProper: function() {
-        if(this._cdr == FoxScheme.nil)
+    isProper(): boolean {
+        // @ts-ignore: Expr could be Pair | nil
+        if(this._cdr === nil)
             return true
-        else if(this._cdr instanceof FoxScheme.Pair)
+        else if(this._cdr instanceof Pair)
             return this._cdr.isProper()
         else
             return false
-    },
-    first: function() {
-        return this.car()
-    },
-    second: function() {
-        return this.cdr().car()
-    },
-    third: function() {
-        return this.cdr().cdr().car()
-    },
-    fourth: function() {
-        return this.cdr().cdr().cdr().car()
-    },
-    last: function() {
-        if(this._cdr === FoxScheme.nil)
+    }
+    first() {
+        return this.car();
+    }
+    second() {
+        // @ts-ignore: This is inherently unsafe
+        return (<Pair>this.cdr()).car();
+    }
+    third() {
+        // @ts-ignore: This is inherently unsafe
+        return (<Pair>(<Pair>this.cdr()).cdr()).car();
+    }
+    fourth() {
+        // @ts-ignore: This is inherently unsafe
+        return (<Pair>(<Pair>(<Pair>this.cdr()).cdr()).cdr()).car();
+    }
+    last(): Expr {
+        // @ts-ignore: Expr could be Pair | nil
+        if(this._cdr === nil) {
             return this._car
+        }
         else
-            if(this._cdr instanceof FoxScheme.Pair)
+            if(this._cdr instanceof Pair)
                 return this._cdr.last()
             else
-                throw new FoxScheme.Bug("Can't get last of improper list", "Pair.last")
-    },
-    length: function() {
-        var acc = 0
-        var cursor = this
-        while(cursor !== FoxScheme.nil) {
-            acc += 1
-            if(!(cursor instanceof FoxScheme.Pair)) // improper list
-                throw new FoxScheme.Bug("Improper list "+this, "Pair.length()");
+                throw new Bug("Can't get last of improper list", "Pair.last")
+    }
+    length(): number {
+        var acc = 0;
+        var cursor: Pair | nil = this;
+        while(cursor !== nil) {
+            acc += 1;
+            if(!(cursor instanceof Pair)) // improper list
+                throw new Bug("Improper list "+this, "Pair.length()");
             cursor = cursor._cdr
         }
         return acc

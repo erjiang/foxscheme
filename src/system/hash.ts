@@ -1,5 +1,6 @@
+import { Expr } from "./types";
 /*
- * FoxScheme.Hash
+ * Hash
  *
  * A simple hash implementation that takes advantage of JS native object
  * properties.
@@ -19,75 +20,71 @@
  * for "x".  Note that the set() method *does not* go up the chain, and
  * will always affect the outermost hash.  This may shadow bindings
  * further up the chain.
+ * 
+ * If the key is not found, undefined is returned.
  *
  */
-FoxScheme.Hash = function () {
-    if(!(this instanceof FoxScheme.Hash)) {
-        throw new FoxScheme.Error("Improper use of FoxScheme.Hash()");
+export default class Hash {
+  /*
+    * We can optionally initialize this hash with another hash,
+    * and the new Hash will be changed to the given Hash.  Then,
+    * if this hash looks up something and cannot find it, it will
+    * ask the chained hash, which asks its chained hash, and so
+    * on.  This means searches search up the hash chain.
+    */
+  _store: { [id: string]: Expr };
+  _next: Hash | undefined;
+  constructor(next?: Hash) {
+    this._store = {};
+    this._next = next;
+  }
+  chainGet(key: string): Expr | undefined {
+    if (this._store.hasOwnProperty(key)) {
+      return this._store[key];
+    } else if (this._next !== undefined) {
+      return this._next.chainGet(key);
     }
-    this.initialize.apply(this, arguments)
+  }
+  get(key: string) {
+    if (this._store.hasOwnProperty(key)) {
+      return this._store[key];
+    }
+  }
+  chainSet(key: string, value: Expr): void {
+    if(this.get(key) !== undefined) {
+      this.set(key, value);
+    }
+    else {
+      if(this._next !== undefined) {
+        this._next.chainSet(key, value);
+      } else {
+        this._store[key] = value;
+      }
+    }
+  }
+  set(key: string, value: Expr): void {
+    this._store[key] = value;
+  }
+  unset(key: string) {
+    var val = this._store[key];
+    delete this._store[key];
+    return val;
+  }
+  toString() {
+    return "#<SystemHash>"
+  }
+  clone() {
+    var c = new Hash();
+    for(var k in this._store) {
+      c.set(k, this._store[k]);
+    }
+    return c;
+  }
+  /*
+    * The extend method is a shortcut for initializing a new Hash
+    * with this Hash
+    */
+  extend() {
+    return new Hash(this);
+  }
 }
-
-FoxScheme.Hash.prototype = function () {
-    return {
-        /*
-         * We can optionally initialize this hash with another hash,
-         * and the new Hash will be changed to the given Hash.  Then,
-         * if this hash looks up something and cannot find it, it will
-         * ask the chained hash, which asks its chained hash, and so
-         * on.  This means searches search up the hash chain.
-         */
-        initialize: function (next) {
-            this._store = {}
-            this._next = next
-        },
-        chainGet: function (key) {
-            var r
-            if((r = this._store[key]) !== undefined &&
-               r !== Object.prototype[key])
-                return r
-            else if(this._next !== undefined)
-                return this._next.chainGet(key)
-        },
-        get: function (key) {
-            var r
-            if((r = this._store[key]) !== undefined &&
-               r !== Object.prototype[key])
-                return r
-        },
-        chainSet: function(key, value) {
-            if(this.get(key) !== undefined)
-                this.set(key, value)
-            else
-                if(this._next !== undefined)
-                    return this._next.chainSet(key, value)
-                else
-                    return this._store[key] = value
-        },
-        set: function (key, value) {
-            return this._store[key] = value
-        },
-        unset: function (key) {
-            var val = this._store[key]
-            delete this._store[key]
-            return val
-        },
-        toString: function () {
-            return "#<SystemHash>"
-        },
-        clone: function () {
-            var c = new FoxScheme.Hash()
-            for(var k in this._store)
-                c.set(k, this._store[k])
-            return c;
-        },
-        /*
-         * The extend method is a shortcut for initializing a new Hash
-         * with this Hash
-         */
-        extend: function () {
-            return new FoxScheme.Hash(this)
-        }
-    }
-}();
-

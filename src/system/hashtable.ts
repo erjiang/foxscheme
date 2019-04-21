@@ -1,72 +1,58 @@
+import { Expr } from "./types";
+import Pair from "./pair";
 /*
- * FoxScheme.Hashtable
+ * Hashtable
  *
  * This hash table implements the R6RS hashtables, as opposed to hash.js which
- * is only used internally by FoxScheme.
+ * is only used internally by 
  */
+export default class Hashtable {
+  _store: { [key: string]: Pair[] };
+  constructor() {
+    this._store = {};
+  }
 
-FoxScheme.Hashtable = function() {
-    if(!(this instanceof FoxScheme.Hashtable)) {
-        throw new FoxScheme.Bug("Improper use of FoxScheme.Hashtable()")
+  clear() {
+    this._store = {};
+  }
+  
+  get(k: Expr) {
+    var ks = k.toString()
+    var lookup
+    if((lookup = this._store[ks]) !== undefined) {
+      var i = lookup.length
+      while(i--) {
+        if(lookup[i].car() === k) {
+          return lookup[i].cdr()
+        }
+      }
     }
+    return null
+  }
 
-    this.initialize.apply(this, arguments)
+  set(k: Expr, v: Expr) {
+    var ks = k.toString()
+    var lookup
+    if((lookup = this._store[ks]) !== undefined) {
+      var i = lookup.length
+      while(i--) {
+        if(lookup[i].car() === k) {
+          return lookup[i].setCdr(v)
+        }
+      }
+      // not found, make new entry
+      lookup.push(new Pair(k, v))
+    }
+    else {
+      this._store[ks] = ([new Pair(k, v)])
+    }
+    return v
+  }
+
+  remove (k: Expr) {
+    var ks = k.toString()
+    var v = this._store[ks]
+    delete this._store[ks]
+    return v
+  }
 }
-
-FoxScheme.Hashtable.prototype = function() {
-    var initialize = function() {
-        this._store = []
-        return
-    }
-
-    var clear = function() {
-        this._store = []
-    }
-    
-    var get = function(k) {
-        var ks = k.toString()
-        var lookup
-        if((lookup = this._store[ks]) !== undefined) {
-            var i = lookup.length
-            while(i--) {
-                if(lookup[i].car() === k) {
-                    return lookup[i].cdr()
-                }
-            }
-        }
-        return null
-    }
-
-    var set = function(k, v) {
-        var ks = k.toString()
-        var lookup
-        if((lookup = this._store[ks]) !== undefined) {
-            var i = lookup.length
-            while(i--) {
-                if(lookup[i].car() === k) {
-                    return lookup[i].setCdr(v)
-                }
-            }
-            // not found, make new entry
-            lookup.push(new FoxScheme.Pair(k, v))
-        }
-        else {
-            this._store[ks] = ([new FoxScheme.Pair(k, v)])
-        }
-        return v
-    }
-
-    var remove = function (k) {
-        var ks = k.toString()
-        var v = this._store[ks]
-        delete this._store[ks]
-        return v
-    }
-
-    return {
-        initialize: initialize,
-        clear: clear,
-        get: get,
-        set: set
-    }
-}();
