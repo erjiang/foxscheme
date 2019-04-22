@@ -7,7 +7,7 @@
  */
 
 export default class nil {
-    toString() {
+    static toString() {
         return "()";
     }
 }

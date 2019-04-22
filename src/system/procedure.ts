@@ -24,7 +24,7 @@ export abstract class Procedure {
 
 export type ProcedureFunction = (this: Interpreter, ...args: any) => Expr;
 
-export class NativeProcedure implements Procedure {
+export class NativeProcedure extends Procedure {
   /*
    * To create a function, pass a function in as a_proc,
    * and optionally specify the arity, and an optional
@@ -42,6 +42,8 @@ export class NativeProcedure implements Procedure {
     a_name: string,
     a_arity: number | undefined,
     a_maxarity: number | undefined) {
+
+    super();
 
     this.proc = a_proc
     // XXX: shouldn't this.arity always be 0 or higher?

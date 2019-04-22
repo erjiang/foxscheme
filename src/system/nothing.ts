@@ -6,7 +6,7 @@
  * it's called nothing here.
  */
 export default class nothing {
-  toString() {
+  static toString() {
     return "#<void>";
   }
 }
