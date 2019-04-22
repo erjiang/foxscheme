@@ -4,7 +4,7 @@ module.exports = {
         filename: "foxscheme.js",
         path: __dirname + "/dist"
     },
-    mode: "production",
+    mode: "development",
 
     // Enable sourcemaps for debugging webpack's output.
     devtool: "source-map",

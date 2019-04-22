@@ -2,8 +2,15 @@ import {defun} from "../system/native";
 import String from "../system/string";
 import {Error} from "../system/error";
 import nothing from "../system/nothing";
-import Parser from "../system/parser";
 import * as FoxScheme from "../foxscheme";
+
+declare global {
+  interface Window { FoxScheme: any; $fs: any }
+}
+
+window.FoxScheme = FoxScheme;
+window.$fs = window.FoxScheme;
+
 /*
  * This is neither asynchronous nor XML, so we can't really call it AJAX, can
  * we? More like... J
