@@ -705,13 +705,15 @@ describe("Scope", function () {
 })
 
 describe("call/cc", function () {
-  it("simple", function () {
+  it("in trivial case", function () {
     evto("(call/cc (lambda (k) 5))", 5)
+  });
+  it("continuation used inside a begin", function() {
     evto("(call/cc (lambda (k) " +
       "(begin (k 5) 7)))",
       5)
   });
-})
+});
 
 describe("Multiple Values", function () {
   /*

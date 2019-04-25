@@ -144,6 +144,11 @@ type Continuation = KLet | KEmpty | KLet | KLetrec | KBegin | KIf | KSet |
 const syntax = ["lambda", "let", "letrec", "begin", "if",
   "set!", "define", "quote", "call/cc", "letcc"];
 
+// TODO: can we have a stronger check for continuations?
+function isContinuation(x: any): x is Continuation {
+  return (typeof x === 'object') && x.hasOwnProperty("type");
+}
+
 export default class Interpreter {
 
   //
@@ -227,14 +232,19 @@ export default class Interpreter {
   //
   // extendEnv extends an environment
   //
-  extendEnv(symbols: List, values: List, env: Env) {
+  extendEnv(symbols: List | Symbol, values: List, env: Env) {
     var newenv = env.extend()
 
     var pcursor = symbols // param cursor
     var vcursor = values // value cursor
     while(pcursor !== nil) {
-      // check for improper param list: (x y . z)
+      // handle improper param list: (x y . z) or bare symbol
+      // ((lambda (x y . z)) 1 2 3 4 5) => (3 4 5)
+      // ((lambda x x) 1 2 3 4 5) => (1 2 3 4 5)
       if(pcursor instanceof Symbol) {
+        if(vcursor instanceof Pair && vcursor.car() instanceof Values) {
+          throw new Error("Cannot pass multiple values in for " + pcursor);
+        }
         newenv.set(pcursor.name(), vcursor)
         break;
       } else if (pcursor instanceof Pair && vcursor instanceof Pair) {
@@ -243,7 +253,7 @@ export default class Interpreter {
         pcursor = pcursor.cdr()
         vcursor = vcursor.cdr()
       } else {
-        throw new Bug("pcursor or vcursor reached list end early", "extendEnv");
+        throw new Error("Incorrect argument count to Closure");
       }
     }
     return newenv;
@@ -873,7 +883,8 @@ export default class Interpreter {
       case CT.kProcRator: {
         let rator = this.$v;
         if (!(rator instanceof Procedure) &&
-          !(rator instanceof Closure)) {
+          !(rator instanceof Closure) &&
+          !isContinuation(rator)) {
           throw new Error("Attempt to apply non-procedure " + rator)
         }
 
@@ -1099,10 +1110,12 @@ export default class Interpreter {
 // }
 //
 export class Closure {
-  params: Expr; // should be a List of values
+  // should be a List of values or a single symbol
+  params: List | Symbol;
+  // the body of the lambda
   expr: Expr;
   env: Env;
-  constructor(params: Expr, expr: Expr, env: Env) {
+  constructor(params: List | Symbol, expr: Expr, env: Env) {
     this.params = params;
     this.expr = expr;
     this.env = env;
