@@ -30,4 +30,7 @@ export default class Gensym {
       return this._shortname
     }
   }
+  name() {
+    return this._name;
+  }
 }
