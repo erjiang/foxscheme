@@ -172,7 +172,7 @@ export default class Interpreter {
   // program counter
   // TODO: can we type this better?
   $pc: (...args: any) => void;
-  
+
   // callback for async eval
   $callback: (val: Expr) => void;
 
@@ -334,7 +334,7 @@ export default class Interpreter {
        * Restore registers
        */
       this.restoreRegs(regs)
-    
+
       // Check if we stopped because we're done
       if (e instanceof ValueContainer)
         return e.value;
@@ -569,7 +569,7 @@ export default class Interpreter {
             this.$ls = bindright
             this.$k = {
               type: CT.kLet,
-              body: body, 
+              body: body,
               bindleft: bindleft,
               env: this.$env,
               k: this.$k,
@@ -1075,8 +1075,8 @@ export default class Interpreter {
             "Interpreter.getReg")
     }
   }
-  toString() { 
-    return "#<Interpreter>" 
+  toString() {
+    return "#<Interpreter>"
   }
 }
 

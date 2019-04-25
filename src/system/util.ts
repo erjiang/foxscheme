@@ -6,7 +6,7 @@
 
 import { Expr, List } from "./types";
 import { Bug } from "./error";
-import nil from "./nil";
+import nil, { isNil } from "./nil";
 import Pair from "./pair";
 
 /*
@@ -42,24 +42,24 @@ export function listify(arg: Expr | Expr[], end?: Expr): List {
   * and arguments "arrays" into arrays
   */
 export function arrayify(list: Pair | nil | Iterable<any>) {
-  var ls = []
+  var ls = [];
   /*
     * Converts a FoxScheme list into an array by
     * walking the list
     */
-  if(list instanceof Pair ||
-      list instanceof nil) {
-    while(list instanceof Pair) {
-      ls.push(list.car())
-      list = list.cdr()
+  if(list instanceof Pair || isNil(list)) {
+    let listCursor: any = list;
+    while(listCursor instanceof Pair) {
+      ls.push(listCursor.car())
+      listCursor = listCursor.cdr() as any;
     }
     /*
       * Check if last item is improper (not nil)
       * This means that '(1 2 . 3) => [1, 2, 3] !!
       * Careful!
       */
-    if(!(list === nil)) {
-      ls.push(list)
+    if(!isNil(listCursor)) {
+      ls.push(listCursor);
     }
     return ls;
   }
@@ -67,6 +67,7 @@ export function arrayify(list: Pair | nil | Iterable<any>) {
     * Converts arguments into an array
     */
   else {
+    // @ts-ignore: TODO: figure out why this doesn't typecheck
     return [...list];
   }
 }
