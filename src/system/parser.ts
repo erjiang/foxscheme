@@ -18,6 +18,7 @@ import Gensym from "./gensym";
 import Pair from "./pair";
 import Symbol from "./symbol";
 import Vector from "./vector";
+import String from "./string";
 import { Error } from "./error";
 import { Expr } from "./types";
 
