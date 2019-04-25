@@ -883,21 +883,6 @@ describe("Simple Expand", function() {
 })
 */
 
-describe("Bugs", function () {
-  /*
-   * This test catches a bug in which the variable 'i' in a for loop wasn't
-   * being declared using 'var', so it would clobber whatever was 'i' in the
-   * global scope
-   */
-  it("Don't clobber i", function () {
-    // @ts-ignore
-    window.i = "fox"
-    evto("(+ 2 2)", 4)
-    // @ts-ignore
-    assert_equals(window.i, "fox")
-  });
-})
-
 describe('Miscellaneous', function () {
   // the first exercise from The Seasoned Schemer,
   // rewritten without 'cond' or 'or'
