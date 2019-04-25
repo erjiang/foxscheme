@@ -13,7 +13,7 @@
     "build": "webpack",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
-    "test": "mocha -r ts-node/register test/interpreter.ts"
+    "test": "mocha -r ts-node/register test/interpreter.js"
   },
   "repository": {
     "type": "git",
@@ -30,9 +30,9 @@
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "@babel/preset-typescript": "^7.3.3",
+    "@babel/register": "^7.4.0",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.7",
-    "babel-cli": "^6.26.0",
     "babel-loader": "^8.0.5",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-preset-env": "^1.7.0",

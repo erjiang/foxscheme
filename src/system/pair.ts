@@ -2,7 +2,7 @@
  * Pair
  *
  */
-import { Expr } from "./types";
+import { Expr, List } from "./types";
 import { Bug } from "./error";
 import nil from "./nil";
 
@@ -87,7 +87,7 @@ export default class Pair {
     }
     length(): number {
         var acc = 0;
-        var cursor: Pair | nil = this;
+        var cursor: List = this;
         while(cursor !== nil) {
             acc += 1;
             if(!(cursor instanceof Pair)) // improper list

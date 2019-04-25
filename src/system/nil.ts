@@ -6,12 +6,15 @@
  * confusion with Javascript's own null.
  */
 
-export default class nil {
+export class Nil {
     static toString() {
         return "()";
     }
 }
 
-export function isNil(x: any): x is nil {
-  return x instanceof nil || x === nil;
+let nil = new Nil();
+export default nil;
+
+export function isNil(x: any): x is Nil {
+  return x instanceof Nil || x === nil || x === Nil;
 }

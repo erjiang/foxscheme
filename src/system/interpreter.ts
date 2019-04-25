@@ -19,7 +19,7 @@ import Pair from "./pair";
 import Hash from "./hash";
 import Symbol from "./symbol";
 import Vector from "./vector";
-import nil from "./nil";
+import nil, { isNil, Nil } from "./nil";
 import * as Util from "./util";
 import { Error, Bug } from "./error";
 import nativeprocedures from "./native";
@@ -28,7 +28,7 @@ import { Procedure } from "./procedure";
 import Values from "./values";
 
 type Env = Hash;
-type List = Pair | nil;
+type List = Pair | Nil;
 
 //
 // Enums for continuation types
@@ -543,7 +543,7 @@ export default class Interpreter {
              * Well, the macro expander should do this
              * optimization, but we can't assume the expander
              */
-            if(bindings instanceof nil) {
+            if(isNil(bindings)) {
               this.$expr = body;
               this.$env = this.$env;
               this.$k = this.$k;
@@ -557,12 +557,15 @@ export default class Interpreter {
             var bindleft: List = nil;
             var bindright: List = nil;
             var bcursor: List = bindings; // ((lhs rhs) ...)
-            while(!(bcursor instanceof nil)) {
+            while(!(nil instanceof Nil)) {
               //
               // TODO: add back error-checking here
               //
+              // @ts-ignore: Why is bcursor never?
               bindleft = new Pair((<Pair>bcursor.car()).car(), bindleft);
+              // @ts-ignore: Why is bcursor never?
               bindright = new Pair((<Pair>(<Pair>bcursor.car()).cdr()).car(), bindright);
+              // @ts-ignore: Why is bcursor never?
               bcursor = bcursor.cdr();
             }
 
@@ -614,7 +617,7 @@ export default class Interpreter {
             let binderr: List = nil;
             let bindright: List = nil;
             let bcursor: List = bindings;
-            while(!(bcursor instanceof nil)) {
+            while(!(bcursor instanceof Nil)) {
               //
               // TODO: add back error-checking here
               //

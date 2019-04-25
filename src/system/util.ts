@@ -6,7 +6,7 @@
 
 import { Expr, List } from "./types";
 import { Bug } from "./error";
-import nil, { isNil } from "./nil";
+import nil, { isNil, Nil } from "./nil";
 import Pair from "./pair";
 
 /*
@@ -41,7 +41,7 @@ export function listify(arg: Expr | Expr[], end?: Expr): List {
   * Arrayify can convert both FoxScheme lists
   * and arguments "arrays" into arrays
   */
-export function arrayify(list: Pair | nil | Iterable<any>) {
+export function arrayify(list: Pair | Nil | Iterable<any>) {
   var ls = [];
   /*
     * Converts a FoxScheme list into an array by
@@ -74,7 +74,7 @@ export function arrayify(list: Pair | nil | Iterable<any>) {
   /*
     * Map a function to a list
     */
-export function map(func: (arg0: any) => any, ls: Pair | nil) {
+export function map(func: (arg0: any) => any, ls: Pair | Nil) {
   if (!(ls instanceof Pair))
     throw new Bug("Attempt to map on non-list " + ls, "Util.map");
   if (!ls.isProper())
