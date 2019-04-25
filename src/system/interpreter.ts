@@ -533,11 +533,11 @@ export default class Interpreter {
            * This section is a lot like that for lambda as
            * far as syntax checks go.
            */
-          case "let":
+          case "let": {
             if(this.$expr.length() < 3)
               throw new Error("Invalid syntax: "+this.$expr)
-            var body = this.$expr.third()
-            var bindings = this.$expr.second() as List;
+            let body = this.$expr.third()
+            let bindings = this.$expr.second() as List;
 
             /*
              * Well, the macro expander should do this
@@ -554,10 +554,10 @@ export default class Interpreter {
             //
             // Split the bindings into two lists
             //
-            var bindleft: List = nil;
-            var bindright: List = nil;
-            var bcursor: List = bindings; // ((lhs rhs) ...)
-            while(!(nil instanceof Nil)) {
+            let bindleft: List = nil;
+            let bindright: List = nil;
+            let bcursor: List = bindings; // ((lhs rhs) ...)
+            while(!(bcursor instanceof Nil)) {
               //
               // TODO: add back error-checking here
               //
@@ -579,6 +579,7 @@ export default class Interpreter {
             };
             this.$pc = this.mapValueof
             return;
+          }
 
           /* TODO: Read Dybvig, Ghuloum, "Fixing letrec (reloaded)"
            * This code is much like let, except that each rhs is evaluated with
