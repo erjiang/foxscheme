@@ -1,7 +1,8 @@
+import Symbol from "./symbol";
 let gensymcount = 0;
 let printgensym = true;
 
-export default class Gensym {
+export default class Gensym extends Symbol {
   _shortname: string;
   _name: string;
 
@@ -10,12 +11,17 @@ export default class Gensym {
       shortname = "g" + gensymcount;
     }
 
-    this._shortname = shortname
 
+
+    let tentativeName: string;
     if (name === undefined)
-      this._name = "_" + shortname + "__fox-" + gensymcount;
+      tentativeName = "_" + shortname + "__fox-" + gensymcount;
     else
-      this._name = name
+      tentativeName = name
+    super(tentativeName);
+    this._name = tentativeName;
+
+    this._shortname = shortname
 
     gensymcount++;
   }
