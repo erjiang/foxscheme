@@ -7,7 +7,7 @@
  */
 
 export class Nil {
-    static toString() {
+    toString() {
         return "()";
     }
 }
@@ -16,5 +16,5 @@ let nil = new Nil();
 export default nil;
 
 export function isNil(x: any): x is Nil {
-  return x instanceof Nil || x === nil || x === Nil;
+  return (x instanceof Nil) || (x === nil) || (x === Nil);
 }
