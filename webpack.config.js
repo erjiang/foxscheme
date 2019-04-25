@@ -1,7 +1,10 @@
 module.exports = {
-    entry: "./src/shim/browser.ts",
+    entry: {
+      browser: "./src/shim/browser.ts",
+      node: "./src/shim/node.ts"
+    },
     output: {
-        filename: "foxscheme.js",
+        filename: "foxscheme-[name].js",
         path: __dirname + "/dist"
     },
     mode: "development",
@@ -12,6 +15,10 @@ module.exports = {
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: [".ts", ".tsx", ".js", ".json"]
+    },
+
+    externals: {
+      repl: 'require("repl")'
     },
 
     module: {
