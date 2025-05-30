@@ -781,6 +781,14 @@ describe("gensym", function () {
   });
 })
 
+describe("Symbol", function () {
+  it("invalid names throw FoxScheme.Error", function () {
+    should_error(function () {
+      new $fs.Symbol("bad name");
+    });
+  });
+});
+
 describe("Native library methods", function () {
   //
   // Apply is a fragile library method in native.js because it must directly

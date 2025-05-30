@@ -1,4 +1,5 @@
 import { Bug } from "./error";
+import { Error } from "./error";
 
 export default class Symbol {
     _name: string;
