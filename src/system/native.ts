@@ -649,7 +649,7 @@ defun("vector-ref", 2, 2,
 defun("vector-set!", 3, 3,
   function(vector, index, value) {
     if(!(vector instanceof Vector))
-      throw new Error("Can't vector-ref non-vector "+vector);
+      throw new Error("Can't vector-set! non-vector " + vector);
     if(isNaN(index))
       throw new Error("Can't get non-numeric index "+vector);
     if(index < 0 || index >= vector.length())

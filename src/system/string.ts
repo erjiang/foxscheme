@@ -21,12 +21,12 @@ export default class String {
     set(i: number, c: Char) {
         if(!(c instanceof Char))
             throw new Error(c+" is not a Char", "String.set")
-        if(i < 0 || i > this._value.length)
+        if(i < 0 || i >= this._value.length)
             throw new Error("Invalid index "+i, "String.set")
         this._value = this._value.slice(0, i)+ c.getValue() +this._value.slice(i+1)
     }
     get(i: number) {
-        if(i < 0 || i > this._value.length)
+        if(i < 0 || i >= this._value.length)
             throw new Error("Invalid index "+i, "String.get")
         
         return this._value[i]

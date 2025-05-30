@@ -536,6 +536,8 @@ describe("Strings", function () {
   it('string-set! invalid', function () {
     should_error('(string-set! "" 0 #\\f)')
     should_error('(string-set! "a" 0 "a")')
+    should_error('(string-set! "abc" -1 #\\a)')
+    should_error('(string-set! "abc" 3 #\\a)')
   });
 })
 
@@ -599,6 +601,10 @@ describe("Vectors", function () {
       "(vector-set! v 3 5) " +
       "(vector-ref v 3)))",
       5)
+  });
+  it("vector-set! invalid", function () {
+    should_error("(vector-set! 3 0 1)")
+    should_error("(let ((v (make-vector 2))) (vector-set! v 2 5))")
   });
 })
 
