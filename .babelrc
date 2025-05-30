@@ -8,6 +8,6 @@
         "./src/system/looper.ts",
     ],
     "plugins": [
-        "transform-class-properties"
+        "@babel/plugin-transform-class-properties"
     ]
 }
