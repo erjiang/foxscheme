@@ -43,5 +43,8 @@
     "typescript": "^3.4.4",
     "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "peggy": "^5.0.2"
   }
 }
