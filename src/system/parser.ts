@@ -47,10 +47,18 @@ export default class Parser {
     for (var i = 0; i < fragment.length; i++) {
       const ch = fragment[i];
       switch (ch) {
-        case '"':
-          inString = !inString;
+        case '"': {
+          // handle escaped quotes inside strings
+          let backslashCount = 0;
+          for (let j = i - 1; j >= 0 && fragment[j] === '\\'; j--) {
+            backslashCount++;
+          }
+          if (backslashCount % 2 === 0) {
+            inString = !inString;
+          }
           column++;
           break;
+        }
         case "(":
           if (!inString) {
             parens++;
