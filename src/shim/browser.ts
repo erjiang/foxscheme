@@ -2,14 +2,13 @@ import {defun} from "../system/native";
 import String from "../system/string";
 import {Error} from "../system/error";
 import nothing from "../system/nothing";
-import * as FoxScheme from "../foxscheme";
+import FoxScheme from "../foxscheme";
 
-declare global {
-  interface Window { FoxScheme: any; $fs: any }
+// Export FoxScheme to the global scope
+if (typeof window !== 'undefined') {
+    (window as any).FoxScheme = FoxScheme;
+    (window as any).$fs = FoxScheme;
 }
-
-window.FoxScheme = FoxScheme;
-window.$fs = window.FoxScheme;
 
 /*
  * This is neither asynchronous nor XML, so we can't really call it AJAX, can
@@ -33,7 +32,7 @@ defun("load", 1, 2,
      */
     try {
       xhr.send(null)
-    } catch (e) {
+    } catch (e: any) {
       throw new Error("Internet request failed: "+e.message, "load")
     }
     /*
@@ -50,9 +49,9 @@ defun("load", 1, 2,
         ].join(""),
         "load")
     }
-    var p = new Parser(xhr.responseText);
+    var p = new FoxScheme.Parser(xhr.responseText);
     let o;
-    while((o = p.nextObject()) !== Parser.EOS) {
+    while((o = p.nextObject()) !== FoxScheme.Parser.EOS) {
       evalproc.apply(this, [o])
     }
     return nothing
@@ -72,3 +71,5 @@ defun("js:load", 1, 1,
 
     return nothing;
   })
+
+export default FoxScheme;

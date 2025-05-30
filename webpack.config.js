@@ -5,7 +5,13 @@ module.exports = {
     },
     output: {
         filename: "foxscheme-[name].js",
-        path: __dirname + "/dist"
+        path: __dirname + "/dist",
+        library: {
+            name: 'FoxScheme',
+            type: 'var',
+            export: 'default'
+        },
+        globalObject: 'this'
     },
     mode: "development",
 
@@ -14,7 +20,9 @@ module.exports = {
 
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"]
+        extensions: [".ts", ".tsx", ".js", ".json"],
+        // Ensure .js files are properly resolved
+        mainFields: ["browser", "module", "main"]
     },
 
     externals: {

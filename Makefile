@@ -58,7 +58,7 @@ psyntax/psyntax.js: preparse.ss lib/core.ss psyntax/psyntax.pp
 	cat lib/core.ss psyntax/psyntax.pp | $(SCHEME) --script preparse.ss > psyntax/psyntax.js
 
 clean:
-	rm __merged.js bin/foxscheme.js bin/foxbrowser.js dist/foxscheme-*.js dist/foxscheme-*.js.map
+	rm -f __merged.js bin/foxscheme.js bin/foxbrowser.js dist/foxscheme-*.js dist/foxscheme-*.js.map
 
 src/parser/parser.generated.js: grammar.peg
 	npm run build:grammar

@@ -1,4 +1,4 @@
-import generated from './parser.generated.js';
+import generated from './parser.generated';
 import { Expr } from './types';
 import { Error } from './error';
 
