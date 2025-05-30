@@ -1,0 +1,113 @@
+{
+  const Util = require("./util");
+  const Vector = require("./vector").default;
+  const SymbolObj = require("./symbol").default;
+  const StringObj = require("./string").default;
+  const CharObj = require("./char").default;
+  const nil = require("./nil").default;
+}
+
+Start
+  = _ exprs:ExpressionList? _ { return exprs !== null ? exprs : []; }
+
+Expression
+  = List
+  / Vector
+  / Quoted
+  / Boolean
+  / Number
+  / Character
+  / String
+  / Symbol
+
+List
+  = "(" _ elements:Elements? _ ")" { return elements !== null ? elements : nil; }
+
+Elements
+  = head:Expression tail:(_ Expression)* dot:(_ "." _ Expression)? {
+      const items = [head].concat(tail.map(t => t[1]));
+      if (dot) {
+        return Util.listify(items, dot[3]);
+      } else {
+        return Util.listify(items);
+      }
+    }
+
+Vector
+  = "#(" _ exprs:ExpressionList? _ ")" {
+      return new Vector(exprs !== null ? exprs : []);
+    }
+
+ExpressionList
+  = head:Expression tail:(_ Expression)* {
+      return [head].concat(tail.map(t => t[1]));
+    }
+
+Quoted
+  = "'" expr:Expression { return Util.listify([new SymbolObj("quote"), expr]); }
+
+Boolean
+  = "#t"i { return true; }
+  / "#f"i { return false; }
+
+Number
+  = Rational
+  / FloatOrInt
+
+Rational
+  = sign:Sign? num:Digits '/' den:Digits {
+      const n = (sign ? sign : '') + num;
+      return parseInt(n, 10) / parseInt(den, 10);
+    }
+
+FloatOrInt
+  = sign:Sign? n:$NumberBody {
+      const str = (sign ? sign : '') + n;
+      return parseFloat(str);
+    }
+
+NumberBody
+  = Digits '.' Digits? Exp?
+  / '.' Digits Exp?
+  / Digits Exp?
+
+Exp
+  = [eE] Sign? Digits
+
+Sign
+  = [+-]
+
+Digits
+  = [0-9]+
+
+String
+  = '"' chars:StringChar* '"' {
+      return new StringObj(chars.join(""));
+    }
+StringChar
+  = "\\\"" { return '"'; }
+  / "\\n" { return '\n'; }
+  / "\\t" { return '\t'; }
+  / !'"' c:. { return c; }
+
+Character
+  = "#\\" val:CharacterValue { return new CharObj("#\\" + val); }
+
+CharacterValue
+  = val:$[^ \t\n\r()]+ { return val; }
+
+Symbol
+  = !Boolean ident:Identifier { return new SymbolObj(ident); }
+
+Identifier
+  = head:Initial tail:Subsequent* {
+      return head + tail.join("");
+    }
+
+Initial
+  = [a-zA-Z!$%&*/:<=>?^_~+-]
+
+Subsequent
+  = Initial / [0-9] / "." / "+"
+
+_  = [ \t\n\r]*  // optional whitespace

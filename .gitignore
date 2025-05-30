@@ -4,3 +4,4 @@ __merged.js
 *.swp
 node_modules
 dist/
+src/system/parser.generated.js

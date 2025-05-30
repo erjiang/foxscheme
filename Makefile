@@ -48,14 +48,20 @@ $(OUTPUT): $(FILES)
 uncompressed: $(files)
 	cat $(FILES) > $(OUTPUT)
 
-rhino: $(OUTPUT) src/shim/rhino.js
+rhino: $(OUTPUT) src/parser/parser.generated.js src/shim/rhino.js
 	cat $(OUTPUT) src/shim/rhino.js > $(OUTPUT_PATH)/foxrhino.js
 
-browser: $(OUTPUT) src/shim/browser.js
+browser: $(OUTPUT) src/parser/parser.generated.js src/shim/browser.js
 	cat $(OUTPUT) src/shim/browser.js > $(OUTPUT_PATH)/foxbrowser.js
 
 psyntax/psyntax.js: preparse.ss lib/core.ss psyntax/psyntax.pp
 	cat lib/core.ss psyntax/psyntax.pp | $(SCHEME) --script preparse.ss > psyntax/psyntax.js
 
 clean:
-	rm __merged.js bin/foxscheme.js bin/foxbrowser.js
+	rm __merged.js bin/foxscheme.js bin/foxbrowser.js dist/foxscheme-*.js dist/foxscheme-*.js.map
+
+src/parser/parser.generated.js: grammar.peg
+	npm run build:grammar
+
+test: src/parser/parser.generated.js
+	npm test
