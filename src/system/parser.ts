@@ -45,22 +45,29 @@ export default class Parser {
     let column = 2; // start with 2 to account for prompt
     let leftParensColumns = [];
     for (var i = 0; i < fragment.length; i++) {
-      switch (fragment[i]) {
+      const ch = fragment[i];
+      switch (ch) {
+        case '"':
+          inString = !inString;
+          column++;
+          break;
         case "(":
-          parens++;
-          leftParensColumns.push(column);
+          if (!inString) {
+            parens++;
+            leftParensColumns.push(column);
+          }
           column++;
           break;
         case ")":
-          parens--;
-          leftParensColumns.pop();
+          if (!inString) {
+            parens--;
+            leftParensColumns.pop();
+          }
           column++;
           break;
         case "\n":
           column = 0;
           break;
-        case '"':
-          inString = !inString;
         default:
           column++;
       }

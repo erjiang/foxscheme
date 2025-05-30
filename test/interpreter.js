@@ -138,6 +138,11 @@ describe('Parser', function () {
   it("Parse float", function () {
     evto("123456.654321", 123456.654321)
   });
+
+  it("calculateIndentation ignores parens in strings", function() {
+    const indent = FoxScheme.Parser.calculateIndentation('(display "(")');
+    assert_equals(indent, 0);
+  });
 });
 
 /*
