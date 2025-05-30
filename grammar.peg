@@ -1,0 +1,57 @@
+Start
+  = _ expr:Expression _ { return expr; }
+
+Expression
+  = List
+  / Quoted
+  / Boolean
+  / Number
+  / String
+  / Symbol
+
+List
+  = "(" _ exprs:ExpressionList? _ ")" { return exprs !== null ? exprs : []; }
+
+ExpressionList
+  = head:Expression tail:(_ Expression)* {
+      return [head].concat(tail.map(t => t[1]));
+    }
+
+Quoted
+  = "'" expr:Expression { return ['quote', expr]; }
+
+Boolean
+  = "#t" { return true; }
+  / "#f" { return false; }
+
+Number
+  = sign:"-"? digits:[0-9]+ {
+      return parseInt((sign ? "-" : "") + digits.join(""), 10);
+    }
+
+String
+  = "\"" chars:Char* "\"" {
+      return chars.join("");
+    }
+
+Char
+  = "\\\"" { return '"'; }
+  / "\\n" { return '\n'; }
+  / "\\t" { return '\t'; }
+  / [^"]
+
+Symbol
+  = !Boolean ident:Identifier { return ident; }
+
+Identifier
+  = head:Initial tail:Subsequent* {
+      return head + tail.join("");
+    }
+
+Initial
+  = [a-zA-Z!$%&*/:<=>?^_~]
+
+Subsequent
+  = Initial / [0-9] / "." / "+"
+
+_  = [ \t\n\r]*  // optional whitespace
