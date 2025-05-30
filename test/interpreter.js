@@ -143,6 +143,10 @@ describe('Parser', function () {
     const indent = FoxScheme.Parser.calculateIndentation('(display "(")');
     assert_equals(indent, 0);
   });
+  it("calculateIndentation handles escaped quotes", function() {
+    const indent = FoxScheme.Parser.calculateIndentation('(display "foo \\"(")');
+    assert_equals(indent, 0);
+  });
 });
 
 /*
