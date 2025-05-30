@@ -13,6 +13,7 @@
     "build": "webpack",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "build:grammar": "peggy --format commonjs -o src/system/parser.generated.js grammar.peg",
     "test": "mocha -r ts-node/register test/interpreter.js"
   },
   "repository": {
