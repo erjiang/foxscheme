@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FoxScheme REPL</title>
+  <style>
+    body { font-family: monospace; background: #1e1e1e; color: #e0e0e0; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+    #console { flex: 1; overflow-y: auto; padding: 10px; }
+    .line.input::before { content: '> '; color: #8be9fd; }
+    .line.result { color: #50fa7b; }
+    .line.error { color: #ff5555; }
+    #prompt { border: none; border-top: 1px solid #333; background: #1e1e1e; color: #e0e0e0; padding: 8px; font-family: inherit; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <div id="console"></div>
+  <input id="prompt" autocomplete="off" placeholder="Type Scheme code and press Enter" />
+  <script src="../dist/foxscheme-browser.js"></script>
+  <script src="repl.js"></script>
+</body>
+</html>
