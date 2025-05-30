@@ -356,7 +356,7 @@ defun("log", 1, 1,
     if(isNaN(n))
       throw new Error(n+" is not a number", "log")
 
-    return Math.exp(n)
+    return Math.log(n)
   })
 
 

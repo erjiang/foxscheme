@@ -225,6 +225,10 @@ describe('Native arithmetic', function () {
     evto('(sqrt 4)', 2)
     evto('(sqrt 0.64)', 0.8)
   });
+  it('log', function () {
+    evto('(log 1)', 0)
+    evto('(log 10)', Math.log(10))
+  });
 });
 
 /*
