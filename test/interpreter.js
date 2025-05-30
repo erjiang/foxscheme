@@ -169,6 +169,15 @@ describe('Simple literals', function () {
         (a.getValue() == "a"))
     })
   });
+  it("Hex characters", function () {
+    evto('#\\x61', function (a) {
+      return (
+        a instanceof FoxScheme.Char &&
+        a.getValue() == 'a'
+      );
+    });
+    should_error('#\\xgg');
+  });
   it("Booleans", function () {
     evto("#t", true)
     evto("#T", true)

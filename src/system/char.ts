@@ -34,7 +34,11 @@ export default class Char {
            */
           if (c[0] === "x") {
             c = c.substring(1);
-            this._char = String.fromCharCode(parseInt(c, 16));
+            const value = parseInt(c, 16);
+            if (isNaN(value)) {
+              throw new Error("Invalid character " + oc);
+            }
+            this._char = String.fromCharCode(value);
             resolved = true;
           }
           else
