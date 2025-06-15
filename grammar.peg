@@ -13,6 +13,10 @@ Start
 Expression
   = List
   / Vector
+  / SyntaxQuasiQuoted
+  / SyntaxUnquote
+  / SyntaxUnquoteSplicing
+  / SyntaxQuoted
   / QuasiQuoted
   / Unquote
   / UnquoteSplicing
@@ -49,6 +53,18 @@ ExpressionList
 
 QuasiQuoted
   = "`" expr:Expression { return Util.listify([new SymbolObj("quasiquote"), expr]); }
+
+SyntaxQuasiQuoted
+  = "#`" expr:Expression { return Util.listify([new SymbolObj("quasisyntax"), expr]); }
+
+SyntaxUnquoteSplicing
+  = "#,@" expr:Expression { return Util.listify([new SymbolObj("unsyntax-splicing"), expr]); }
+
+SyntaxUnquote
+  = "#," expr:Expression { return Util.listify([new SymbolObj("unsyntax"), expr]); }
+
+SyntaxQuoted
+  = "#'" expr:Expression { return Util.listify([new SymbolObj("syntax"), expr]); }
 
 UnquoteSplicing
   = ",@" expr:Expression { return Util.listify([new SymbolObj("unquote-splicing"), expr]); }

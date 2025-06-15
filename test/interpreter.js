@@ -191,6 +191,16 @@ describe('Parser', function () {
     var o = p.nextObject();
     assert_equals(o.toString(), "(quasiquote (a (unquote b) (unquote-splicing c)))");
   });
+  it("Parses syntax quoting", function() {
+    var p = new $fs.Parser("#'(a b c)");
+    var o = p.nextObject();
+    assert_equals(o.toString(), "(syntax (a b c))");
+  });
+  it("Parses quasisyntax", function() {
+    var p = new $fs.Parser("#`(a #,b #,@c)");
+    var o = p.nextObject();
+    assert_equals(o.toString(), "(quasisyntax (a (unsyntax b) (unsyntax-splicing c)))");
+  });
 });
 
 /*
