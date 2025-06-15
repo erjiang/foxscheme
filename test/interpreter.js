@@ -66,6 +66,22 @@ var should_error = function (expr) {
       "but we got " + r + " instead")
   }
 }
+var should_error_message = function(expr, substr) {
+  var interp = new $fs.Interpreter();
+  var p = new $fs.Parser(expr);
+  try {
+    interp.eval(p.nextObject());
+  } catch (e) {
+    if (e instanceof FoxScheme.Error) {
+      if (e.message.indexOf(substr) === -1) {
+        throw new Error("Error message '" + e.message + "' does not contain '" + substr + "'");
+      }
+      return true;
+    }
+    throw e;
+  }
+  throw new Error(expr + " should have evaluated to an error");
+}
 var assert_true = function (bool) {
   if (bool !== true)
     throw new Error("Assertion failed: Got " + bool + " but expected true")
@@ -640,6 +656,9 @@ describe("Vectors", function () {
   it("vector-ref", function () {
     evto("(vector-ref '#(1 2 3) 0)", 1)
     evto("(vector-ref '#(1 2 3 5) 3)", 5)
+  });
+  it("vector-ref invalid index message", function() {
+    should_error_message("(vector-ref '#(1 2) 'a)", "index a");
   });
   it("vector-set!", function () {
     evto("(let ((v (make-vector 5)))" +

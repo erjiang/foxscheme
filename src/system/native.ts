@@ -640,7 +640,7 @@ defun("vector-ref", 2, 2,
     if(!(vector instanceof Vector))
       throw new Error("Can't vector-ref non-vector " + vector);
     if(isNaN(index))
-      throw new Error("Can't get non-numeric index " + vector);
+      throw new Error("Can't get non-numeric index " + index);
     if(index < 0 || index >= vector.length())
       throw new Error("Vector index "+index+" is out of bounds")
 
@@ -651,7 +651,7 @@ defun("vector-set!", 3, 3,
     if(!(vector instanceof Vector))
       throw new Error("Can't vector-set! non-vector " + vector);
     if(isNaN(index))
-      throw new Error("Can't get non-numeric index "+vector);
+      throw new Error("Can't get non-numeric index " + index);
     if(index < 0 || index >= vector.length())
       throw new Error("Vector index "+index+" is out of bounds");
     
