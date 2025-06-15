@@ -7,6 +7,9 @@ import 'mocha';
 // このファイルはUTF-8です
 
 import * as $fs from "../src/foxscheme";
+import fs from 'fs';
+import path from 'path';
+import '../src/shim/node';
 let FoxScheme = $fs;
 
 var evto = function (expr, test) {
@@ -987,5 +990,12 @@ describe('Miscellaneous', function () {
       "(fact* (- n 1) (lambda (r) (k (* r n)))))))) " +
       "(fact* 5 (lambda (v) v)))",
       120)
+  });
+});
+
+describe('Node load', function () {
+  it('loads a Scheme file and evaluates its contents', function () {
+    const filename = path.join(__dirname, 'fixtures', 'load-test.scm');
+    evto(`(begin (load "${filename}") loaded-val)`, 123);
   });
 });
