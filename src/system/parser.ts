@@ -29,11 +29,27 @@ export default class Parser {
   static calculateIndentation(fragment: string): number {
     let parens = 0;
     let inString = false;
+    let inComment = false;
     let column = 2; // start with 2 to account for prompt
     let leftParensColumns: number[] = [];
     for (var i = 0; i < fragment.length; i++) {
       const ch = fragment[i];
+      if (inComment) {
+        if (ch === '\n') {
+          inComment = false;
+          column = 0;
+        } else {
+          column++;
+        }
+        continue;
+      }
       switch (ch) {
+        case ';':
+          if (!inString) {
+            inComment = true;
+          }
+          column++;
+          break;
         case '"': {
           // handle escaped quotes inside strings
           let backslashCount = 0;
