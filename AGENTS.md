@@ -1,3 +1,5 @@
+When finding and fixing a bug, it's preferable to first write a test for the bug and make sure the test fails. Then, fix the bug and make sure the test passes.
+
 Testing changes:
 
 1. Run `npm run build` to make sure build still works.
