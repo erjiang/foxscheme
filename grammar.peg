@@ -18,6 +18,7 @@ Expression
   / Number
   / Character
   / String
+  / Ellipsis
   / Symbol
 
 List
@@ -96,6 +97,9 @@ Character
 CharacterValue
   = val:$[^ \t\n\r()]+ { return val; }
 
+Ellipsis
+  = '...' { return new SymbolObj('...'); }
+
 Symbol
   = !Boolean ident:Identifier { return new SymbolObj(ident); }
 
@@ -110,4 +114,8 @@ Initial
 Subsequent
   = Initial / [0-9] / "." / "+"
 
-_  = [ \t\n\r]*  // optional whitespace
+_  = (Whitespace / LineComment)*
+
+Whitespace = [ \t\n\r]+
+
+LineComment = ';' (![\n\r] .)* ([\n\r] / !.)

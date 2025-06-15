@@ -16,7 +16,12 @@ export default class Parser {
       this.error = null;
     } catch (e) {
       this.exprs = [];
-      this.error = new Error((e as Error).message);
+      const loc = (e as any).location?.start;
+      if (loc) {
+        this.error = new Error(`${(e as Error).message} at line ${loc.line} column ${loc.column}`);
+      } else {
+        this.error = new Error((e as Error).message);
+      }
     }
     this.i = 0;
   }

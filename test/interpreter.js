@@ -150,6 +150,19 @@ describe('Parser', function () {
     const indent = FoxScheme.Parser.calculateIndentation('(display "foo \\"(")');
     assert_equals(indent, 0);
   });
+
+  it("Ignores semicolon comments", function() {
+    var p = new $fs.Parser("1 ;comment\n2");
+    assert_equals(p.nextObject(), 1);
+    assert_equals(p.nextObject(), 2);
+  });
+
+  it("Parses ellipsis token", function() {
+    var p = new $fs.Parser("...");
+    var o = p.nextObject();
+    assert_instanceof(o, FoxScheme.Symbol);
+    assert_equals(o.name(), "...");
+  });
 });
 
 /*
