@@ -13,6 +13,9 @@ Start
 Expression
   = List
   / Vector
+  / QuasiQuoted
+  / Unquote
+  / UnquoteSplicing
   / Quoted
   / Boolean
   / Number
@@ -43,6 +46,15 @@ ExpressionList
   = head:Expression tail:(_ Expression)* {
       return [head].concat(tail.map(t => t[1]));
     }
+
+QuasiQuoted
+  = "`" expr:Expression { return Util.listify([new SymbolObj("quasiquote"), expr]); }
+
+UnquoteSplicing
+  = ",@" expr:Expression { return Util.listify([new SymbolObj("unquote-splicing"), expr]); }
+
+Unquote
+  = "," expr:Expression { return Util.listify([new SymbolObj("unquote"), expr]); }
 
 Quoted
   = "'" expr:Expression { return Util.listify([new SymbolObj("quote"), expr]); }

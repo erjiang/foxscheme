@@ -169,6 +169,12 @@ describe('Parser', function () {
     assert_instanceof(o, FoxScheme.Symbol);
     assert_equals(o.name(), "...");
   });
+
+  it("Parses quasiquote syntax", function() {
+    var p = new $fs.Parser("`(a ,b ,@c)");
+    var o = p.nextObject();
+    assert_equals(o.toString(), "(quasiquote (a (unquote b) (unquote-splicing c)))");
+  });
 });
 
 /*
