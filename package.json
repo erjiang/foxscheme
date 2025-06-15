@@ -14,7 +14,7 @@
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
     "build:grammar": "peggy --format commonjs -o src/system/parser.generated.js grammar.peg",
-    "repl": "node -r ts-node/register src/repl.ts",
+    "repl": "node -r ts-node/register src/shim/node.ts",
     "test": "mocha -r ts-node/register test/interpreter.js"
   },
   "repository": {
