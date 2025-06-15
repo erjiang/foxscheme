@@ -157,6 +157,12 @@ describe('Parser', function () {
     assert_equals(p.nextObject(), 2);
   });
 
+  it("Ignores block comments", function() {
+    var p = new $fs.Parser("#| comment |# 1 2");
+    assert_equals(p.nextObject(), 1);
+    assert_equals(p.nextObject(), 2);
+  });
+
   it("Parses ellipsis token", function() {
     var p = new $fs.Parser("...");
     var o = p.nextObject();

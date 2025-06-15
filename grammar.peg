@@ -114,8 +114,12 @@ Initial
 Subsequent
   = Initial / [0-9] / "." / "+"
 
-_  = (Whitespace / LineComment)*
+_  = (Whitespace / LineComment / BlockComment)*
 
 Whitespace = [ \t\n\r]+
 
 LineComment = ';' (![\n\r] .)* ([\n\r] / !.)
+
+BlockComment = '#|' BlockCommentContent* '|#'
+
+BlockCommentContent = BlockComment / !( '#|' / '|#' ) .
