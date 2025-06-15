@@ -10,6 +10,10 @@
 MINIFY=closure-compiler --js 
 MINIFY_OUT=--js_output_file
 SCHEME=petite
+
+.PHONY: all
+all:
+	npm run build
 #
 # FILES is a list of all the FoxScheme files, in the order that
 # they should be run

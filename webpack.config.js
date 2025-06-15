@@ -1,10 +1,7 @@
 module.exports = {
-    entry: {
-      browser: "./src/shim/browser.ts",
-      node: "./src/shim/node.ts",
-    },
+    entry: "./src/shim/browser.ts",
     output: {
-        filename: "foxscheme-[name].js",
+        filename: "foxscheme.js",
         path: __dirname + "/dist",
         library: {
             name: 'FoxScheme',
