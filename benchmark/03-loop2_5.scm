@@ -1,0 +1,5 @@
+(letrec ((loop (lambda (n acc)
+                (if (< n 2500000)
+                    (loop (+ n 1) (+ acc n))
+                    acc))))
+  (loop 0 0))
