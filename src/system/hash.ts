@@ -39,11 +39,17 @@ export default class Hash {
     this._next = next;
   }
   chainGet(key: string): Expr | undefined {
-    if (this._store.hasOwnProperty(key)) {
-      return this._store[key];
-    } else if (this._next !== undefined) {
-      return this._next.chainGet(key);
+    // We switched from a recursive implementation to an iterative one.
+    // Recursion created extra call frames on deeply nested environments,
+    // hurting performance on benchmarks. Iteration avoids that overhead.
+    let env: Hash | undefined = this;
+    while (env !== undefined) {
+      if (Object.prototype.hasOwnProperty.call(env._store, key)) {
+        return env._store[key];
+      }
+      env = env._next;
     }
+    return undefined;
   }
   get(key: string) {
     if (this._store.hasOwnProperty(key)) {
@@ -51,16 +57,19 @@ export default class Hash {
     }
   }
   chainSet(key: string, value: Expr): void {
-    if(this.get(key) !== undefined) {
-      this.set(key, value);
-    }
-    else {
-      if(this._next !== undefined) {
-        this._next.chainSet(key, value);
-      } else {
-        this._store[key] = value;
+    // Like chainGet, this function is now iterative to prevent deep
+    // recursion when walking parent environments.
+    let env: Hash | undefined = this;
+    let last: Hash = this;
+    while (env !== undefined) {
+      if (Object.prototype.hasOwnProperty.call(env._store, key)) {
+        env._store[key] = value;
+        return;
       }
+      last = env;
+      env = env._next;
     }
+    last._store[key] = value;
   }
   set(key: string, value: Expr): void {
     this._store[key] = value;
