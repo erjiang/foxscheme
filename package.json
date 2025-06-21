@@ -15,7 +15,8 @@
     "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
     "build:grammar": "peggy --format commonjs -o src/system/parser.generated.js grammar.peg",
     "repl": "node -r ts-node/register src/shim/node.ts",
-    "test": "npm run build:grammar && mocha -r ts-node/register test/interpreter.js"
+    "test": "npm run build:grammar && mocha -r ts-node/register test/interpreter.js",
+    "benchmark": "npm run build:grammar && ts-node benchmark/run.ts"
   },
   "repository": {
     "type": "git",
