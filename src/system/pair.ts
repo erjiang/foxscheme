@@ -51,13 +51,15 @@ export default class Pair {
      * Some utility functions for use internally by FoxScheme
      */
     isProper(): boolean {
-        // @ts-ignore: Expr could be Pair | nil
-        if(this._cdr === nil)
-            return true
-        else if(this._cdr instanceof Pair)
-            return this._cdr.isProper()
-        else
-            return false
+        // Use an iterative approach to avoid deep recursion on long lists.
+        let cursor: Expr = this._cdr;
+        while (cursor !== nil) {
+            if (!(cursor instanceof Pair)) {
+                return false;
+            }
+            cursor = cursor._cdr;
+        }
+        return true;
     }
     first() {
         return this.car();
