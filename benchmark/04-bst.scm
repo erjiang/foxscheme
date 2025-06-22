@@ -23,4 +23,4 @@
                          (+ (car tree)
                             (sum-tree (left tree))
                             (sum-tree (right tree)))))))
-  (sum-tree (build 0 1000 '())))
+  (sum-tree (build 0 2200 '())))

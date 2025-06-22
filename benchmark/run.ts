@@ -10,9 +10,9 @@ interface Benchmark {
 
 const benchmarks: Benchmark[] = [
   { file: '01-factorial.scm', expected: 2432902008176640000 },
-  { file: '02-dotproduct.scm', expected: 2000 },
+  { file: '02-dotproduct.scm', expected: 8000000 },
   { file: '03-nbody.scm', expected: 1 },
-  { file: '04-bst.scm', expected: 499500 },
+  { file: '04-bst.scm', expected: 2418900 },
 ];
 
 const interp = new Interpreter();
