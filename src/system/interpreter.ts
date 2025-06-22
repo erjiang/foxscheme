@@ -141,8 +141,8 @@ type Continuation = KLet | KEmpty | KLet | KLetrec | KBegin | KIf | KSet |
 
 // some reserved keywords that would throw an "invalid syntax"
 // error rather than an "unbound variable" error
-const syntax = ["lambda", "let", "letrec", "begin", "if",
-  "set!", "define", "quote", "call/cc", "letcc"];
+const syntax = new Set(["lambda", "let", "letrec", "begin", "if",
+  "set!", "define", "quote", "call/cc", "letcc"]);
 
 // TODO: can we have a stronger check for continuations?
 function isContinuation(x: any): x is Continuation {
@@ -476,7 +476,7 @@ export default class Interpreter {
       let val: Expr | undefined;
       if((val = this.applyEnv(this.$expr, this.$env)) === undefined) {
         if((val = this.applyEnv(this.$expr, nativeprocedures)) === undefined) {
-          if(syntax.includes(this.$expr.name()))
+          if(syntax.has(this.$expr.name()))
             throw new Error("Invalid syntax "+this.$expr.name())
           else
             throw new Error("Unbound symbol "+this.$expr.name())
@@ -502,7 +502,7 @@ export default class Interpreter {
        */
       let eCar = this.$expr.car();
       if (eCar instanceof Symbol &&
-        syntax.includes(eCar.name()) &&
+        syntax.has(eCar.name()) &&
         // make sure the syntax keyword hasn't been shadowed
         this.applyEnv(eCar, this.$env) === undefined) {
         var sym = eCar.name();
