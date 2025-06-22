@@ -1,0 +1,26 @@
+(letrec ((make-node (lambda (v l r) (cons v (cons l r))))
+         (left (lambda (node) (car (cdr node))))
+         (right (lambda (node) (cdr (cdr node))))
+         (insert (lambda (tree n)
+                   (if (null? tree)
+                       (make-node n '() '())
+                       (let ((v (car tree)))
+                         (if (< n v)
+                             (make-node v
+                                        (insert (left tree) n)
+                                        (right tree))
+                             (make-node v
+                                        (left tree)
+                                        (insert (right tree) n))))))
+         )
+         (build (lambda (i max tree)
+                  (if (= i max)
+                      tree
+                      (build (+ i 1) max (insert tree i)))))
+         (sum-tree (lambda (tree)
+                     (if (null? tree)
+                         0
+                         (+ (car tree)
+                            (sum-tree (left tree))
+                            (sum-tree (right tree)))))))
+  (sum-tree (build 0 1000 '())))
