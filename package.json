@@ -14,7 +14,7 @@
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
     "build:grammar": "peggy --format commonjs -o src/system/parser.generated.js grammar.peg",
-    "repl": "node -r ts-node/register src/shim/node.ts",
+    "repl": "node -r ts-node/register src/shim/node.ts --script psyntax/repl.ss",
     "test": "npm run build:grammar && mocha -r ts-node/register 'test/**/*.js'",
     "benchmark": "npm run build:grammar && ts-node benchmark/run.ts"
   },
