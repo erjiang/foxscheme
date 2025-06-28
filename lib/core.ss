@@ -22,7 +22,6 @@
 (define list
   (lambda x x))
 
-;; TODO: fix list? to detect cycles
 (define list?
   (lambda (ls)
     (letrec

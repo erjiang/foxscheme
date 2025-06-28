@@ -30,6 +30,7 @@ Expression
 
 List
   = "(" _ elements:Elements? _ ")" { return elements !== null ? elements : nil; }
+  / "[" _ elements:Elements? _ "]" { return elements !== null ? elements : nil; }
 
 Elements
   = head:Expression tail:(_ Expression)* dot:(_ "." _ Expression)? {
@@ -43,6 +44,9 @@ Elements
 
 Vector
   = "#(" _ exprs:ExpressionList? _ ")" {
+      return new Vector(exprs !== null ? exprs : []);
+    }
+  / "#[" _ exprs:ExpressionList? _ "]" {
       return new Vector(exprs !== null ? exprs : []);
     }
 
