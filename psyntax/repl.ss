@@ -2,7 +2,11 @@
 (load "lib/fox.r6rs.ss")
 (load "psyntax/psyntax.pp")
 
-;; (define (repl)
-;;   (begin
-;;     (write (eval (sc-expand (read))))
-;;     (repl)))
+(define repl
+  (lambda ()
+    (begin
+      (write "> ")
+      (write (eval (sc-expand (read))))
+      (repl))))
+
+(repl)

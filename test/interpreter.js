@@ -1053,3 +1053,12 @@ describe('Node load', function () {
     evto(`(begin (load "${filename}") loaded-val)`, 123);
   });
 });
+
+describe('fox.r6rs not', function () {
+  it('evaluates not after loading library', function () {
+    const core = path.join(process.cwd(), 'lib', 'core.ss');
+    const r6rs = path.join(process.cwd(), 'lib', 'fox.r6rs.ss');
+    evto(`(begin (load "${core}") (load "${r6rs}") (not #f))`, true);
+    evto(`(begin (load "${core}") (load "${r6rs}") (not '(1 2)))`, false);
+  });
+});

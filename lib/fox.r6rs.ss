@@ -30,7 +30,7 @@
 
 (define not
   (lambda (v)
-    (= v #f)))
+    (if v #f #t)))
 
 
 (define eval-core
